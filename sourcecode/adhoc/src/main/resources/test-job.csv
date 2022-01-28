@@ -1,0 +1,11 @@
+NAME,GENDER,DEPARTMENT,SALARY,LOC,RATING
+Employe One,Male,Research and Development,70020,Wellington,Average
+Employe Two,Male,Support,93160,Bellevue,Average
+Employe Three,Female,Product Management,36480,Wellington,Average
+Employe Four,Male,Business Development,120000,Los Angeles,Average
+Employe Five,Female,Support,104800,Bellevue,Average
+Employe Six,Male,Sales,114010,Los Angeles,Average
+Employe Seven,Female,Services,74620,Los Angeles,Poor
+Employe Eight,Male,Human Resources,103490,Wellington,Good
+Employe Nine,Male,Marketing,48170,Wellington,Good
+Employe 10,Female,Legal,129000,Raleigh,Very good
