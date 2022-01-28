@@ -1,0 +1,109 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('GitHub Checkout') {
+            steps {
+                git credentialsId: 'sangita_id_rsa' ,
+                url: 'ssh://git@github.ibm.com/CIO-MAP/MAP-ETL-Jenkins-POC.git', branch: 'Adhoc_Xref_poc'
+            }// steps to base framework jar checkout 
+        } //stage
+        
+        stage('Flare ETL Framework download'){
+            environment {
+                GITHUB_API_TOKEN = credentials('github_api_token')
+                GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flarelets-Developer/releases/assets/548535"
+                OUTPUT_FILENAME = "ETL-Framework-2.0.jar"
+            }
+            steps{
+                //curl 'https://github.ibm.com/CIO-Mkt-DataEng/Flarelets-Developer/releases/download/v2.0/ETL-Framework-2.0.jar'
+                sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+                sh 'ls -al'
+            }
+        }
+
+        stage('Spark download'){
+            environment {
+                SPARK_URL = "https://archive.apache.org/dist/spark/spark-3.0.1/spark-3.0.1-bin-hadoop2.7.tgz"
+                SPARK_FILENAME = "spark-3.0.1-bin-hadoop2.7.tgz"
+            }
+            steps{
+                sh 'curl -L -H "Accept:application/octet-stream" "$SPARK_URL" -o $SPARK_FILENAME'
+                sh 'tar -xzf spark-3.0.1-bin-hadoop2.7.tgz'
+                sh 'ls -al spark-3.0.1-bin-hadoop2.7'
+            }
+        }
+
+        stage('Maven build') {
+            steps {
+                //sh 'mvn install:install-file -Dfile=ETL-Framework-2.0-jar-with-dependencies.jar -DgroupId=com.etlframework -DartifactId=base -Dversion=2.0 -Dpackaging=jar'
+                sh 'mvn install:install-file -Dfile=ETL-Framework-2.0.jar -DgroupId=com.etlframework -DartifactId=base -Dversion=2.0 -Dpackaging=jar'
+                sh 'mvn clean compile package -f pom.xml '
+                //sh 'ls -al'
+               
+            } //steps
+        } //stage
+
+                stage('Move files') {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+                IBMCLOUD_COS_CRN = 'bda9a48c-574e-4be0-b2ff-62f2d0f23ead'
+                IBMCLOUD_COS_REGION = 'ap-geo'
+                IBMCLOUD_COS_BUCKET = 'map-dev-01'
+            }
+ 
+            steps{
+                //Prepare IBMCLOUD COS access
+                sh "ibmcloud plugin install cloud-object-storage"
+                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                sh "ibmcloud cos config region --region=${IBMCLOUD_COS_REGION}"
+                sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
+                //Create folder and download files from COS to spark-3.0.1-bin-hadoop2.7/cert
+                //Keystore files are uploaded to map-dev-01 bucket with jenkins-poc/ prefix
+                sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
+                sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
+                sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/digikeystore_old.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore_old.jks"
+                sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/javacerts.jks' spark-3.0.1-bin-hadoop2.7/cert/javacerts.jks"
+                sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
+                //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
+                sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
+                //Copy Maven artifacts to Spark jars folder
+                sh 'cp -r CDStoAdobe/target spark-3.0.1-bin-hadoop2.7/examples/jars'
+            }
+        }
+        
+        stage('Image build') {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+
+            steps {
+                sh "ibmcloud plugin install container-registry"
+                sh "ibmcloud plugin list"
+                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                sh "ibmcloud cr login"
+                sh "docker build -t us.icr.io/map-dev-namespace/adhocdata_lead_xref_build-poc:jenkins -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
+                sh "docker images"
+                sh "docker push us.icr.io/map-dev-namespace/adhocdata_lead_xref_build-poc:jenkins"
+                sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
+            }
+        } //stage image build
+/*
+        stage('Image deploy to K8s') {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+
+            steps {
+                sh "ibmcloud plugin install container-service"
+                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                sh "ibmcloud ks cluster config --cluster map-dal10-16x64-01"
+                sh "kubectl config current-context"
+                sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
+            }
+            
+        }*/
+
+    } //stages
+} //pipeline
+
