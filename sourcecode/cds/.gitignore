@@ -1,0 +1,6 @@
+*.log
+job.log*
+.DS_Store
+*.iml
+!CDStoAdobe.iml
+jars
