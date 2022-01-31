@@ -43,6 +43,7 @@ object CDSExtract extends ETLFrameWork {
 
   var countSoFar = 0
   var skipCounter = 0
+  var retryCount = 0
 
   // Static values for pageCodes needed
   private val USProductCode: String = "PC030"
@@ -250,6 +251,17 @@ object CDSExtract extends ETLFrameWork {
         log.info("No data withing provided date range")
         return ""
       }
+      if (responseCode == 500 || responseCode == 504) {
+        log.info("Unexpected network error occurred...retrying")
+        //returns the same urlString back to try again
+        retryCount += 1
+        println("Retry count: " + retryCount)
+        if (retryCount > 10) {
+          log.info("Retry count exceeding 10 tries, throwing exception")
+          throw new IOException("doGet Error - HTTP Status: " + responseCode)
+        }
+        return urlString
+      }
       if (responseCode == 200) {
         log.info("Response code 200, parsing data")
         cdsJSON = getJSONOBJECT(urlConnection)
@@ -315,7 +327,7 @@ object CDSExtract extends ETLFrameWork {
           val huc: HttpURLConnection = url.openConnection().asInstanceOf[HttpURLConnection]
           huc.setInstanceFollowRedirects(false)
           val responseCode: Int = huc.getResponseCode()
-          System.out.println(url + " " + responseCode)
+          log.info(url + " " + responseCode)
           if (responseCode != 200) {
             log.info("Redirect detected for parsed url, skipping " + contentUrl.toString)
             skipCounter+= 1
