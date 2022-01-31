@@ -1,0 +1,59 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: "marketo-poc"  # Name for application
+  namespace: cmdp      # Namespace on cluster
+spec:
+  sparkVersion: 3.0.1
+  type: Scala
+  mode: cluster
+  image: "us.icr.io/cmdp-dev-namespace/etlframework:20210204" # location where image was pushed. 
+  imagePullPolicy: Always
+  imagePullSecrets:
+    - default-us-icr-io
+  arguments:
+      - '--jobseq'     # Command line REQUIRED
+      - 'MARKETO_POC'  # Name of job (can be changed)
+  mainClass: "com.ibm.mkt.etlframework.job.MarketoJob"  # package path to the main function
+  
+  # mainApplicationFile is the local path to where the etlframework jar file was loaded
+  mainApplicationFile: "local:///opt/spark/examples/jars/ETL-Framework-1.0-jar-with-dependencies.jar"
+  sparkConf:
+    "spark.executor.extraJavaOptions": "-Ddb2.jcc.charsetDecoderEncoder=3"
+    "spark.driver.extraJavaOptions": "-Ddb2.jcc.charsetDecoderEncoder=3"
+    "spark.eventLog.enabled": "true"   
+  driver:
+    cores: 1
+    
+    instances: 1  
+    memory: 10G
+    labels:
+      version: 3.0.1
+    envSecretKeyRefs:
+      BASE_DB_ENDPOINT:
+        name: k8s-etlframework   # !!! MUST match the name as is in secrets yaml that is applied FIRST
+        key: BASE_DB_ENDPOINT    # Must match 
+      BASE_DB_USER_ID:
+        name: k8s-etlframework   # !!! MUST match the name as is in secrets yaml that is applied FIRST
+        key: BASE_DB_USER_ID     # Must match 
+      BASE_DB_PASSWORD:
+        name: k8s-etlframework   # !!! MUST match the name as is in secrets yaml that is applied FIRST
+        key: BASE_DB_PASSWORD    # Must match 
+         
+  executor:
+    cores: 1
+    instances: 1
+    memory: 10G
+    labels:
+      version: 3.0.1
+    envSecretKeyRefs:
+      BASE_DB_ENDPOINT:
+        name: k8s-etlframework   # !!! MUST match the name as is in secrets yaml that is applied FIRST
+        key: BASE_DB_ENDPOINT    # Must match 
+      BASE_DB_USER_ID:
+        name: k8s-etlframework   # !!! MUST match the name as is in secrets yaml that is applied FIRST
+        key: BASE_DB_USER_ID     # Must match 
+      BASE_DB_PASSWORD:
+        name: k8s-etlframework   # !!! MUST match the name as is in secrets yaml that is applied FIRST
+        key: BASE_DB_PASSWORD    # Must match 
+ 
