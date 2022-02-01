@@ -6,6 +6,10 @@ pipeline {
             steps {
                 git credentialsId: 'sangita_id_rsa' ,
                 url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'
+
+                dir("sourcecode/cds") {
+                    sh "pwd"
+                }   
             }  //steps
         } //stage
 
