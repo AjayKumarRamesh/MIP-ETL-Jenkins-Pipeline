@@ -5,7 +5,7 @@ pipeline {
         stage('GitHub Checkout') {
             steps {
                 git credentialsId: 'sangita_id_rsa' ,
-                url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'Master'
+                url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'
             }// steps to base framework jar checkout 
         } //stage
         
