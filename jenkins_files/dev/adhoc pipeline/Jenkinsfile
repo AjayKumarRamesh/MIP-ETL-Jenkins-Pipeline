@@ -19,7 +19,8 @@ pipeline {
                 dir("sourcecode/adhoc") {
                     sh "pwd"
                     //curl 'https://github.ibm.com/CIO-Mkt-DataEng/Flarelets-Developer/releases/download/v2.0/ETL-Framework-2.0.jar'
-                    sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'sh 'ls -al'
+                    sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+                    sh 'ls -al'
                 }
             }
         }
