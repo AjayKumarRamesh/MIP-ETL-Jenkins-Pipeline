@@ -16,6 +16,7 @@ object RubyToMIP extends ETLFrameWork {
 
     // create connection to CMDP database
     val srcConn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, "CMDP_PROD")
+    srcConn.setProperty("sslConnection", "true")
     val tgtDF = DataUtilities.readDataByPartitioningType(AppProperties.SparkSession,
       srcConn,
       xtrSql,
@@ -27,6 +28,7 @@ object RubyToMIP extends ETLFrameWork {
 
     // create connection to MIP database
     val tgtConn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, targetDB)
+    tgtConn.setProperty("sslConnection", "true")
 
     // run SQL to merge dataframe into target table
     DataUtilities.runPreparedStatement(
