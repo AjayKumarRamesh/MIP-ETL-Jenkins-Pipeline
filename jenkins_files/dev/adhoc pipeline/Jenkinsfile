@@ -84,7 +84,7 @@ pipeline {
             }
         }
         
-        stage('Image build') {
+        /*stage('Image build') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
@@ -103,9 +103,9 @@ pipeline {
                     sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
-        } //stage image build
-/*
-        stage('Image deploy to K8s') {
+        }*/ //stage image build
+
+        /*stage('Image deploy to K8s') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
