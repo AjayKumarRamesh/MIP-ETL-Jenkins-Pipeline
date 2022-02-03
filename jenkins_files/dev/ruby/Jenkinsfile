@@ -50,7 +50,7 @@ pipeline {
                     sh 'mvn -version'
                     sh 'ls -al'
                     sh 'mvn install:install-file -Dfile=groupId-ETL-Framework-2.1.jar -DgroupId=com.etlframework -DartifactId=base -Dversion=2.1 -Dpackaging=jar'
-                    sh 'mvn clean compile package -f RubytoMIP/pom.xml'
+                    sh 'mvn clean compile package -f RubyToMIP/pom.xml'
                 }
             } //steps
         } //stage
@@ -81,7 +81,7 @@ pipeline {
                     //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
                     sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
                     //Copy Maven artifacts to Spark jars folder
-                    sh 'cp -r RubytoMIP/target spark-3.0.1-bin-hadoop2.7/examples/jars'
+                    sh 'cp -r RubyToMIP/target spark-3.0.1-bin-hadoop2.7/examples/jars'
 
                 }
             }
