@@ -60,8 +60,7 @@ pipeline {
                 IBMCLOUD_COS_BUCKET = 'map-dev-01'
             }
  
-            steps{
-                sh 
+            steps{ 
                 dir("sourcecode/adhoc") {
                     sh 'ls -al'
                     //Prepare IBMCLOUD COS access
