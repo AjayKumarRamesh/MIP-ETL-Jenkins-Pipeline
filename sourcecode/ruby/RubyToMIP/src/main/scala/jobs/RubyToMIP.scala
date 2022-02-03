@@ -31,9 +31,12 @@ object RubyToMIP extends ETLFrameWork {
     // run SQL to merge dataframe into target table
     DataUtilities.runPreparedStatement(
       tgtConn,
-      tgtDF.columns,
       tgtDF,
-      tgtSql)
+      tgtSql,
+      tgtDF.columns,
+      null,
+      null,
+      null)
 
     val sourceRowCount = tgtDF.count().toInt
     val targetRowCount = sourceRowCount
@@ -59,7 +62,7 @@ object RubyToMIP extends ETLFrameWork {
         AppProperties.CommonJobSeqCode,
         0,
         Constants.JobStarted,
-        "GOOD LUCK")
+        s"$jobClassName Started", null, null)
 
 
       var sourceDB: String = null
@@ -145,7 +148,7 @@ object RubyToMIP extends ETLFrameWork {
         AppProperties.CommonJobSeqCode,
         0,
         Constants.JobSucceeded,
-        "")
+        s"Completed Job => $jobClassName.", null, null)
 
 
       log.info(s"Completed Job => $jobClassName.")
@@ -159,7 +162,7 @@ object RubyToMIP extends ETLFrameWork {
           AppProperties.CommonJobSeqCode,
           0,
           Constants.JobFailed,
-          s"e.getMessage - e.getCause")
+          e.getMessage + " - " + e.getCause, null, null)
       }
     } finally {
       this.cleanUpFramework(AppProperties.SparkSession)
