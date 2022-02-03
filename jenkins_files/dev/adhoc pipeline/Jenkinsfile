@@ -53,6 +53,7 @@ pipeline {
             }
  
             steps{
+                sh 'ls -al'
                 //Prepare IBMCLOUD COS access
                 sh "ibmcloud plugin install cloud-object-storage"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
