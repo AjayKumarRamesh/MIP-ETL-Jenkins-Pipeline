@@ -65,6 +65,7 @@ pipeline {
                 sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
                 sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/Universal-trustore.jks' spark-3.0.1-bin-hadoop2.7/cert/Universal-trustore.jks"
                 sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/marketo_sftp_pem.pem' spark-3.0.1-bin-hadoop2.7/cert/marketo_sftp_pem.pem"
+                sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/marketo_sftp_prod.pem' spark-3.0.1-bin-hadoop2.7/cert/marketo_sftp_prod.pem"
                 sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
                 //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
                 sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
