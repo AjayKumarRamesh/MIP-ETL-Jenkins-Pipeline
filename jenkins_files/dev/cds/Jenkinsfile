@@ -76,8 +76,8 @@ pipeline {
                     //Keystore files are uploaded to map-dev-01 bucket with jenkins-poc/ prefix
                     sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/digikeystore_old.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore_old.jks"
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/javacerts.jks' spark-3.0.1-bin-hadoop2.7/cert/javacerts.jks"
+                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/adhoc_certs/Universal-trustore.jks' spark-3.0.1-bin-hadoop2.7/cert/Universal-trustore.jks"
+                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/adhoc_certs/marketo_sftp_pem.pem' spark-3.0.1-bin-hadoop2.7/cert/marketo_sftp_pem.pem"
                     sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
                     //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
                     sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
