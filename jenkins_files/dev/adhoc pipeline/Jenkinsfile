@@ -81,7 +81,7 @@ pipeline {
                     //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
                     sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
                     //Copy Maven artifacts to Spark jars folder
-                    sh 'cp -r sourcecode/adhoc/target spark-3.0.1-bin-hadoop2.7/examples/jars'
+                    sh 'cp -r target/ spark-3.0.1-bin-hadoop2.7/examples/jars'
                 }
             }
         }
