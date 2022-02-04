@@ -99,9 +99,9 @@ pipeline {
                     sh "ibmcloud plugin list"
                     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                     sh "ibmcloud cr login"
-                    sh "docker build -t us.icr.io/map-dev-namespace/adhocdata_lead_xref_build-poc:jenkins -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
+                    sh "docker build -t us.icr.io/map-dev-namespace/adhocdata_lead_xref_build:jenkins -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
                     sh "docker images"
-                    sh "docker push us.icr.io/map-dev-namespace/adhocdata_lead_xref_build-poc:jenkins"
+                    sh "docker push us.icr.io/map-dev-namespace/adhocdata_lead_xref_build:jenkins"
                     sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
