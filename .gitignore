@@ -4,3 +4,4 @@
 cert
 jars
 *.log
+.DS_Store
