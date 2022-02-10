@@ -6,7 +6,7 @@
 
     <groupId>com.ibm.map</groupId>
     <artifactId>etl-framework-CDSJobs</artifactId>
-    <version>3.0</version>
+    <version>3.1</version>
 
     <properties>
         <scala.version>2.12.10</scala.version>
