@@ -77,8 +77,8 @@ pipeline {
                     sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/IWM/cert/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/IWM/cert/mrs_db2_cloud_stage.ks' spark-3.0.1-bin-hadoop2.7/cert/mrs_db2_cloud_stage.ks"
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/IWM/cert/mrs_db2_prod_cloud.jks' spark-3.0.1-bin-hadoop2.7/cert/mrs_db2_prod_cloud.jks"
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/IWM/cert/mrs_db2_test.jks' spark-3.0.1-bin-hadoop2.7/cert/mrs_db2_test.jks"
+                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/IWM/cert/mrs_db2_prod_cloud.ks' spark-3.0.1-bin-hadoop2.7/cert/mrs_db2_prod_cloud.ks"
+                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/IWM/cert/mrs_db2_test.ks' spark-3.0.1-bin-hadoop2.7/cert/mrs_db2_test.ks"
                     sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
                     //Copy db2jcc4.jar zip to spark jars folder
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
