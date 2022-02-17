@@ -5,3 +5,4 @@ cert
 jars
 *.log
 .DS_Store
+sourcecode/adhoc/.DS_Store
