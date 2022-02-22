@@ -1,6 +1,9 @@
 pipeline {
     agent any
-
+    environment {
+       CDS_IMAGE = 'cds-jobs:jenkins'                               //can be used in whole pipeline
+       CDS_APP_JAR = 'com.ibm.map-etl-framework-CDSJobs-3.1.jar'
+    }
     stages {
         stage('GitHub Checkout') {
             steps {
@@ -105,16 +108,15 @@ pipeline {
                     sh "ibmcloud plugin list"
                     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                     sh "ibmcloud cr login"
-                    sh "docker build -t us.icr.io/map-dev-namespace/cds-jobs-poc:jenkins -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
+                    sh "docker build -t us.icr.io/map-dev-namespace/${CDS_IMAGE} -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
                     sh "docker images"
-                    sh "docker push us.icr.io/map-dev-namespace/cds-jobs-poc:jenkins"
+                    sh "docker push us.icr.io/map-dev-namespace/${CDS_IMAGE}"
                     sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
         } //stage
         
-        /*
-        stage('Image deploy to K8s') {
+        stage('Image deploy to Airflow') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
@@ -125,9 +127,25 @@ pipeline {
                 sh "ibmcloud ks cluster config --cluster map-dal10-16x64-01"
                 sh "kubectl config current-context"
                 //sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
+            
+                script {
+                    env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                }
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set cds_image ${CDS_IMAGE}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set cds_app_jar ${CDS_APP_JAR}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_app_jar'"
+
+                
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause BDS_GEO_HIER"
+                
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause BDS_GEO_HIER"
             }
-        
-        } */ //stage
+        }  //stage
     } //stages
 } //pipeline
 

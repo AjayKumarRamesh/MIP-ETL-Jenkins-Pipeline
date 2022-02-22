@@ -3,7 +3,7 @@ pipeline {
     environment {
        RUBY_IMAGE = 'rubytomip:jenkins'                               //can be used in whole pipeline
        RUBY_APP_JAR = 'com.ibm.map-RubyToMIP-2.1.jar'
-   }
+    }
     stages {
         stage('GitHub Checkout') {
             steps {
