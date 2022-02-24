@@ -86,6 +86,7 @@ pipeline {
         stage('Validate DAG') {
             environment {
                 DAG_STATUS = ''
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
             steps {
                 //sh "ibmcloud plugin install container-service"
