@@ -84,6 +84,9 @@ pipeline {
             }
         }
         stage('Validate DAG') {
+            environment {
+                DAG_STATUS = ''
+            }
             //sh "ibmcloud plugin install container-service"
             sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
             sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
@@ -98,7 +101,10 @@ pipeline {
             sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${RUBY_DAG_ID}"
             script {
                         timeout(time: 2, unit: "HOURS") {
-                            
+                            while (DAG_STATUS != 'success') {
+                                DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID}", returnStdout: true).trim()
+                                sleep(10)
+                            }
                         }
             }
         }
