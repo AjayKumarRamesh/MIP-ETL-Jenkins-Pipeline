@@ -79,11 +79,13 @@ pipeline {
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
             }
         }
+        /**
         stage('Validate DAG') {
 
         }
         stage('Notification of Completion') {
 
         }
+        */
     }
 }
