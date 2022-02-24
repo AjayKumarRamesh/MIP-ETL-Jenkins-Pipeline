@@ -3,6 +3,7 @@ pipeline {
     environment {
        RUBY_IMAGE = ''                               //can be used in whole pipeline
        RUBY_APP_JAR = ''
+       RUBY_DAG_ID = 'RUBY_TO_MIP'
     }
     stages {
         stage('Request Approval') {
@@ -71,6 +72,9 @@ pipeline {
                 }
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
+
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${RUBY_DAG_ID}"
+
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_image ${RUBY_IMAGE}"
@@ -79,13 +83,34 @@ pipeline {
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
             }
         }
-        /**
         stage('Validate DAG') {
-
+            //sh "ibmcloud plugin install container-service"
+            sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+            sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
+            sh "kubectl config current-context"
+            //sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
+        
+            script {
+                env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+            }
+            sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow tasks clear ${RUBY_DAG_ID}"
+            sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${RUBY_DAG_ID}"
+            sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${RUBY_DAG_ID}"
+            script {
+                        timeout(time: 2, unit: "HOURS") {
+                            
+                        }
+            }
         }
         stage('Notification of Completion') {
-
+            post {
+                always {
+                emailext to: 'timothy.figgins1@ibm.com', 
+                    subject: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}!",
+                    body: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}: Check console output at ${env.BUILD_URL} to view the results."
+        
+                } //always
+            } //post
         }
-        */
     }
 }
