@@ -87,36 +87,40 @@ pipeline {
             environment {
                 DAG_STATUS = ''
             }
-            //sh "ibmcloud plugin install container-service"
-            sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
-            sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
-            sh "kubectl config current-context"
-            //sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
-        
-            script {
-                env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-            }
-            sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow tasks clear ${RUBY_DAG_ID}"
-            sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${RUBY_DAG_ID}"
-            sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${RUBY_DAG_ID}"
-            script {
-                        timeout(time: 2, unit: "HOURS") {
-                            while (DAG_STATUS != 'success') {
-                                DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID}", returnStdout: true).trim()
-                                sleep(10)
+            steps {
+                //sh "ibmcloud plugin install container-service"
+                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
+                sh "kubectl config current-context"
+                //sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
+            
+                script {
+                    env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                }
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow tasks clear ${RUBY_DAG_ID}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${RUBY_DAG_ID}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${RUBY_DAG_ID}"
+                script {
+                            timeout(time: 2, unit: "HOURS") {
+                                while (DAG_STATUS != 'success') {
+                                    DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID}", returnStdout: true).trim()
+                                    sleep(10)
+                                }
                             }
-                        }
+                }
             }
         }
         stage('Notification of Completion') {
-            post {
-                always {
-                emailext to: 'timothy.figgins1@ibm.com', 
-                    subject: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}!",
-                    body: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}: Check console output at ${env.BUILD_URL} to view the results."
-        
-                } //always
-            } //post
+            steps {
+                post {
+                    always {
+                    emailext to: 'timothy.figgins1@ibm.com', 
+                        subject: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}!",
+                        body: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}: Check console output at ${env.BUILD_URL} to view the results."
+            
+                    } //always
+                } //post
+            }
         }
     }
 }
