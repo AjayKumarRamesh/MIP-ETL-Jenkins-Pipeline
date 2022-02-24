@@ -105,6 +105,7 @@ pipeline {
                             timeout(time: 2, unit: "HOURS") {
                                 while (DAG_STATUS != 'success') {
                                     DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID}", returnStdout: true).trim()
+                                    sh "echo 'Checking DAG status: ${DAG_STATUS}'"
                                     sleep(10)
                                 }
                             }
