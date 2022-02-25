@@ -57,6 +57,7 @@ pipeline {
         }
         stage('Deploy Image to Airflow') {
             environment {
+                DAG_STATUS = 'running'
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
 
@@ -72,6 +73,16 @@ pipeline {
                 }
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
+
+                script {
+                            timeout(time: 2, unit: "HOURS") {
+                                while (DAG_STATUS == 'running') {
+                                    DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID}", returnStdout: true).trim()
+                                    sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
+                                    sleep(10)
+                                }
+                            }
+                }
 
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${RUBY_DAG_ID}"
 
@@ -98,7 +109,7 @@ pipeline {
                 script {
                     env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
                 }
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow tasks clear ${RUBY_DAG_ID}"
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow tasks clear ${RUBY_DAG_ID}"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${RUBY_DAG_ID}"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${RUBY_DAG_ID}"
                 script {
