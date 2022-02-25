@@ -59,6 +59,8 @@ pipeline {
         }
         stage('Deploy Image to Airflow') {
             environment {
+                DAG_EXECUTION_DATE = ''
+                DAG_CURRENT_RUN = ''
                 DAG_STATUS = 'running'
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
@@ -73,18 +75,23 @@ pipeline {
             
                 script {
                     env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    DAG_CURRENT_RUN = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list-runs -d ${RUBY_DAG_ID} --state running -o json", returnStdout: true).trim()
                 }
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
 
-                script {
-                            timeout(time: 2, unit: "HOURS") {
-                                while (DAG_STATUS == 'running') {
-                                    DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID}", returnStdout: true).trim()
-                                    sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
-                                    sleep(10)
+                if (DAG_CURRENT_RUN.length > 0) {
+                    def dag_run_object = readJSON text: DAG_CURRENT_RUN
+                    DAG_EXECUTION_DATE = dag_run_object['execution_date']
+                    script {
+                                timeout(time: 2, unit: "HOURS") {
+                                    while (DAG_STATUS == 'running') {
+                                        DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID} ${DAG_EXECUTION_DATE}", returnStdout: true).trim()
+                                        sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
+                                        sleep(10)
+                                    }
                                 }
-                            }
+                    }
                 }
 
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${RUBY_DAG_ID}"
