@@ -26,6 +26,7 @@ pipeline {
             }
 
             steps {
+                sh "ibmcloud config --check-version=false"
                 sh "ibmcloud plugin install container-service"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                 sh "ibmcloud ks cluster config --cluster map-dal10-16x64-01"
@@ -46,6 +47,7 @@ pipeline {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
             steps {
+                sh "ibmcloud config --check-version=false"
                 sh "ibmcloud plugin install container-registry"
                 sh "ibmcloud plugin list"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
@@ -62,6 +64,7 @@ pipeline {
             }
 
             steps {
+                sh "ibmcloud config --check-version=false"
                 //sh "ibmcloud plugin install container-service"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                 sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
@@ -100,6 +103,7 @@ pipeline {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
             steps {
+                sh "ibmcloud config --check-version=false"
                 //sh "ibmcloud plugin install container-service"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                 sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
