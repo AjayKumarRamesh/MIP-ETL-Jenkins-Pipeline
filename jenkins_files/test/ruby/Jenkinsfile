@@ -80,19 +80,20 @@ pipeline {
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
 
-                if (DAG_CURRENT_RUN.length > 0) {
-                    def dag_run_object = readJSON text: DAG_CURRENT_RUN
-                    DAG_EXECUTION_DATE = dag_run_object['execution_date']
-                    script {
-                                timeout(time: 2, unit: "HOURS") {
+                script {
+                            timeout(time: 2, unit: "HOURS") {
+                                if (DAG_CURRENT_RUN.length > 0) {
+                                    def dag_run_object = readJSON text: DAG_CURRENT_RUN
+                                    DAG_EXECUTION_DATE = dag_run_object['execution_date']
                                     while (DAG_STATUS == 'running') {
                                         DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID} ${DAG_EXECUTION_DATE}", returnStdout: true).trim()
                                         sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
                                         sleep(10)
                                     }
                                 }
-                    }
+                            }
                 }
+                
 
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${RUBY_DAG_ID}"
 
