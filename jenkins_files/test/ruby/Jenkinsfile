@@ -6,7 +6,6 @@ pipeline {
        RUBY_DAG_ID = 'RUBY_TO_MIP'
     }
     stages {
-        /**
         stage('Request Approval') {
             steps {
                 script {
@@ -58,7 +57,6 @@ pipeline {
                 sh "docker push us.icr.io/mip-test-namespace/${RUBY_IMAGE}"
             }
         }
-        */
         stage('Deploy Image to Airflow') {
             environment {
                 DAG_EXECUTION_DATE = ''
@@ -131,11 +129,20 @@ pipeline {
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${RUBY_DAG_ID}"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${RUBY_DAG_ID}"
                 script {
+                    DAG_CURRENT_RUN = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list-runs -d ${RUBY_DAG_ID} --state running -o json", returnStdout: true).trim()
                             timeout(time: 2, unit: "HOURS") {
-                                while (DAG_STATUS != 'success') {
-                                    DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID}", returnStdout: true).trim()
-                                    sh "echo 'Checking DAG status: ${DAG_STATUS}'"
-                                    sleep(10)
+                                def dag_run_object = readJSON text: DAG_CURRENT_RUN
+                                if (dag_run_object.size() > 0) {
+                                    //def dag_run_object = readJSON text: DAG_CURRENT_RUN
+                                    DAG_EXECUTION_DATE = dag_run_object[0]['execution_date']
+                                    while (DAG_STATUS != 'success') {
+                                        DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID} ${DAG_EXECUTION_DATE} | grep success", returnStdout: true).trim()
+                                        sh "echo 'Checking DAG status for success: ${DAG_STATUS}'"
+                                        sleep(10)
+                                    }
+                                    sh "echo DAG no longer in run state, continuing with deployment."
+                                } else {
+                                    sh "echo 'No current ${RUBY_DAG_ID} DAGs found running.'"
                                 }
                             }
                 }
