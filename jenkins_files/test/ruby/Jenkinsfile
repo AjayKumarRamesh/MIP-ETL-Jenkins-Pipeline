@@ -87,12 +87,14 @@ pipeline {
                                 def dag_run_object = readJSON text: DAG_CURRENT_RUN
                                 if (dag_run_object.size() > 0) {
                                     //def dag_run_object = readJSON text: DAG_CURRENT_RUN
-                                    DAG_EXECUTION_DATE = dag_run_object['execution_date']
+                                    DAG_EXECUTION_DATE = dag_run_object[0]['execution_date']
                                     while (DAG_STATUS == 'running') {
                                         DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID} ${DAG_EXECUTION_DATE}", returnStdout: true).trim()
                                         sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
                                         sleep(10)
                                     }
+                                } else {
+                                    sh "echo 'No current ${RUBY_DAG_ID} DAGs found running.'"
                                 }
                             }
                 }
