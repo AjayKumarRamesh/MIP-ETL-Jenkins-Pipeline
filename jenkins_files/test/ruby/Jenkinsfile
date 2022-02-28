@@ -93,6 +93,7 @@ pipeline {
                                         sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
                                         sleep(10)
                                     }
+                                    sh "echo DAG no longer in run state, continuing with deployment."
                                 } else {
                                     sh "echo 'No current ${RUBY_DAG_ID} DAGs found running.'"
                                 }
