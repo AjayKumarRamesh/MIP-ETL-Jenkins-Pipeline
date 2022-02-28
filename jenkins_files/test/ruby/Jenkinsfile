@@ -113,7 +113,7 @@ pipeline {
             environment {
                 DAG_EXECUTION_DATE = ''
                 DAG_CURRENT_RUN = ''
-                DAG_STATUS = ''
+                DAG_STATUS = 'running'
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
             steps {
