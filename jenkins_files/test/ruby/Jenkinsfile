@@ -89,7 +89,7 @@ pipeline {
                                     //def dag_run_object = readJSON text: DAG_CURRENT_RUN
                                     DAG_EXECUTION_DATE = dag_run_object[0]['execution_date']
                                     while (DAG_STATUS == 'running') {
-                                        DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID} ${DAG_EXECUTION_DATE}", returnStdout: true).trim()
+                                        DAG_STATUS = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID} ${DAG_EXECUTION_DATE} | grep running", returnStdout: true).trim()
                                         sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
                                         sleep(10)
                                     }
