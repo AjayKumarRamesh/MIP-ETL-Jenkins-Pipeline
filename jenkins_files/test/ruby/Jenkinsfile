@@ -111,6 +111,8 @@ pipeline {
         }
         stage('Validate DAG') {
             environment {
+                DAG_EXECUTION_DATE = ''
+                DAG_CURRENT_RUN = ''
                 DAG_STATUS = ''
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
