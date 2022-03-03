@@ -157,7 +157,7 @@ pipeline {
         }
         stage('Notification of Completion') {
             steps {
-                post {
+                script {
                     always {
                     emailext to: 'timothy.figgins1@ibm.com', 
                         subject: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}!",
