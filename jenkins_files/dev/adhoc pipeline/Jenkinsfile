@@ -111,6 +111,30 @@ pipeline {
             }
         } //stage image build
 
+        stage('Image deploy to Airflow') {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+
+            steps {
+                sh "ibmcloud plugin install container-service"
+                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                sh "ibmcloud ks cluster config --cluster map-dal10-16x64-01"
+                sh "kubectl config current-context"
+                //sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
+            
+                script {
+                    env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                }
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set cds_image ${CDS_IMAGE}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set cds_app_jar ${CDS_APP_JAR}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_app_jar'"
+
         /*stage('Image deploy to K8s') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
