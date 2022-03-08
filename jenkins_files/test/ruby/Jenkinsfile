@@ -134,8 +134,8 @@ pipeline {
                     DAG_CURRENT_RUN = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list-runs -d ${RUBY_DAG_ID} --state running -o json", returnStdout: true).trim()
                 }
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow tasks clear ${RUBY_DAG_ID}"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${RUBY_DAG_ID}"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${RUBY_DAG_ID}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${RUBY_DAG_ID}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${RUBY_DAG_ID}"
                 script {
                             timeout(time: 2, unit: "HOURS") {
                                 def dag_run_object = readJSON text: DAG_CURRENT_RUN
