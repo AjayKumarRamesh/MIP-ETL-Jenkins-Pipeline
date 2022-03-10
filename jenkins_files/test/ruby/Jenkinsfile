@@ -165,6 +165,7 @@ pipeline {
         stage('Notification of Completion') {
             steps { 
                 sh "echo 'TEST'"
+                sh "exit 1"
             }
         }
     }
