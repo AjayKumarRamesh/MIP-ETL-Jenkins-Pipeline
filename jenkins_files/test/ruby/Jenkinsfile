@@ -141,6 +141,7 @@ pipeline {
                     sleep(10)
                             timeout(time: 2, unit: "HOURS") {
                                 def dag_run_object = readJSON text: DAG_CURRENT_RUN
+                                sh "echo ${dag_run_object}"
                                 if (dag_run_object.size() > 0) {
                                     //def dag_run_object = readJSON text: DAG_CURRENT_RUN
                                     DAG_EXECUTION_DATE = dag_run_object[0]['execution_date']
