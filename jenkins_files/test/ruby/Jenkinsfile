@@ -194,6 +194,10 @@ pipeline {
             sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
             sh "kubectl config current-context"
 
+            script {
+                env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+            }
+
             sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_image ${STABLE_IMAGE}"
             sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_app_jar ${STABLE_JAR}"
             sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'"
