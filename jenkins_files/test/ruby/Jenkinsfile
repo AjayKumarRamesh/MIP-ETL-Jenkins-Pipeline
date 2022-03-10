@@ -160,7 +160,11 @@ pipeline {
             }
         }
         */
-        //stage('Notification of Completion') {
+        stage('Notification of Completion') {
+            steps {
+                sh "echo 'Test'"
+            }
+        }
         post {
             always {
             emailext to: 'timothy.figgins1@ibm.com', 
