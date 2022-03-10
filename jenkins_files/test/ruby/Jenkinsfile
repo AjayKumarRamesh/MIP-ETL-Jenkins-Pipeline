@@ -188,7 +188,7 @@ pipeline {
                 env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
         
                 env.STABLE_IMAGE = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'", returnStdout: true).trim()
-                env.STABLE_JAR = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_jar'", returnStdout: true).trim()
+                env.STABLE_JAR = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'", returnStdout: true).trim()
             }
 
             sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
