@@ -162,7 +162,9 @@ pipeline {
         */
         //}
         stage('Notification of Completion') {
-            steps { }
+            steps { 
+                sh "echo 'TEST'"
+            }
         }
     }
     post {
