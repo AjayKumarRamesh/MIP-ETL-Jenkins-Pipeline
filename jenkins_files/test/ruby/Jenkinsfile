@@ -147,7 +147,7 @@ pipeline {
                                     DAG_EXECUTION_DATE = dag_run_object[0]['execution_date']
                                     sh "echo ${DAG_EXECUTION_DATE}"
                                     while (DAG_STATUS != 'success') {
-                                        DAG_STATUS = sh(script:"""kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID} ${DAG_EXECUTION_DATE} | egrep "running|failed|success"""", returnStdout: true).trim()
+                                        DAG_STATUS = sh(script:"""kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${RUBY_DAG_ID} ${DAG_EXECUTION_DATE} | egrep 'running|failed|success'""", returnStdout: true).trim()
                                         sh "echo 'Checking DAG status for success: ${DAG_STATUS}'"
                                         sleep(10)
                                     }
