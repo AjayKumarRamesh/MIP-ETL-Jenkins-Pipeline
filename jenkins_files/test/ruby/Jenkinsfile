@@ -160,20 +160,18 @@ pipeline {
             }
         }
         */
-        
-        post {
-            stage('Notification of Completion') {
-                steps {
-                    always {
-                    emailext to: 'timothy.figgins1@ibm.com', 
-                        subject: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}!",
-                        body: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}: Check console output at ${env.BUILD_URL} to view the results."
-            
-                    } //always
-                        //post
-                }   
-            }
-        }
         //}
+        stage('Notification of Completion') {
+            steps { }
+        }
+    }
+    post {
+        always {
+        emailext to: 'timothy.figgins1@ibm.com', 
+            subject: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}!",
+            body: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}: Check console output at ${env.BUILD_URL} to view the results."
+
+        } //always
+            //post
     }
 }
