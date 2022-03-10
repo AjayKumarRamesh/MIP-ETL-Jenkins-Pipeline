@@ -4,6 +4,7 @@ pipeline {
        RUBY_IMAGE = ''                               //can be used in whole pipeline
        RUBY_APP_JAR = ''
        RUBY_DAG_ID = 'RUBY_TO_MIP'
+       IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
     }
     stages {
         /*
@@ -168,9 +169,6 @@ pipeline {
         }
     }
     post {
-        environment {
-            IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
-        }
         always {
         emailext to: 'timothy.figgins1@ibm.com', 
             subject: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}!",
