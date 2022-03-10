@@ -177,9 +177,7 @@ pipeline {
 
         }
         failure {
-            script {
-                env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-            }
+            
             sh "ibmcloud config --check-version=false"
             sh "ibmcloud plugin install container-service"
             sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
@@ -187,6 +185,8 @@ pipeline {
             sh "kubectl config current-context"
 
             script {
+                env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+        
                 env.STABLE_IMAGE = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'", returnStdout: true).trim()
                 env.STABLE_JAR = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_jar'", returnStdout: true).trim()
             }
