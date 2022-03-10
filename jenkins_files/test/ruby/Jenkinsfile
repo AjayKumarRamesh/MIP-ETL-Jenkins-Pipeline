@@ -58,7 +58,7 @@ pipeline {
                 sh "docker push us.icr.io/mip-test-namespace/${RUBY_IMAGE}"
             }
         }
-        */
+        *
         stage('Deploy Image to Airflow') {
             environment {
                 DAG_EXECUTION_DATE = ''
@@ -110,7 +110,7 @@ pipeline {
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_app_jar ${RUBY_APP_JAR}"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
-                */
+                *
             }
         }
         stage('Validate DAG') {
@@ -159,17 +159,17 @@ pipeline {
                 }
             }
         }
-        stage('Notification of Completion') {
-            steps {
-                script {
-                    always {
-                    emailext to: 'timothy.figgins1@ibm.com', 
-                        subject: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}!",
-                        body: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}: Check console output at ${env.BUILD_URL} to view the results."
-            
-                    } //always
-                } //post
-            }
+        */
+        //stage('Notification of Completion') {
+        post {
+            always {
+            emailext to: 'timothy.figgins1@ibm.com', 
+                subject: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}!",
+                body: "${env.PROJECT_NAME} - Build # ${env.BUILD_NUMBER} - ${env.BUILD_STATUS}: Check console output at ${env.BUILD_URL} to view the results."
+    
+            } //always
+                //post
         }
+        //}
     }
 }
