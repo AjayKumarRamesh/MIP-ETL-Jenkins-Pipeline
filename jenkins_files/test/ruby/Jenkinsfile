@@ -174,8 +174,8 @@ pipeline {
     post {
         always {
         emailext to: 'timothy.figgins1@ibm.com', 
-            subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${${currentBuild.currentResult}}!",
-            body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${${currentBuild.currentResult}}: Check console output at ${env.BUILD_URL} to view the results."
+            subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
+            body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}: Check console output at ${env.BUILD_URL} to view the results."
 
         }
         /*
