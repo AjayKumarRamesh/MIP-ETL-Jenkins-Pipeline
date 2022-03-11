@@ -13,8 +13,8 @@ pipeline {
                 script {
                         timeout(time: 2, unit: "HOURS") {
                             emailext to: 'timothy.figgins1@ibm.com', 
-                                subject: "$PROJECT_NAME - Build # $BUILD_NUMBER - Approval for deployment required!",
-                                body: "$PROJECT_NAME - Build # $BUILD_NUMBER - The message here must include more information about what is going to be deployed \n approve required: ${BUILD_URL}/input"
+                                subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - Approve deploy required!",
+                                body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - The message here must include more information about what is going to be deployed \n approve required: ${BUILD_URL}/input "
                             
                             input message: 'The message here must include more information about what is going to be deployed\n Approve Deploy?', ok: 'Yes',
                                 submitter: 'timothy.figgins1@ibm.com'
@@ -169,7 +169,6 @@ pipeline {
                 sh "exit 1"
             }
         }
-        */
     }
     /*
     post {
