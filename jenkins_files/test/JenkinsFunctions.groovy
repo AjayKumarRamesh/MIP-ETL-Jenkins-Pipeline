@@ -4,7 +4,9 @@ dags = [RUBY_TO_MIP:"Found me"]
 
 def getCerts(String dag_ID) {
     sh "echo '${dag_ID}'"
-    assertTrue(dags[dag_ID] == "Found me")
+    if (dags[dag_ID] == "Found me") {
+        sh "echo 'Yes'"
+    }
 }
 
 def test() {
