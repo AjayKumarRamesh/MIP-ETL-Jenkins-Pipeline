@@ -5,4 +5,8 @@ def getCerts(String dag_ID) {
     assertTrue(dags[dag_ID] == "Found me")
 }
 
+def test() {
+    sh "echo 'test'"
+}
+
 return this

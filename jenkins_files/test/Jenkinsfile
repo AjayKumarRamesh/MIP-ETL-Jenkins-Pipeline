@@ -19,7 +19,7 @@ pipeline {
                 }
                 sh "echo '${DAG_NAME_PIPELINE}'"
                 script {
-                    JENKINS_FUNC.getCerts("RUBY_TO_MIP")
+                    JENKINS_FUNC.test()
                 }
             }
         }
