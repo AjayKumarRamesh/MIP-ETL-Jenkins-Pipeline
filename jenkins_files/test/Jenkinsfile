@@ -3,9 +3,19 @@ pipeline {
     environment {
        IMAGE_TAG = ''                               //can be used in whole pipeline
        APP_JAR = ''
-       DAG_ID = "${env.DAG_ID}"
+       DAG_ID = params.DAG_NAME
+       DAG_NAME_PIPELINE = "${DAG_NAME}"
        IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
     }
+    stages{
+        stage('Echo parameters') {
+            steps {
+                sh "echo ${DAG_ID}"
+                sh "echo ${DAG_NAME_PIPELINE}"
+            }
+        }
+    }
+    /**
     stages {
         stage('Request Approval') {
             steps {
@@ -121,7 +131,7 @@ pipeline {
             }
             steps {
                 sh "ibmcloud config --check-version=false"
-                //sh "ibmcloud plugin install container-service"
+                sh "ibmcloud plugin install container-service"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                 sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
                 sh "kubectl config current-context"
@@ -166,7 +176,7 @@ pipeline {
                 sh "exit 1"
             }
         }
-        */
+        *
     }
     post {
         always {
@@ -204,4 +214,5 @@ pipeline {
             sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
         } 
     }
+    */
 }
