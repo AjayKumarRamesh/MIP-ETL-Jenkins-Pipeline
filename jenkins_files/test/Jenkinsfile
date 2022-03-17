@@ -5,7 +5,7 @@ pipeline {
        APP_JAR = ''
        //DAG_ID = params.DAG_NAME
        DAG_NAME_PIPELINE = "${DAG_NAME}"
-       JENKINS_FUNC = load "JenkinsFunctions.Groovy"
+       JENKINS_FUNC = load "./JenkinsFunctions.Groovy"
        IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
     }
     stages{
