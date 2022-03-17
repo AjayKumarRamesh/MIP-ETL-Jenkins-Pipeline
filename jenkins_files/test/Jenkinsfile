@@ -18,7 +18,9 @@ pipeline {
                     }
                 }
                 sh "echo '${DAG_NAME_PIPELINE}'"
-                JENKINS_FUNC.getCerts(DAG_NAME_PIPELINE)
+                script {
+                    JENKINS_FUNC.getCerts(DAG_NAME_PIPELINE)
+                }
             }
         }
     }
