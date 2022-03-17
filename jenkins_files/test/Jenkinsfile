@@ -3,15 +3,18 @@ pipeline {
     environment {
        IMAGE_TAG = ''                               //can be used in whole pipeline
        APP_JAR = ''
-       DAG_ID = params.DAG_NAME
+       //DAG_ID = params.DAG_NAME
        DAG_NAME_PIPELINE = "${DAG_NAME}"
        IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
     }
     stages{
         stage('Echo parameters') {
             steps {
-                sh "echo ${DAG_ID}"
-                sh "echo ${DAG_NAME_PIPELINE}"
+                //sh "echo ${DAG_ID}"
+                if (params.DAG_NAME == "RUBY_TO_MIP") {
+                    sh "echo 'True'"
+                }
+                sh "echo '${DAG_NAME_PIPELINE}'"
             }
         }
     }
