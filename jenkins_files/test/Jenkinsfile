@@ -21,6 +21,7 @@ pipeline {
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.test()
+                    JENKINS_FUNC.getCerts(DAG_NAME_PIPELINE)
                 }
             }
         }
