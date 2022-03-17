@@ -1,4 +1,6 @@
-def dags = [RUBY_TO_MIP:"Found me"]
+import groovy.transform.Field
+
+dags = [RUBY_TO_MIP:"Found me"]
 
 def getCerts(String dag_ID) {
     sh "echo '${dag_ID}'"
