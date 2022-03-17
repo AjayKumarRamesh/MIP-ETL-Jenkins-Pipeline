@@ -10,9 +10,11 @@ pipeline {
     stages{
         stage('Echo parameters') {
             steps {
-                //sh "echo ${DAG_ID}"
-                if (params.DAG_NAME == "RUBY_TO_MIP") {
-                    sh "echo 'True'"
+                script {
+                    //sh "echo ${DAG_ID}"
+                    if (params.DAG_NAME == "RUBY_TO_MIP") {
+                        sh "echo 'True'"
+                    }
                 }
                 sh "echo '${DAG_NAME_PIPELINE}'"
             }
