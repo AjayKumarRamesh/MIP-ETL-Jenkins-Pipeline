@@ -30,7 +30,7 @@ pipeline {
                script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", true)
-                    JENKINS_FUNC.moveImage("rubytomip:jenkins", "dev", "test")
+                    JENKINS_FUNC.moveImage("rubytomip:jenkins", "map-dev", "mip-test")
                 } 
             }
         }
