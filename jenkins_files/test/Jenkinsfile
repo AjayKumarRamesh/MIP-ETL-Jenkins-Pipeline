@@ -25,6 +25,15 @@ pipeline {
                 }
             }
         }
+        stage('Move Images') {
+            steps {
+               script {
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", true)
+                    JENKINS_FUNC.moveImage("rubytomip:jenkins", "dev", "test")
+                } 
+            }
+        }
     }
     /**
     stages {

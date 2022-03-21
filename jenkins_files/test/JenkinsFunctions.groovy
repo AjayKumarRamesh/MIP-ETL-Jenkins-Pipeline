@@ -49,12 +49,12 @@ def checkDagStatus(String airflow_pod, String dag_ID, String status) {
 
 }
 
-def moveImage() {
-    //move images from dev to test 
+def moveImage(String image, String source_env, String dest_env) {
+    //move images from dev to test (or source to dest)
     sh "ibmcloud cr login"
-    sh "docker pull us.icr.io/map-dev-namespace/${RUBY_IMAGE}"
-    sh "docker tag us.icr.io/map-dev-namespace/${RUBY_IMAGE} us.icr.io/mip-test-namespace/${RUBY_IMAGE}"
-    sh "docker push us.icr.io/mip-test-namespace/${RUBY_IMAGE}"
+    sh "docker pull us.icr.io/${source_env}-namespace/${image}"
+    sh "docker tag us.icr.io/${source_env}-namespace/${image} us.icr.io/${dest_env}-namespace/${image}"
+    sh "docker push us.icr.io/${dest_env}-namespace/${image}"
 }
 
 return this
