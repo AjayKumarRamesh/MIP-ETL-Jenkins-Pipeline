@@ -1,7 +1,7 @@
 import groovy.transform.Field
 
 dags = [RUBY_TO_MIP:"Found me"]
-envNum = [dev:1,test:2,:prod:3]
+envNum = [dev:1,test:2,prod:3]
 
 def getCerts(String dag_ID) {
     sh "echo '${dag_ID}'"
