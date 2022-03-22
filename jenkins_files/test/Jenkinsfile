@@ -9,6 +9,7 @@ pipeline {
        IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
     }
     stages{
+        /**
         stage('Echo parameters') {
             steps {
                 script {
@@ -25,12 +26,19 @@ pipeline {
                 }
             }
         }
+        */
         stage('Move Images') {
             steps {
                script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", true)
+                    env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_NAME_PIPELINE)
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${DAG_NAME_PIPELINE}"
                     JENKINS_FUNC.moveImage("rubytomip:jenkins", "map-dev", "mip-test")
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${DAG_NAME_PIPELINE}"
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${DAG_NAME_PIPELINE}"
+                    JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_NAME_PIPELINE)
                 } 
             }
         }

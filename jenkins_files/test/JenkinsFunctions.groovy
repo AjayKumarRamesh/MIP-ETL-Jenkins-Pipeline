@@ -26,7 +26,7 @@ def cloudLogin(String credentials, String env, boolean install) {
     sh "kubectl config current-context"
 }
 
-def checkDagStatus(String airflow_pod, String dag_ID, String status) {
+def checkDagStatus(String airflow_pod, String dag_ID) {
     //while loop checking for status 
     //AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
     DAG_CURRENT_RUN = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow dags list-runs -d ${dag_ID} --state running -o json", returnStdout: true).trim()
@@ -36,7 +36,7 @@ def checkDagStatus(String airflow_pod, String dag_ID, String status) {
         if (dag_run_object.size() > 0) {
             //def dag_run_object = readJSON text: DAG_CURRENT_RUN
             DAG_EXECUTION_DATE = dag_run_object[0]['execution_date']
-            while (DAG_STATUS == status) {
+            while (DAG_STATUS != "success") {
                 DAG_STATUS = sh(script:"""kubectl exec -n airflow ${airflow_pod} -- airflow dags state ${dag_ID} ${DAG_EXECUTION_DATE} | egrep 'running|failed|success'""", returnStdout: true).trim()
                 sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
                 sleep(10)
