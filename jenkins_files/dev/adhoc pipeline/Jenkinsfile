@@ -1,16 +1,18 @@
 pipeline {
+    
     agent any
     environment {
        ADHOC_IMAGE = 'adhocdata_lead_xref:jenkins'                               //can be used in whole pipeline
        ADHOC_APP_JAR = 'MIP-adhoc-ETL-Framework-1.1.jar'
     }
+
     stages {
         stage('GitHub Checkout') {
             steps {
                 git credentialsId: 'sangita_id_rsa' ,
                 url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'
-            }// steps to base framework jar checkout 
-        } //stage
+            }
+        }
         
         stage('Flare ETL Framework download'){
             environment {
@@ -21,7 +23,6 @@ pipeline {
             steps{
                 dir("sourcecode/adhoc") {
                     sh "pwd"
-                
                     sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
                     sh 'ls -al'
 
@@ -49,13 +50,12 @@ pipeline {
                 dir("sourcecode/adhoc") {
                     sh "pwd"
                     sh 'ls -al'
-                    //sh 'mvn install:install-file -Dfile=ETL-Framework-2.0-jar-with-dependencies.jar -DgroupId=com.etlframework -DartifactId=base -Dversion=2.0 -Dpackaging=jar'
                     sh 'mvn install:install-file -Dfile=groupId-ETL-Framework-2.1.jar -DgroupId=com.etlframework -DartifactId=base -Dversion=2.1 -Dpackaging=jar'
                     sh 'mvn clean compile package -f pom.xml '
                     
                 }
-            } //steps
-        } //stage
+            }
+        }
 
         stage('Move files') {
             environment {
@@ -112,7 +112,7 @@ pipeline {
                     sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
-        } //stage image build
+        }
 
         stage('Image deploy to Airflow') {
             environment {
@@ -140,21 +140,5 @@ pipeline {
             }
         }
 
-        /*stage('Image deploy to K8s') {
-            environment {
-                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
-            }
-
-            steps {
-                dir("sourcecode/adhoc") {
-                    sh "pwd"
-                    sh "ibmcloud plugin install container-service"
-                    sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
-                    sh "ibmcloud ks cluster config --cluster map-dal10-16x64-01"
-                    sh "kubectl config current-context"
-                    sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
-                }   
-            }
-        }*/
     } //stages
 } //pipeline
