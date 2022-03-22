@@ -137,6 +137,7 @@ pipeline {
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set adhoc_app_jar ${ADHOC_APP_JAR}"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_xref_image'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_app_jar'"
+            }
         }
 
         /*stage('Image deploy to K8s') {
