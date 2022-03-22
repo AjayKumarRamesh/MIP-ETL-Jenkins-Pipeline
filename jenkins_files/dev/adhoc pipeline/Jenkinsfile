@@ -1,5 +1,5 @@
 pipeline {
-    
+
     agent any
     environment {
        ADHOC_IMAGE = 'adhocdata_lead_xref:jenkins'                               //can be used in whole pipeline
@@ -57,7 +57,7 @@ pipeline {
             }
         }
 
-        stage('Move files') {
+        stage('Get files from COS') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
                 IBMCLOUD_COS_CRN = 'bda9a48c-574e-4be0-b2ff-62f2d0f23ead'
@@ -93,7 +93,7 @@ pipeline {
             }
         }
         
-        stage('Image build and Push') {
+        stage('Image build and push to container registry') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
@@ -114,7 +114,7 @@ pipeline {
             }
         }
 
-        stage('Image deploy to Airflow') {
+        stage('Prepare image deploy to Airflow') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
@@ -124,13 +124,10 @@ pipeline {
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                 sh "ibmcloud ks cluster config --cluster map-dal10-16x64-01"
                 sh "kubectl config current-context"
-                //sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
-            
+                
                 script {
                     env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
                 }
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_xref_image'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_app_jar'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set adhoc_xref_image ${ADHOC_IMAGE}"
