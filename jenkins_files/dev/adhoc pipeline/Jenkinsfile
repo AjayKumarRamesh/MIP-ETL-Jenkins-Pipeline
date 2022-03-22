@@ -1,6 +1,9 @@
 pipeline {
     agent any
-
+    environment {
+       ADHOC_IMAGE = 'adhocdata_lead_xref:jenkins'                               //can be used in whole pipeline
+       ADHOC_APP_JAR = 'MIP-adhoc-ETL-Framework-1.1.jar'
+    }
     stages {
         stage('GitHub Checkout') {
             steps {
@@ -9,7 +12,7 @@ pipeline {
             }// steps to base framework jar checkout 
         } //stage
         
-                stage('Flare ETL Framework download'){
+        stage('Flare ETL Framework download'){
             environment {
                 GITHUB_API_TOKEN = credentials('github_api_token')
                 GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flarelets-Developer/releases/assets/608129"
@@ -54,7 +57,7 @@ pipeline {
             } //steps
         } //stage
 
-                stage('Move files') {
+        stage('Move files') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
                 IBMCLOUD_COS_CRN = 'bda9a48c-574e-4be0-b2ff-62f2d0f23ead'
@@ -90,7 +93,7 @@ pipeline {
             }
         }
         
-        stage('Image build') {
+        stage('Image build and Push') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
@@ -128,12 +131,12 @@ pipeline {
                 }
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_image'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_app_jar'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set cds_image ${CDS_IMAGE}"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set cds_app_jar ${CDS_APP_JAR}"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_image'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'cds_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_xref_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set adhoc_xref_image ${ADHOC_IMAGE}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set adhoc_app_jar ${ADHOC_APP_JAR}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_xref_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_app_jar'"
 
         /*stage('Image deploy to K8s') {
             environment {
