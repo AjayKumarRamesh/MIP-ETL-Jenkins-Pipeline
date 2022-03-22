@@ -30,7 +30,7 @@ def checkDagStatus(String airflow_pod, String dag_ID) {
     //while loop checking for status 
     //AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
     DAG_CURRENT_RUN = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow dags list-runs -d ${dag_ID} --state running -o json", returnStdout: true).trim()
-
+    DAG_STATUS = ""
     timeout(time: 2, unit: "HOURS") {
         def dag_run_object = readJSON text: DAG_CURRENT_RUN
         if (dag_run_object.size() > 0) {
