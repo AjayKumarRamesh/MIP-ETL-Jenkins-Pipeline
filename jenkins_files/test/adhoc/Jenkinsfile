@@ -36,7 +36,7 @@ pipeline {
             
                 script {
                     env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-                    ADHOC_IMAGE = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_image'", returnStdout: true).trim()
+                    ADHOC_IMAGE = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_xref_image'", returnStdout: true).trim()
                     ADHOC_APP_JAR = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'adhoc_app_jar'", returnStdout: true).trim()
                 }
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
