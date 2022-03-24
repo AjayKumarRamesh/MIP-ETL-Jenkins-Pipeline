@@ -107,8 +107,12 @@ pipeline {
                     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                     sh "ibmcloud cr login"
                     sh "docker build -t us.icr.io/map-dev-namespace/adhocdata_lead_xref:jenkins -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
+                    echo "build number: ${env.BUILD_NUMBER}"
+                    sh "docker images"
+                    sh "docker tag us.icr.io/map-dev-namespace/adhocdata_lead_xref:jenkins us.icr.io/map-dev-namespace/adhocdata_lead_xref:${env.BUILD_NUMBER}"
                     sh "docker images"
                     sh "docker push us.icr.io/map-dev-namespace/adhocdata_lead_xref:jenkins"
+                    sh "docker push us.icr.io/map-dev-namespace/adhocdata_lead_xref:${env.BUILD_NUMBER}"
                     sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
