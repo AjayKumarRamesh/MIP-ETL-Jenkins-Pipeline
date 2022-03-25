@@ -1,6 +1,7 @@
 import groovy.transform.Field
 
 dags = [RUBY_TO_MIP:"Found me"]
+airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar']]
 envNum = [dev:1,test:2,prod:3]
 
 def getCerts(String dag_ID) {
@@ -55,6 +56,24 @@ def moveImage(String image, String source_env, String dest_env) {
     sh "docker pull us.icr.io/${source_env}-namespace/${image}"
     sh "docker tag us.icr.io/${source_env}-namespace/${image} us.icr.io/${dest_env}-namespace/${image}"
     sh "docker push us.icr.io/${dest_env}-namespace/${image}"
+}
+
+def getAirflowVars(String airflow_pod, String dag_ID) {
+
+    def image_ref = sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][0]}"
+    def jar_ref = sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][1]}"
+
+    return [image_ref, jar_ref]
+    /**
+    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_image ${RUBY_IMAGE}"
+    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_app_jar ${RUBY_APP_JAR}"
+    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'"
+    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
+    */
+}
+
+def setAirflowVars(String airflow_pod, String dag_ID, String image, String jar) {
+
 }
 
 return this
