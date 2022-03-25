@@ -60,8 +60,8 @@ def moveImage(String image, String source_env, String dest_env) {
 
 def getAirflowVars(String airflow_pod, String dag_ID) {
 
-    def image_ref = sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][0]}"
-    def jar_ref = sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][1]}"
+    image_ref = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][0]}", returnStdout: true).trim()
+    jar_ref = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][1]}", returnStdout: true).trim()
 
     return [image_ref, jar_ref]
     /**
