@@ -48,6 +48,7 @@ pipeline {
             }
         }
     }*/
+    /*
     stages {
         stage('Request Approval') {
             steps {
@@ -63,6 +64,7 @@ pipeline {
                 }
             }
         }
+        */
         stage('Get DEV image and jar refernece') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
@@ -96,6 +98,7 @@ pipeline {
 
             }
         }
+        /*
         stage('Tag and Push Image') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
@@ -116,8 +119,8 @@ pipeline {
                 sh "docker pull us.icr.io/map-dev-namespace/${IMAGE_TAG}"
                 sh "docker tag us.icr.io/map-dev-namespace/${IMAGE_TAG} us.icr.io/mip-test-namespace/${IMAGE_TAG}"
                 sh "docker push us.icr.io/mip-test-namespace/${IMAGE_TAG}"
-                */
-            }
+                *
+            }*/
         }
         stage('Deploy Image to Airflow') {
             environment {
@@ -134,9 +137,9 @@ pipeline {
                     JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, true)
 
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${DAG_ID}"
-                    JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    //JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
                     JENKINS_FUNC.setAirflowVars(AIRFLOW_POD, IMAGE_TAG, APP_JAR)
-                    JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    //JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
                 }
                 /*
                 sh "ibmcloud config --check-version=false"
