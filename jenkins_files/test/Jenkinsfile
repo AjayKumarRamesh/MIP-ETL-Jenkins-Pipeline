@@ -242,15 +242,16 @@ pipeline {
             }
         }
         //}
-        /**
+        /*
         stage('Notification of Completion') {
             steps { 
                 sh "echo 'TEST'"
                 sh "exit 1"
             }
         }
-        *
+        */
     }
+    /*
     post {
         always {
         emailext to: 'timothy.figgins1@ibm.com', 
