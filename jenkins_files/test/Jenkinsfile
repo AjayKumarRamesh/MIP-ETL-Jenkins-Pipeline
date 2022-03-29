@@ -121,8 +121,8 @@ pipeline {
                 sh "docker tag us.icr.io/map-dev-namespace/${IMAGE_TAG} us.icr.io/mip-test-namespace/${IMAGE_TAG}"
                 sh "docker push us.icr.io/mip-test-namespace/${IMAGE_TAG}"
                 *
-            }*/
-        }
+            }*
+        }*/
         stage('Deploy Image to Airflow') {
             environment {
                 //DAG_EXECUTION_DATE = ''
