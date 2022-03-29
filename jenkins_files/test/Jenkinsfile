@@ -192,6 +192,16 @@ pipeline {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
             steps {
+                script {
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", false)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${DAG_ID}"
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${DAG_ID}"
+                    JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, false)
+                }
+
+                /**
                 sh "ibmcloud config --check-version=false"
                 sh "ibmcloud plugin install container-service"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
@@ -228,6 +238,7 @@ pipeline {
                                 }
                             }
                 }
+                */
             }
         }
         //}
