@@ -27,7 +27,7 @@ def cloudLogin(String credentials, String env, boolean install) {
     sh "kubectl config current-context"
 }
 
-def checkDagStatus(String airflow_pod, String dag_ID) {
+def checkDagStatus(String airflow_pod, String dag_ID, boolean canFail) {
     //while loop checking for status 
     //AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
     DAG_CURRENT_RUN = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow dags list-runs -d ${dag_ID} --state running -o json", returnStdout: true).trim()
@@ -40,6 +40,9 @@ def checkDagStatus(String airflow_pod, String dag_ID) {
             while (DAG_STATUS != "success") {
                 DAG_STATUS = sh(script:"""kubectl exec -n airflow ${airflow_pod} -- airflow dags state ${dag_ID} ${DAG_EXECUTION_DATE} | egrep 'running|failed|success'""", returnStdout: true).trim()
                 sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
+                if (DAG_STATUS == "failed" && !canFail) {
+                    sh "exit 1"
+                }
                 sleep(10)
             }
             sh "echo 'DAG no longer in run state, continuing with deployment.'"
@@ -73,7 +76,8 @@ def getAirflowVars(String airflow_pod, String dag_ID) {
 }
 
 def setAirflowVars(String airflow_pod, String dag_ID, String image, String jar) {
-
+    sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables set ${airflow[dag_ID][0]} ${image}"
+    sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables set ${airflow[dag_ID][1]} ${jar}"
 }
 
 return this

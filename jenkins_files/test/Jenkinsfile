@@ -4,10 +4,11 @@ pipeline {
        IMAGE_TAG = ''                               //can be used in whole pipeline
        APP_JAR = ''
        //DAG_ID = params.DAG_NAME
-       DAG_NAME_PIPELINE = "${DAG_NAME}"
+       DAG_ID = "${DAG_NAME}"
        //JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
        IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
     }
+    /*
     stages{
         /**
         stage('Echo parameters') {
@@ -26,7 +27,7 @@ pipeline {
                 }
             }
         }
-        */
+        *
         stage('Move Images') {
             steps {
                script {
@@ -42,12 +43,11 @@ pipeline {
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${DAG_NAME_PIPELINE}"
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${DAG_NAME_PIPELINE}"
                     JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_NAME_PIPELINE)
-                    */
+                    *
                 } 
             }
         }
-    }
-    /**
+    }*/
     stages {
         stage('Request Approval') {
             steps {
@@ -69,6 +69,15 @@ pipeline {
             }
 
             steps {
+                script {
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    IMAGE_TAG = image
+                    APP_JAR = jar
+                }
+                /**
                 sh "ibmcloud config --check-version=false"
                 sh "ibmcloud plugin install container-service"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
@@ -83,6 +92,8 @@ pipeline {
                 }
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
+                */
+
             }
         }
         stage('Tag and Push Image') {
@@ -90,6 +101,13 @@ pipeline {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
             steps {
+                script {
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", false)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    JENKINS_FUNC.moveImage(IMAGE_TAG, "map-dev", "mip-test")
+                }
+                /**
                 sh "ibmcloud config --check-version=false"
                 sh "ibmcloud plugin install container-registry"
                 sh "ibmcloud plugin list"
@@ -98,17 +116,29 @@ pipeline {
                 sh "docker pull us.icr.io/map-dev-namespace/${IMAGE_TAG}"
                 sh "docker tag us.icr.io/map-dev-namespace/${IMAGE_TAG} us.icr.io/mip-test-namespace/${IMAGE_TAG}"
                 sh "docker push us.icr.io/mip-test-namespace/${IMAGE_TAG}"
+                */
             }
         }
         stage('Deploy Image to Airflow') {
             environment {
-                DAG_EXECUTION_DATE = ''
-                DAG_CURRENT_RUN = ''
-                DAG_STATUS = 'running'
+                //DAG_EXECUTION_DATE = ''
+                //DAG_CURRENT_RUN = ''
+                //DAG_STATUS = 'running'
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
-
             steps {
+                script {
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", false)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, true)
+
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${DAG_ID}"
+                    JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    JENKINS_FUNC.setAirflowVars(AIRFLOW_POD, IMAGE_TAG, JAR)
+                    JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                }
+                /*
                 sh "ibmcloud config --check-version=false"
                 //sh "ibmcloud plugin install container-service"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
@@ -151,14 +181,14 @@ pipeline {
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_app_jar ${APP_JAR}"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
-                
+                */
             }
         }
         stage('Validate DAG') {
             environment {
-                DAG_EXECUTION_DATE = ''
-                DAG_CURRENT_RUN = ''
-                DAG_STATUS = 'running'
+                //DAG_EXECUTION_DATE = ''
+                //DAG_CURRENT_RUN = ''
+                //DAG_STATUS = 'running'
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
             steps {
