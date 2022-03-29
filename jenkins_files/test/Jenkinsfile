@@ -139,7 +139,7 @@ pipeline {
 
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${DAG_ID}"
                     //JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
-                    JENKINS_FUNC.setAirflowVars(AIRFLOW_POD, IMAGE_TAG, APP_JAR)
+                    JENKINS_FUNC.createAirflowVars(AIRFLOW_POD, IMAGE_TAG, APP_JAR)
                     //JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
                 }
                 /*
