@@ -75,7 +75,7 @@ def getAirflowVars(String airflow_pod, String dag_ID) {
     */
 }
 
-def createAirflowVars(String airflow_pod, String dag_ID, String image, String jar) {
+def setAirflowVars(String airflow_pod, String dag_ID, String image, String jar) {
     sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables set ${airflow[dag_ID][0]} ${image}"
     sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables set ${airflow[dag_ID][1]} ${jar}"
 }
