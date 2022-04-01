@@ -15,7 +15,8 @@ pipeline {
         stage('Flare ETL Framework download'){
             environment {
                 GITHUB_API_TOKEN = credentials('github_api_token')
-                GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flarelets-Developer/releases/assets/608129"
+                //GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flarelets-Developer/releases/assets/608129"
+                GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flare/releases/assets/577917"
                 OUTPUT_FILENAME = "groupId-ETL-Framework-2.1.jar"
             }
             steps{
