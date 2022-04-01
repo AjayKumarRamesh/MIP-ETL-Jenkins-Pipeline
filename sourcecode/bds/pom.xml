@@ -4,14 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>MIP</groupId>
-    <artifactId>ETL-Framework</artifactId>
+    <artifactId>Flare-Framework</artifactId>
     <version>2.1</version>
     <properties>
         <scala.version>2.12.1</scala.version>
     </properties>
     <dependencies>
         <dependency>
-            <!-- <groupId>com.flare</groupId> -->
+            <!--  <groupId>com.flare</groupId>  -->
             <groupId>com.etlframework</groupId>
             <artifactId>base</artifactId>
             <version>2.1</version>
