@@ -115,8 +115,7 @@ pipeline {
                     sh "docker images"
                     sh "docker push us.icr.io/map-dev-namespace/${MIP_TO_MKTO_IMAGE}:jenkins.latest"
                     sh "docker push us.icr.io/map-dev-namespace/${MIP_TO_MKTO_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
-
-                    //sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
+                    sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
         } //stage
@@ -126,7 +125,7 @@ pipeline {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
-
+            /*
             steps {
                 sh "ibmcloud plugin install container-service"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
@@ -138,7 +137,7 @@ pipeline {
                     env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
                 }
 
-                /* sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_image'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_app_jar'"
@@ -148,8 +147,8 @@ pipeline {
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_app_jar'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause MIP_TO_MKTO"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause MIP_TO_MKTO"
-                */
-            }
+
+            } */
         }  //stage
     } //stages
 } //pipeline
