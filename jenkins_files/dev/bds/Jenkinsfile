@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-       BDS_GEO_HIER_IMAGE = 'cmdp-bds-geo-hier-mip:jenkins'                               //can be used in whole pipeline
+       BDS_GEO_HIER_IMAGE = 'cmdp-bds-geo-hier-mip'                               //can be used in whole pipeline
        BDS_GEO_HIER_APP_JAR = 'MIP-ETL-Framework-2.1.jar'
     }
     stages {
