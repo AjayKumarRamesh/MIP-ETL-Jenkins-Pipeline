@@ -79,8 +79,8 @@ pipeline {
                     //Create folder and download files from COS to spark-3.0.1-bin-hadoop2.7/cert
                     //Keystore files are uploaded to map-dev-01 bucket with jenkins-poc/ prefix
                     //sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
-                    //sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
-                    //sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/javacerts.jks' spark-3.0.1-bin-hadoop2.7/cert/javacerts.jks"
+                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
+                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/javacerts.jks' spark-3.0.1-bin-hadoop2.7/cert/javacerts.jks"
                     //sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
                     //Copy db2jcc4.jar zip to spark jars folder
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
