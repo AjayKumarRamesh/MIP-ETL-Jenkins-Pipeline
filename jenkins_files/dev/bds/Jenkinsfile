@@ -68,7 +68,7 @@ pipeline {
             }
  
             steps{
-                dir("sourcecode/ruby") {
+                dir("sourcecode/bds") {
                     sh "pwd"
                 
                     //Prepare IBMCLOUD COS access
@@ -79,8 +79,8 @@ pipeline {
                     //Create folder and download files from COS to spark-3.0.1-bin-hadoop2.7/cert
                     //Keystore files are uploaded to map-dev-01 bucket with jenkins-poc/ prefix
                     //sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
-                    //sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Ruby/cert/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
-                    //sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Ruby/cert/javacerts.jks' spark-3.0.1-bin-hadoop2.7/cert/javacerts.jks"
+                    //sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
+                    //sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/javacerts.jks' spark-3.0.1-bin-hadoop2.7/cert/javacerts.jks"
                     //sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
                     //Copy db2jcc4.jar zip to spark jars folder
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
@@ -134,12 +134,12 @@ pipeline {
                 }
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_image ${RUBY_IMAGE}"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_app_jar ${RUBY_APP_JAR}"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set bds_image ${BDS_GEO_HIER_IMAGE}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set bds_app_jar ${BDS_GEO_HIER_APP_JAR}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_app_jar'"
 
                 
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause BDS_GEO_HIER"
