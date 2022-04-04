@@ -108,9 +108,14 @@ pipeline {
                     sh "ibmcloud plugin list"
                     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                     sh "ibmcloud cr login"
-                    sh "docker build -t us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE} -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
+                    sh "docker build -t us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.latest -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
                     sh "docker images"
-                    //sh "docker push us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}"
+                    echo "build number: ${env.BUILD_NUMBER}"
+                    sh "docker tag us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.latest us.icr.io/map-dev-namespace/adhocdata_lead_xrefus.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
+                    sh "docker images"
+                    sh "docker push us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.latest"
+                    sh "docker push us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
+
                     //sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
