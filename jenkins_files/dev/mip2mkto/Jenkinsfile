@@ -20,7 +20,7 @@ pipeline {
                 OUTPUT_FILENAME = "groupId-Flare-Framework-2.1.jar"
             }
             steps{
-                dir("sourcecode/bds") {
+                dir("sourcecode/mip2mkto") {
                     sh "pwd"
 
                     sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
@@ -36,7 +36,7 @@ pipeline {
                 SPARK_FILENAME = "spark-3.0.1-bin-hadoop2.7.tgz"
             }
             steps{
-                dir("sourcecode/bds") {
+                dir("sourcecode/mip2mkto") {
                     sh "pwd"
 
                     sh 'curl -L -H "Accept:application/octet-stream" "$SPARK_URL" -o $SPARK_FILENAME'
@@ -48,7 +48,7 @@ pipeline {
 
         stage('Maven build') {
             steps {
-                dir("sourcecode/bds") {
+                dir("sourcecode/mip2mkto") {
                     sh "pwd"
 
                     sh 'mvn -version'
@@ -101,7 +101,7 @@ pipeline {
             }
 
             steps {
-                dir("sourcecode/bds") {
+                dir("sourcecode/mip2mkto") {
                     sh "pwd"
 
                     sh "ibmcloud plugin install container-registry"
@@ -137,19 +137,18 @@ pipeline {
                 script {
                     env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
                 }
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_image'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_app_jar'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set bds_image ${MIP_TO_MKTO_IMAGE}"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set bds_app_jar ${MIP_TO_MKTO_APP_JAR}"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_image'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_app_jar'"
 
-
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause MIP_TO_MKTO"
-
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause MIP_TO_MKTO"
+                /* sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set mip_mkto_image ${MIP_TO_MKTO_IMAGE}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set mip_mkto_app_jar ${MIP_TO_MKTO_APP_JAR}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause MIP_TO_MKTO"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause MIP_TO_MKTO"
+                */
             }
         }  //stage
     } //stages
