@@ -78,10 +78,10 @@ pipeline {
                     sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
                     //Create folder and download files from COS to spark-3.0.1-bin-hadoop2.7/cert
                     //Keystore files are uploaded to map-dev-01 bucket with jenkins-poc/ prefix
-                    //sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
+                    sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/javacerts.jks' spark-3.0.1-bin-hadoop2.7/cert/javacerts.jks"
-                    //sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
+                    sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
                     //Copy db2jcc4.jar zip to spark jars folder
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
                     sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
@@ -103,7 +103,7 @@ pipeline {
             steps {
                 dir("sourcecode/bds") {
                     sh "pwd"
-                
+
                     sh "ibmcloud plugin install container-registry"
                     sh "ibmcloud plugin list"
                     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
@@ -111,7 +111,7 @@ pipeline {
                     sh "docker build -t us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.latest -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
                     sh "docker images"
                     echo "build number: ${env.BUILD_NUMBER}"
-                    sh "docker tag us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.latest us.icr.io/map-dev-namespace/adhocdata_lead_xrefus.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
+                    sh "docker tag us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.latest us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
                     sh "docker images"
                     sh "docker push us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.latest"
                     sh "docker push us.icr.io/map-dev-namespace/${BDS_GEO_HIER_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
