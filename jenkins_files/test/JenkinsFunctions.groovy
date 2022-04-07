@@ -1,14 +1,27 @@
 import groovy.transform.Field
 
-dags = [RUBY_TO_MIP:"Found me"]
+dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP']]
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar']]
 envNum = [dev:1,test:2,prod:3]
 
-def getCerts(String dag_ID) {
-    sh "echo '${dag_ID}'"
-    if (dags[dag_ID] == "Found me") {
-        sh "echo 'Yes'"
-    }
+def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN, 
+                  String IBMCLOUD_COS_REGION, String IBMCLOUD_COS_BUCKET, String dag_ID) {
+    //Prepare IBMCLOUD COS access
+    sh "ibmcloud plugin install cloud-object-storage"
+    sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+    sh "ibmcloud cos config region --region=${IBMCLOUD_COS_REGION}"
+    sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
+    sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
+    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/${dagstoCOS[dag_ID][0]}/cert' spark-3.0.1-bin-hadoop2.7/cert"
+
+     //Copy db2jcc4.jar zip to spark jars folder
+    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
+    sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
+    sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
+    //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
+    sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
+    //Copy Maven artifacts to Spark jars folder
+    sh "cp -r ${dagstoCOS[dag_ID][1]}/target/. spark-3.0.1-bin-hadoop2.7/examples/jars"
 }
 
 def test() {
@@ -67,12 +80,6 @@ def getAirflowVars(String airflow_pod, String dag_ID) {
     jar_ref = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][1]}", returnStdout: true).trim()
 
     return [image_ref, jar_ref]
-    /**
-    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_image ${RUBY_IMAGE}"
-    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set ruby_app_jar ${RUBY_APP_JAR}"
-    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'"
-    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_app_jar'"
-    */
 }
 
 def setAirflowVars(String airflow_pod, String dag_ID, String image, String jar) {
