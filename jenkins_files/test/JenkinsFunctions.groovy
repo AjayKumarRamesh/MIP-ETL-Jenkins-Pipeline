@@ -11,7 +11,18 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
     sh "ibmcloud cos config region --region=${IBMCLOUD_COS_REGION}"
     sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
+
+    //Download and Install Flare
+    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Flare-v2.1-Log4j2.jar' Flare-v2.1-Log4j2.jar"
+    sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
+
+    sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
+
+    //Download Spark
+    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/spark-3.0.1-bin-hadoop2.7' spark-3.0.1-bin-hadoop2.7"
+    //Create cert folder
     sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
+    //Get certs and 
     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/${dagstoCOS[dag_ID][0]}/cert' spark-3.0.1-bin-hadoop2.7/cert"
 
      //Copy db2jcc4.jar zip to spark jars folder
