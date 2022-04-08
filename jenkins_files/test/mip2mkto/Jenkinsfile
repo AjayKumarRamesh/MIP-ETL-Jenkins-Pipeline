@@ -1,0 +1,187 @@
+pipeline {
+    agent any
+    environment {
+       MIP_TO_MKTO_IMAGE = ''                               //can be used in whole pipeline
+       MIP_TO_MKTO_APP_JAR = ''
+       MIP_TO_MKTO_DAG_ID = 'MIP-MARKETO-INTERACTION'
+       IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+    }
+    stages {
+        stage('Request Approval') {
+            steps {
+                script {
+                    timeout(time: 2, unit: "HOURS") {
+                        emailext to: 'saghodas@us.ibm.com',
+                            subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - Approve deploy required!",
+                            body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - The message here must include more information about what is going to be deployed \n approve required: ${BUILD_URL}/input "
+
+                        input message: 'The message here must include more information about what is going to be deployed\n Approve Deploy?', ok: 'Yes',
+                            submitter: 'saghodas@us.ibm.com'
+                    }
+                }
+            }
+        }
+        stage('Get DEV image and jar reference') {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+            steps {
+                sh "ibmcloud config --check-version=false"
+                sh "ibmcloud plugin install container-service"
+                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                sh "ibmcloud ks cluster config --cluster map-dal10-16x64-01"
+                sh "kubectl config current-context"
+
+                script {
+                    env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    MIP_TO_MKTO_IMAGE = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_image'", returnStdout: true).trim()
+                    //MIP_TO_MKTO_APP_JAR = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_app_jar'", returnStdout: true).trim()
+                }
+            }
+        }
+        stage('Tag and Push Image') {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+            steps {
+                sh "ibmcloud config --check-version=false"
+                sh "ibmcloud plugin install container-registry"
+                sh "ibmcloud plugin list"
+                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                sh "ibmcloud cr login"
+                sh "docker pull us.icr.io/map-dev-namespace/${MIP_TO_MKTO_IMAGE}"
+                sh "docker tag us.icr.io/map-dev-namespace/${MIP_TO_MKTO_IMAGE} us.icr.io/mip-test-namespace/${MIP_TO_MKTO_IMAGE}"
+                sh "docker push us.icr.io/mip-test-namespace/${MIP_TO_MKTO_IMAGE}"
+            }
+        }
+        stage('Deploy Image to Airflow') {
+            environment {
+                DAG_EXECUTION_DATE = ''
+                DAG_CURRENT_RUN = ''
+                DAG_STATUS = 'running'
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+
+            steps {
+                sh "ibmcloud config --check-version=false"
+                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
+                sh "kubectl config current-context"
+
+                script {
+                    env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    DAG_CURRENT_RUN = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list-runs -d ${MIP_TO_MKTO_DAG_ID} --state running -o json", returnStdout: true).trim()
+                }
+
+                script {
+                    timeout(time: 2, unit: "HOURS") {
+                        def dag_run_object = readJSON text: DAG_CURRENT_RUN
+                        if (dag_run_object.size() > 0) {
+                            //def dag_run_object = readJSON text: DAG_CURRENT_RUN
+                            DAG_EXECUTION_DATE = dag_run_object[0]['execution_date']
+                            while (DAG_STATUS == 'running') {
+                                DAG_STATUS = sh(script:"""kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${MIP_TO_MKTO_DAG_ID} ${DAG_EXECUTION_DATE} | egrep 'running|failed|success'""", returnStdout: true).trim()
+                                sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
+                                sleep(10)
+                            }
+                            sh "echo 'DAG no longer in run state, continuing with deployment.'"
+                        } else {
+                            sh "echo 'No current ${MIP_TO_MKTO_DAG_ID} DAGs found running.'"
+                        }
+                    }
+                }
+
+
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${MIP_TO_MKTO_DAG_ID}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_image'"
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set mip_mkto_image ${MIP_TO_MKTO_IMAGE}"
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set mip_mkto_app_jar ${MIP_TO_MKTO_APP_JAR}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_image'"
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_app_jar'"
+
+            }
+        }
+        stage('Validate DAG') {
+            environment {
+                DAG_EXECUTION_DATE = ''
+                DAG_CURRENT_RUN = ''
+                DAG_STATUS = 'running'
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+            steps {
+                sh "ibmcloud config --check-version=false"
+                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
+                sh "kubectl config current-context"
+
+                script {
+                    env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${MIP_TO_MKTO_DAG_ID}"
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${MIP_TO_MKTO_DAG_ID}"
+                    DAG_CURRENT_RUN = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list-runs -d ${MIP_TO_MKTO_DAG_ID} --state running -o json", returnStdout: true).trim()
+                }
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow tasks clear ${MIP_TO_MKTO_DAG_ID}"
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${MIP_TO_MKTO_DAG_ID}"
+                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${MIP_TO_MKTO_DAG_ID}"
+                script {
+                    sleep(10)
+                    timeout(time: 2, unit: "HOURS") {
+                        def dag_run_object = readJSON text: DAG_CURRENT_RUN
+                        sh "echo ${dag_run_object}"
+                        if (dag_run_object.size() > 0) {
+                            //def dag_run_object = readJSON text: DAG_CURRENT_RUN
+                            DAG_EXECUTION_DATE = dag_run_object[0]['execution_date']
+                            sh "echo ${DAG_EXECUTION_DATE}"
+                            while (DAG_STATUS != 'success') {
+                                DAG_STATUS = sh(script:"""kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags state ${MIP_TO_MKTO_DAG_ID} ${DAG_EXECUTION_DATE} | egrep 'running|failed|success'""", returnStdout: true).trim()
+                                sh "echo 'Checking DAG status for success: ${DAG_STATUS}'"
+                                sleep(10)
+                            }
+                            sh "echo 'DAG no longer in run state, continuing with deployment.'"
+                        } else {
+                            sh "echo 'No current ${MIP_TO_MKTO_DAG_ID} DAGs found running.'"
+                        }
+                    }
+                }
+            }
+        }
+        //}
+    }
+    post {
+        always {
+        emailext to: 'saghodas@us.ibm.com',
+            subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
+            body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}: Check console output at ${env.BUILD_URL} to view the results."
+
+        }
+        /*
+        failure {
+
+            sh "ibmcloud config --check-version=false"
+            //sh "ibmcloud plugin install container-service"
+            sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+            sh "ibmcloud ks cluster config --cluster map-dal10-16x64-03"
+            sh "kubectl config current-context"
+
+            script {
+                env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+
+                env.STABLE_IMAGE = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_image'", returnStdout: true).trim()
+                //env.STABLE_JAR = sh(script:"kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_app_jar'", returnStdout: true).trim()
+            }
+
+            sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
+            sh "kubectl config current-context"
+
+            script {
+                env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+            }
+
+            sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set mip_mkto_image ${STABLE_IMAGE}"
+            //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set mip_mkto_app_jar ${STABLE_JAR}"
+            sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_image'"
+            //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'mip_mkto_app_jar'"
+        } */
+    }
+}
