@@ -1,6 +1,6 @@
 import groovy.transform.Field
 
-dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP']]
+dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jks']]
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar']]
 envNum = [dev:1,test:2,prod:3]
 
@@ -20,11 +20,15 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
 
     //Download Spark
-    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/spark-3.0.1-bin-hadoop2.7' spark-3.0.1-bin-hadoop2.7"
+    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/spark-3.0.1-bin-hadoop2.7.zip' spark-3.0.1-bin-hadoop2.7.zip"
+    sh "unzip spark-3.0.1-bin-hadoop2.7.zip"
+    
     //Create cert folder
     sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
-    //Get certs and 
-    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/${dagstoCOS[dag_ID][0]}/cert' spark-3.0.1-bin-hadoop2.7/cert"
+    //Get certs
+    for (int i = 2; i < dagstoCOS[dag_ID].size; i++) {
+        sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/${dagstoCOS[dag_ID][0]}/cert/${dagstoCOS[dag_ID][i]}' spark-3.0.1-bin-hadoop2.7/cert/${dagstoCOS[dag_ID][i]}"
+    } 
 
     sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
 
