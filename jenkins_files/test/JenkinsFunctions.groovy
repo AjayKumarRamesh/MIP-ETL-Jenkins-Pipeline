@@ -22,11 +22,11 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     //Download Spark
     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/spark-3.0.1-bin-hadoop2.7.zip' spark-3.0.1-bin-hadoop2.7.zip"
     sh "unzip spark-3.0.1-bin-hadoop2.7.zip"
-    
+
     //Create cert folder
     sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
     //Get certs
-    for (int i = 2; i < dagstoCOS[dag_ID].size; i++) {
+    for (int i = 2; i < dagstoCOS[dag_ID].length; i++) {
         sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/${dagstoCOS[dag_ID][0]}/cert/${dagstoCOS[dag_ID][i]}' spark-3.0.1-bin-hadoop2.7/cert/${dagstoCOS[dag_ID][i]}"
     } 
 
