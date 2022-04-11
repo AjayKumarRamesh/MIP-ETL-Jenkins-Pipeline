@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-       RUBY_IMAGE = 'rubytomip:jenkins'                               //can be used in whole pipeline
+       RUBY_IMAGE = 'rubytomip:jenkins_new'                               //can be used in whole pipeline
        RUBY_APP_JAR = 'com.ibm.map-RubyToMIP-2.1.jar'
     }
     stages {
@@ -23,26 +23,12 @@ pipeline {
             steps{
                 dir("sourcecode/ruby") {
                     sh "pwd"
-                
-                    //Prepare IBMCLOUD COS access
-                    sh "ibmcloud plugin install cloud-object-storage"
-                    sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
-                    sh "ibmcloud cos config region --region=${IBMCLOUD_COS_REGION}"
-                    sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
-                    //Create folder and download files from COS to spark-3.0.1-bin-hadoop2.7/cert
-                    //Keystore files are uploaded to map-dev-01 bucket with jenkins-poc/ prefix
-                    sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Ruby/cert/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Ruby/cert/javacerts.jks' spark-3.0.1-bin-hadoop2.7/cert/javacerts.jks"
-                    sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
-                    //Copy db2jcc4.jar zip to spark jars folder
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
-                    sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
-                    sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
-                    //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
-                    sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
-                    //Copy Maven artifacts to Spark jars folder
-                    sh 'cp -r RubyToMIP/target/. spark-3.0.1-bin-hadoop2.7/examples/jars'
+                    script {
+                        def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                        JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
+                        JENKINS_FUNC.getCOSObjects(IBMCLOUD_CREDS, IBMCLOUD_COS_CRN, 
+                                                   IBMCLOUD_COS_REGION, IBMCLOUD_COS_BUCKET, "RUBY_TO_MIP")
+                    }
 
                 }
             }
@@ -57,7 +43,7 @@ pipeline {
                 dir("sourcecode/ruby") {
                     sh "pwd"
                 
-                    sh "ibmcloud plugin install container-registry"
+                    //sh "ibmcloud plugin install container-registry"
                     sh "ibmcloud plugin list"
                     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                     sh "ibmcloud cr login"
@@ -73,18 +59,27 @@ pipeline {
         stage('Image deploy to Airflow') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+                DAG_ID = "RUBY_TO_MIP"
             }
 
             steps {
+                /**
                 sh "ibmcloud plugin install container-service"
                 sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                 sh "ibmcloud ks cluster config --cluster map-dal10-16x64-01"
                 sh "kubectl config current-context"
                 //sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
             
+                */
                 script {
-                    env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", false)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    JENKINS_FUNC.setAirflowVars(AIRFLOW_POD, DAG_ID, image, jar)
+                    JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
                 }
+                /*
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'ruby_image'"
@@ -98,6 +93,7 @@ pipeline {
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause BDS_GEO_HIER"
                 
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause BDS_GEO_HIER"
+                */
             }
         }  //stage
     } //stages
