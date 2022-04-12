@@ -1,7 +1,17 @@
 import groovy.transform.Field
 
-dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jks']]
-airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar']]
+// COS folder, Source Folder, cert files
+dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jks'],
+            CDSExtract:['CDS', 'CDStoAdobe', 'digikeystore.jks', 'javacerts.jks'],
+            CDStoMIP:['CDS', 'CDStoAdobe', 'digikeystore.jks', 'javacerts.jks'],
+            CDStoMIP_FullRefresh:['CDS', 'CDStoAdobe', 'digikeystore.jks', 'javacerts.jks'],
+            IWM:['IWM', 'MRS', 'digikeystore.jks', 'mrs_db2_cloud_stage.ks', 'mrs_db2_prod_cloud.ks', 'mrs_db2_test.ks']]
+// image, jar 
+airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
+           CDSExtract:['cds_image', 'cds_app_jar'],
+           CDStoMIP:['cds_image', 'cds_app_jar'],
+           CDStoMIP_FullRefresh:['cds_image', 'cds_app_jar'],
+           IWM:['iwm_image', 'iwm_app_jar']]
 envNum = [dev:1,test:2,prod:3]
 
 def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN, 
