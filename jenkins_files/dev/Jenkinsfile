@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-       RUBY_IMAGE = 'rubytomip:jenkins_new'                               //can be used in whole pipeline
+       RUBY_IMAGE = "rubytomip:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
        RUBY_APP_JAR = 'com.ibm.map-RubyToMIP-2.1.jar'
     }
     stages {
