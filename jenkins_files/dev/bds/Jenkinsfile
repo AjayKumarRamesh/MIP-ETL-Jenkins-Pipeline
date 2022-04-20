@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
        BDS_GEO_HIER_IMAGE = 'cmdp-bds-geo-hier-mip'                               //can be used in whole pipeline
-       BDS_GEO_HIER_APP_JAR = 'MIP-ETL-Framework-2.1.jar'
+       BDS_GEO_HIER_APP_JAR = 'MIP-Flare-Framework-2.1.jar'
     }
     stages {
         stage('GitHub Checkout') {
@@ -140,14 +140,11 @@ pipeline {
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_image'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_app_jar'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set bds_image ${BDS_GEO_HIER_IMAGE}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set bds_image ${BDS_GEO_HIER_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set bds_app_jar ${BDS_GEO_HIER_APP_JAR}"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_image'"
                 sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_app_jar'"
-
-                
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause BDS_GEO_HIER"
-                
                 //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause BDS_GEO_HIER"
             }
         }  //stage
