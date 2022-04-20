@@ -5,6 +5,8 @@ pipeline {
        APP_JAR = ''
        DAG_ID = "${DAG_NAME}"
        IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+       STABLE_IMAGE = ''
+       STABLE_JAR = ''
     }
     stages {
         stage('Request Approval') {
@@ -18,6 +20,20 @@ pipeline {
                             input message: 'The message here must include more information about what is going to be deployed\n Approve Deploy?', ok: 'Yes',
                                 submitter: 'timothy.figgins1@ibm.com'
                         }
+                }
+            }
+        }
+        stage('Get Stable Image') {
+            steps{
+                script {
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "prod", true)
+            
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+            
+                    def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    STABLE_IMAGE = image
+                    STABLE_JAR = jar
                 }
             }
         }
@@ -87,15 +103,6 @@ pipeline {
           
                 AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
         
-                def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
-                STABLE_IMAGE = image
-                STABLE_JAR = jar
-            
-
-                sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
-                sh "kubectl config current-context"
-
-                AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
                 JENKINS_FUNC.setAirflowVars(AIRFLOW_POD, DAG_ID, STABLE_IMAGE, STABLE_JAR)
                 JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
             }
