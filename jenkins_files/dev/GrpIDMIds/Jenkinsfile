@@ -19,7 +19,7 @@ pipeline {
                 OUTPUT_FILENAME = "Flare-v2.1-Log4j2.jar"
             }
             steps{
-                dir("sourcecode/bds") {
+                dir("sourcecode/GrpIDMIds") {
                     sh "pwd"
                 
                     sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
@@ -67,7 +67,7 @@ pipeline {
             }
  
             steps{
-                dir("sourcecode/bds") {
+                dir("sourcecode/GrpIDMIds") {
                     sh "pwd"
                 
                     //Prepare IBMCLOUD COS access
@@ -136,16 +136,16 @@ pipeline {
                 script {
                     env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
                 }
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_image'"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_app_jar'"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set bds_image ${GRP_IDM_IDS_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set bds_app_jar ${GRP_IDM_IDS_IMAGE_APP_JAR}"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_image'"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'bds_app_jar'"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause GRP_EVENTS_IDM"
-                //sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause GRP_EVENTS_IDM"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'grp_idm_ids_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'grp_idm_ids_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set grp_idm_ids_image ${GRP_IDM_IDS_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set grp_idm_ids_app_jar ${GRP_IDM_IDS_IMAGE_APP_JAR}"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'grp_idm_ids_image'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'grp_idm_ids_app_jar'"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause GRP_EVENTS_IDM"
+                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause GRP_EVENTS_IDM"
             }
         }  //stage
     } //stages
