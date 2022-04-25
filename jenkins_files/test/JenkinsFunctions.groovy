@@ -6,7 +6,10 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             CDStoMIP:['CDS', 'CDStoAdobe', 'digikeystore.jks', 'javacerts.jks'],
             CDStoMIP_FullRefresh:['CDS', 'CDStoAdobe', 'digikeystore.jks', 'javacerts.jks'],
             IWM:['IWM', 'MRS', 'digikeystore.jks', 'mrs_db2_cloud_stage.ks', 'mrs_db2_prod_cloud.ks', 'mrs_db2_test.ks'],
-            BDS_GEO_HIER:['.', '.', 'digikeystore.jks', 'javacerts.jks']]
+            BDS_GEO_HIER:['.', '.', 'digikeystore.jks', 'javacerts.jks']
+            MIP_SPSS_SCORING:[]
+            ADHOC_MKTO_LEADXREF:['Adhoc_xref', '.', 'Universal-trustore.jks', 'digikeystore.jks', 'marketo_sftp_pem.pem', 'marketo_sftp_prod.pem']
+            GRP_EVENTS_IDM:[]]
 // image, jar 
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
            CDSExtract:['cds_image', 'cds_app_jar'],
