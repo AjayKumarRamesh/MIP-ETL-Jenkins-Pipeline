@@ -7,8 +7,8 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             CDStoMIP_FullRefresh:['CDS', 'CDStoAdobe', 'digikeystore.jks', 'javacerts.jks'],
             IWM:['IWM', 'MRS', 'digikeystore.jks', 'mrs_db2_cloud_stage.ks', 'mrs_db2_prod_cloud.ks', 'mrs_db2_test.ks'],
             BDS_GEO_HIER:['.', '.', 'digikeystore.jks', 'javacerts.jks']
-            MIP_SPSS_SCORING:[]
-            ADHOC_MKTO_LEADXREF:['Adhoc_xref', '.', 'Universal-trustore.jks', 'digikeystore.jks', 'marketo_sftp_pem.pem', 'marketo_sftp_prod.pem']
+            MIP_SPSS_SCORING:[],
+            ADHOC_MKTO_LEADXREF:['Adhoc_xref', '.', 'Universal-trustore.jks', 'digikeystore.jks', 'marketo_sftp_pem.pem', 'marketo_sftp_prod.pem'],
             GRP_EVENTS_IDM:[]]
 // image, jar 
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
@@ -49,9 +49,9 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
 
      //Copy db2jcc4.jar zip to spark jars folder
-    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
-    sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
-    sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
+    //sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
+    //sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
+    //sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
     //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
     sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
     //Copy Maven artifacts to Spark jars folder
