@@ -172,6 +172,12 @@
             <artifactId>spark-marketo_2.11</artifactId>
             <version>1.1.0</version>
         </dependency>
+         <!-- https://mvnrepository.com/artifact/com.ibm.db2/jcc -->
+        <dependency>
+            <groupId>com.ibm.db2</groupId>
+            <artifactId>jcc</artifactId>
+            <version>11.5.7.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
