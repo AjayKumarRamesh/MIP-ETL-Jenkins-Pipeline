@@ -36,6 +36,7 @@ RUN set -ex && \
     apt-get update && apt-get install openssl && \
     apt-get update && apt-get install -y krb5-user && \
     apt-get update && apt-get install zlib1g && \
+    apt-get update && apt-get install gzip && \
     apt install -y bash tini libc6 libpam-modules libnss3 && \
     mkdir -p /opt/spark && \
     mkdir -p /opt/spark/examples && \

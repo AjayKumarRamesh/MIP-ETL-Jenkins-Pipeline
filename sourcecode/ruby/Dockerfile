@@ -38,6 +38,7 @@ RUN set -ex && \
     apt-get update && apt-get install -y krb5-user && \
     apt install -y bash tini libc6 libpam-modules libnss3 && \
     apt-get update && apt-get install zlib1g && \
+    apt-get update && apt-get install gzip && \
     mkdir -p /opt/spark && \
     mkdir -p /opt/spark/examples && \
     mkdir -p /opt/spark/work-dir && \

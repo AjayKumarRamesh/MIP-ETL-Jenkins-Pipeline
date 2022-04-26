@@ -49,9 +49,9 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
 
      //Copy db2jcc4.jar zip to spark jars folder
-    //sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
+    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2jcc4.jar' ./db2jcc4.jar"
     //sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
-    //sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
+    sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
     //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
     sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
     //Copy Maven artifacts to Spark jars folder
