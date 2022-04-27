@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-       IMAGE = "cmdp-bds-geo-hier-mip:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
+       IMAGE = "cmdp-bds-geo-hier-mip:jenkins.build.${env.BUILD_NUMBER}"                               //can be used in whole pipeline
        APP_JAR = 'MIP-Flare-Framework-2.1.jar'
        DAG_ID = "BDS_GEO_HIER"
        SOURCE_CODE_FOLDER = "bds"
