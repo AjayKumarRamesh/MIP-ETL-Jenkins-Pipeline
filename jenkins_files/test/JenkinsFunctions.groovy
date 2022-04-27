@@ -16,9 +16,9 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
            CDStoMIP:['cds_image', 'cds_app_jar'],
            CDStoMIP_FullRefresh:['cds_image', 'cds_app_jar'],
            IWM:['iwm_image', 'iwm_app_jar'],
-           BDS_GEO_HIER:['bds_image','bds_app_jar']
-           MIP_SPSS_SCORING:['spss_image','spss_app_jar']
-           ADHOC_MKTO_LEADXREF:['adhoc_image','adhoc_app_jar']
+           BDS_GEO_HIER:['bds_image','bds_app_jar'],
+           MIP_SPSS_SCORING:['spss_image','spss_app_jar'],
+           ADHOC_MKTO_LEADXREF:['adhoc_image','adhoc_app_jar'],
            GRP_EVENTS_IDM:['grp_image','grp_app_jar']]
            
 envNum = [dev:1,test:2,prod:3]
