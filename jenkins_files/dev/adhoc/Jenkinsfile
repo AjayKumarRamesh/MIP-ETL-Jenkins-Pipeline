@@ -82,8 +82,8 @@ pipeline {
                     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'jenkins-poc/marketo_sftp_prod.pem' spark-3.0.1-bin-hadoop2.7/cert/marketo_sftp_prod.pem"
                     sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
                     //Copy db2jcc4.jar zip to spark jars folder
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
-                    sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
+                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2jcc4.jar' ./db2jcc4.jar"
+                    //sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
                     sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
                     //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
                     sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
