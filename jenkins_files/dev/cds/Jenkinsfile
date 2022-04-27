@@ -3,7 +3,7 @@ pipeline {
     environment {
        IMAGE = "cds-jobs:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
        APP_JAR = 'com.ibm.map-etl-framework-CDSJobs-2.2.jar'
-       DAG_ID = "CDStoMIP" //TODO change this to paramter
+       DAG_ID = "${DAG_NAME}" // paramterized due to 3 different dags could be building for. 
        SOURCE_CODE_FOLDER = "cds"
     }
     stages {
