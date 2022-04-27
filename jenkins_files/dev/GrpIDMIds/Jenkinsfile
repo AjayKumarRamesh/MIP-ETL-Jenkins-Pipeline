@@ -1,153 +1,79 @@
 pipeline {
     agent any
     environment {
-       GRP_IDM_IDS_IMAGE = 'grp_events_idmids'                               //can be used in whole pipeline
-       GRP_IDM_IDS_IMAGE_APP_JAR = 'MIP-Flare-Framework-2.1.jar'
+       IMAGE = "grp_events_idm_ids:jenkins.build.${env.BUILD_NUMBER}"                               //can be used in whole pipeline
+       APP_JAR = 'MIP-Flare-Framework-2.1.jar'
+       DAG_ID = "GRP_EVENTS_IDM"
+       SOURCE_CODE_FOLDER = "GrpIDMIds"
     }
     stages {
         stage('GitHub Checkout') {
             steps {
                 git credentialsId: 'sangita_id_rsa' ,
-                url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'  
+                url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'
             }  //steps
         } //stage
 
-        stage('Flare ETL Framework download'){
-            environment {
-                GITHUB_API_TOKEN = credentials('github_api_token')
-                GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flare/releases/assets/750716"
-                OUTPUT_FILENAME = "Flare-v2.1-Log4j2.jar"
-            }
-            steps{
-                dir("sourcecode/GrpIDMIds") {
-                    sh "pwd"
-                
-                    sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
-                    sh 'ls -al'
-
-                }
-            }
-        }
-
-        stage('Spark download'){
-            environment {
-                SPARK_URL = "https://archive.apache.org/dist/spark/spark-3.0.1/spark-3.0.1-bin-hadoop2.7.tgz"
-                SPARK_FILENAME = "spark-3.0.1-bin-hadoop2.7.tgz"
-            }
-            steps{
-                dir("sourcecode/GrpIDMIds") {
-                    sh "pwd"
-                
-                    sh 'curl -L -H "Accept:application/octet-stream" "$SPARK_URL" -o $SPARK_FILENAME'
-                    sh 'tar -xzf spark-3.0.1-bin-hadoop2.7.tgz'
-                    sh 'ls -al spark-3.0.1-bin-hadoop2.7'
-                }
-            }
-        }
-        
-        stage('Maven build') {
-            steps {
-                dir("sourcecode/GrpIDMIds") {
-                    sh "pwd"
-                
-                    sh 'mvn -version'
-                    sh 'ls -al'
-                    sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1 -Dpackaging=jar'
-                    sh 'mvn clean compile package -f pom.xml'
-                }
-            } //steps
-        } //stage
-
-        stage('Move files') {
+        stage('Get COS Objects') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
                 IBMCLOUD_COS_CRN = 'bda9a48c-574e-4be0-b2ff-62f2d0f23ead'
                 IBMCLOUD_COS_REGION = 'ap-geo'
                 IBMCLOUD_COS_BUCKET = 'map-dev-01'
             }
- 
+
             steps{
-                dir("sourcecode/GrpIDMIds") {
+                dir("sourcecode/${SOURCE_CODE_FOLDER}") {
                     sh "pwd"
-                
-                    //Prepare IBMCLOUD COS access
-                    sh "ibmcloud plugin install cloud-object-storage"
-                    sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
-                    sh "ibmcloud cos config region --region=${IBMCLOUD_COS_REGION}"
-                    sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
-                    //Create folder and download files from COS to spark-3.0.1-bin-hadoop2.7/cert
-                    //Keystore files are uploaded to map-dev-01 bucket with jenkins-poc/ prefix
-                    sh "mkdir spark-3.0.1-bin-hadoop2.7/cert"
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/digikeystore.jks' spark-3.0.1-bin-hadoop2.7/cert/digikeystore.jks"
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/cert/javacerts.jks' spark-3.0.1-bin-hadoop2.7/cert/javacerts.jks"
-                    sh 'ls -al spark-3.0.1-bin-hadoop2.7/cert/'
-                    //Copy db2jcc4.jar zip to spark jars folder
-                    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2_db2driver_for_jdbc_sqlj.zip' ./db2_db2driver_for_jdbc_sqlj.zip"
-                    sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
-                    sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
-                    //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
-                    sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
-                    //Copy Maven artifacts to Spark jars folder
-                    sh 'cp -r target/. spark-3.0.1-bin-hadoop2.7/examples/jars'
+                    script {
+                        def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
+                        JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
+                        JENKINS_FUNC.getCOSObjects(IBMCLOUD_CREDS, IBMCLOUD_COS_CRN,
+                                                   IBMCLOUD_COS_REGION, IBMCLOUD_COS_BUCKET, DAG_ID)
+                    }
 
                 }
             }
         }
-        
+
         stage('Image build') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
 
             steps {
-                dir("sourcecode/GrpIDMIds") {
+                dir("sourcecode/${SOURCE_CODE_FOLDER}") {
                     sh "pwd"
 
-                    sh "ibmcloud plugin install container-registry"
+                    //sh "ibmcloud plugin install container-registry"
                     sh "ibmcloud plugin list"
                     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                     sh "ibmcloud cr login"
-                    sh "docker build -t us.icr.io/map-dev-namespace/${GRP_IDM_IDS_IMAGE}:jenkins.latest -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
+                    sh "docker build -t us.icr.io/map-dev-namespace/${IMAGE} -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
                     sh "docker images"
-                    echo "build number: ${env.BUILD_NUMBER}"
-                    sh "docker tag us.icr.io/map-dev-namespace/${GRP_IDM_IDS_IMAGE}:jenkins.latest us.icr.io/map-dev-namespace/${GRP_IDM_IDS_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
-                    sh "docker images"
-                    sh "docker push us.icr.io/map-dev-namespace/${GRP_IDM_IDS_IMAGE}:jenkins.latest"
-                    sh "docker push us.icr.io/map-dev-namespace/${GRP_IDM_IDS_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
-
-                    //sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
+                    sh "docker push us.icr.io/map-dev-namespace/${IMAGE}"
+                    sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
         } //stage
-        
-        
+
+
         stage('Image deploy to Airflow') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
 
             steps {
-                sh "ibmcloud plugin install container-service"
-                sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
-                sh "ibmcloud ks cluster config --cluster map-dal10-16x64-01"
-                sh "kubectl config current-context"
-                //sh "kubectl exec -n airflow airflow-scheduler-5598f5d6ff-b6h5g -- airflow dags list"
-            
                 script {
-                    env.AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", false)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    //def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    JENKINS_FUNC.setAirflowVars(AIRFLOW_POD, DAG_ID, IMAGE, APP_JAR)
+                    def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    sh "echo '${image} ${jar}'"
                 }
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags list"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables list"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'grp_idm_ids_image'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'grp_idm_ids_app_jar'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set grp_idm_ids_image ${GRP_IDM_IDS_IMAGE}:jenkins.build.${env.BUILD_NUMBER}"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables set grp_idm_ids_app_jar ${GRP_IDM_IDS_IMAGE_APP_JAR}"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'grp_idm_ids_image'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow variables get 'grp_idm_ids_app_jar'"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause GRP_EVENTS_IDM"
-                sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause GRP_EVENTS_IDM"
             }
         }  //stage
     } //stages
 } //pipeline
-
