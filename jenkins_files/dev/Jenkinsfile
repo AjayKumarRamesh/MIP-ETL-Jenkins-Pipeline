@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
        IMAGE = "rubytomip:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
-       APP_JAR = 'com.ibm.map-RubyToMIP-2.1.jar'
+       APP_JAR = 'com.ibm.map-RubyToMIP-2.2.jar'
        DAG_ID = "RUBY_TO_MIP"
        SOURCE_CODE_FOLDER = "ruby"
     }
