@@ -69,7 +69,6 @@ COPY examples /opt/spark/examples
 COPY kubernetes/tests /opt/spark/tests
 COPY data /opt/spark/data
 COPY cert /opt/spark/work-dir/cert
-COPY spss /opt/spark/work-dir/spss
 
 ENV SPARK_HOME /opt/spark
 
