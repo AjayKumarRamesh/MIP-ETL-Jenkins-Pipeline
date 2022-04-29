@@ -11,7 +11,8 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             ADHOC_MKTO_LEADXREF:['Adhoc_xref', '.', 'Universal-trustore.jks', 'digikeystore.jks', 'marketo_sftp_pem.pem', 'marketo_sftp_prod.pem'],
             GRP_EVENTS_IDM:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             CMDP_COP_to_MIP:['.', 'AccountIngestion', 'digikeystore.jks', 'javacerts.jks'],
-             'MIP-MARKETO-INTERACTION':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks']]
+             'MIP-MARKETO-INTERACTION':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
+             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks']]
 // image, jar 
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
            CDSExtract:['cds_image', 'cds_app_jar'],
@@ -23,7 +24,8 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
            ADHOC_MKTO_LEADXREF:['adhoc_image','adhoc_app_jar'],
            GRP_EVENTS_IDM:['grp_image','grp_app_jar'],
            CMDP_COP_to_MIP:['cmdp_cop_image', 'cmdp_cop_jar'],
-           'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar']]
+           'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar'],
+           MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar']]
            
 envNum = [dev:1,test:2,prod:3]
 
