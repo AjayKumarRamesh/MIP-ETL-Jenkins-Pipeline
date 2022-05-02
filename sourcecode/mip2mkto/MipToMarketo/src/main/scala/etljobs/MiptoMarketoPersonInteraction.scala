@@ -191,51 +191,51 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
 
     activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
       s"""{
-         |      "leadId":${row.getLong(8)},
-         |      "activityDate":"${convert({row.getTimestamp(30).toString})}",
-         |      "activityTypeId":${row.getInt(18)},
-         |      "primaryAttributeValue": "${row.getString(24)}",
+         |      "leadId":${row.getLong(9)},
+         |      "activityDate":"${convert({row.getTimestamp(31).toString})}",
+         |      "activityTypeId":${row.getInt(19)},
+         |      "primaryAttributeValue": "${row.getString(25)}",
          |      "attributes":
          |          [
          |              {
          |                    "apiName": "Content_Campaign_Name",
-         |                    "value": "${removeControlChar(row.getString(23))}"
+         |                    "value": "${removeControlChar(row.getString(24))}"
          |                },
          |                {
          |                    "apiName": "Form_Name",
-         |                    "value": "${removeControlChar(row.getString(34))}"
+         |                    "value": "${removeControlChar(row.getString(35))}"
          |                },
          |                {
          |                    "apiName": "GBL_IMT_CD",
-         |                    "value": "${removeControlChar(row.getString(6))}"
+         |                    "value": "${removeControlChar(row.getString(7))}"
          |                },
          |                {
          |                    "apiName": "GBL_IOT_CD",
-         |                    "value": "${removeControlChar(row.getString(14))}"
+         |                    "value": "${removeControlChar(row.getString(15))}"
          |                },
          |                {
          |                    "apiName": "GBL_RGN_CD",
-         |                    "value": "${removeControlChar(row.getString(20))}"
+         |                    "value": "${removeControlChar(row.getString(21))}"
          |
          |                },
          |                {
          |                    "apiName": "Interaction_ID",
-         |                    "value": "${row.getLong(32)}"
+         |                    "value": "${row.getLong(33)}"
          |
          |                },
          |                {
          |                    "apiName": "Lead_Description",
-         |                    "value": "${removeControlChar(row.getString(26))}"
+         |                    "value": "${removeControlChar(row.getString(27))}"
          |
          |                },
          |                {
          |                    "apiName": "Lead_Note",
-         |                    "value": "${removeControlChar(row.getString(9))}"
+         |                    "value": "${removeControlChar(row.getString(10))}"
          |
          |                },
          |                {
          |                    "apiName": "Lead_Source",
-         |                    "value": "${removeControlChar(row.getString(36))}"
+         |                    "value": "${removeControlChar(row.getString(37))}"
          |
          |                },
          |                {
@@ -245,12 +245,12 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Person_Phone",
-         |                    "value": "${removeControlChar(row.getString(7))}"
+         |                    "value": "${removeControlChar(row.getString(8))}"
          |
          |                },
          |                {
          |                    "apiName": "Sales_Channel",
-         |                    "value": "${removeControlChar(row.getString(15))}"
+         |                    "value": "${removeControlChar(row.getString(16))}"
          |
          |                },
          |                {
@@ -260,12 +260,12 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "UT10_Code",
-         |                    "value": "${removeControlChar(row.getString(29))}"
+         |                    "value": "${removeControlChar(row.getString(30))}"
          |
          |                },
          |                {
          |                    "apiName": "UT15_Code",
-         |                    "value": "${removeControlChar(row.getString(27))}"
+         |                    "value": "${removeControlChar(row.getString(28))}"
          |
          |                },
          |                {
@@ -275,12 +275,12 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "UT20_Code",
-         |                    "value": "${removeControlChar(row.getString(25))}"
+         |                    "value": "${removeControlChar(row.getString(26))}"
          |
          |                },
          |                {
          |                    "apiName": "UT30_Code",
-         |                    "value": "${removeControlChar(row.getString(12))}"
+         |                    "value": "${removeControlChar(row.getString(13))}"
          |
          |                },
          |                {
@@ -290,12 +290,11 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "MIP_Activity_Seq_ID",
-         |                    "value": "${row.getLong(13)}"
-         |
+         |                    "value": "${row.getLong(14)}"
          |                },
          |                {
          |                    "apiName": "Item_URL",
-         |                    "value": "${removeControlChar(row.getString(22))}"
+         |                    "value": "${removeControlChar(row.getString(23))}"
          |
          |                }
          |          ]
@@ -304,6 +303,9 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     }).toDF().persist()
 
     activityDF1
+    val finalDF = Seq(activityDF1)
+
+    finalDF.reduce(_ union _)
   }
 
   //Function to perform POST to Marketo
@@ -494,6 +496,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |PRF.PREF_CODE_17DSR,
              |PRF.PREF_CODE_17ENL,
              |PRF.PREF_CODE_17YNI,
+             |PRF.PREF_CODE_15S8X,
              |CASE
              |WHEN UPPER(RRG.JOBTITLE) = 'STUDENT'
              |OR UPPER(IDM.person_title) LIKE '%STUDENT%'
@@ -513,6 +516,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |THEN NULL
              |ELSE IMI.STATE_CD
              |END AS STATE_CD,
+             |RP_PHONE1.sp_type AS WORK_PHONE_PERM,
              |'P' AS STATUS_CODE,
              |CAST (NULL AS VARCHAR) AS ERROR_CODE,
              |CAST (NULL AS VARCHAR) AS ERROR_DESC,
@@ -626,7 +630,8 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |MAX(CASE WHEN SP_PREF_CD = '17CPH' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17CPH,
              |MAX(CASE WHEN SP_PREF_CD = '17DSR' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17DSR,
              |MAX(CASE WHEN SP_PREF_CD = '17ENL' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17ENL,
-             |MAX(CASE WHEN SP_PREF_CD = '17YNI' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17YNI
+             |MAX(CASE WHEN SP_PREF_CD = '17YNI' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17YNI,
+             |MAX(CASE WHEN SP_PREF_CD = '15S8X' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15S8X
              |FROM
              |MAP_IDM.IDM_MAINTAIN_PERSON_RESP_PREF
              |WHERE
@@ -641,9 +646,9 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |PRF.REQUEST_ID = RSP.REQUEST_ID
              |AND PRF.MEDIA_ID = IMI.EMAIL_MEDIA_ID
              |LEFT JOIN
-             |MAP_STG.STG_RAW_ANSWER ANS_QUE ON
-             |ANS_QUE.TRANSACTIONID = imi.REGISTRATION_ID
-             |AND UPPER(ANS_QUE.QUESTIONNUM) IN ('Q_HELP')
+             |MAP_CORE.MCT_QUESTION_ANSWER_PAIRS ANS_QUE ON
+             |ANS_QUE.INBOUND_MKTG_ID = IMI.INBOUND_MKTG_ID
+             |AND UPPER(ANS_QUE.QUESTION_CODE) IN ('Q_HELP')
              |LEFT JOIN
              |MAP_CORE.MCT_QUESTION_ANSWER_PAIRS QA_PAIRS ON
              |QA_PAIRS.INBOUND_MKTG_ID = IMI.INBOUND_MKTG_ID
@@ -661,11 +666,15 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |ACTIVITY_NAME IN ('Event Interaction', 'Contact Interaction', 'Client Interest', 'Digital Interaction')) ACT_ID
              |ON 1 = 1
              |LEFT OUTER JOIN MAP_CORE.MCT_COUNTRY MC ON IMI.PERSON_CTRY_CD = MC.COUNTRY_CODE
+             |LEFT OUTER JOIN MAP_IDM.IDM_MAINTAIN_PERSON_RESP_PREF RP_PHONE1 ON
+             |RSP.REQUEST_ID = RP_PHONE1.REQUEST_ID
+             |AND RSP.PHONE_1_PCMIDPK = RP_PHONE1.MEDIA_ID
+             |AND RP_PHONE1.SP_PREF_CD = 'IBM'
              |WHERE
              |IMI.READY_FOR_MKTO_FLG = 'R'
              |AND IMI.MARKETING_INTERACTION_TYPE_CD = 'MAIL'
              |AND IMI.EMAIL_MEDIA_ID != -1
-             |AND MC.SUB_REGION_CODE NOT IN ('4L','4P','4B','4G','4I','4X')
+             |AND MC.SUB_REGION_CODE NOT IN ('4B','4G','4I','4L','4P','4X','4A','4O','4J')
              |),
              |CTE2 AS (
              |SELECT
@@ -743,6 +752,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |CTE1.PREF_CODE_10L00,
              |CTE1.PREF_CODE_10G00,
              |CTE1.PREF_CODE_10A00,
+             |CTE1.PREF_CODE_15S8X,
              |CASE
              |WHEN XREF.EMAIL_MEDIA_ID IS NULL
              |THEN CTE1.STUDENT_FLG
@@ -758,6 +768,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |THEN CTE1.STATE_CD
              |ELSE NULL
              |END AS STATE_CD,
+             |CTE1.WORK_PHONE_PERM,
              |CTE1.STATUS_CODE,
              |CTE1.ERROR_CODE,
              |CTE1.ERROR_DESC,
@@ -805,19 +816,19 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |CTE1.REFERRER_URL,
              |CTE1.ACTIVITY_CMPN_CD,
              |MAXSEQID.MAXSEQID AS MAXSEQID,
-             |ACTSEQ.MAXACTSEQID AS MAXACTSEQID,
-             |ROW_NUMBER () OVER (PARTITION BY CTE1.EMAIL_MEDIA_ID ORDER BY CTE1.CREATE_TS ASC) AS EMAIL_MEDIA_ID_SEQ
+             |ACTSEQ.MAXACTSEQID AS MAXACTSEQID
              |FROM CTE1
-             |LEFT JOIN (SELECT NVL(MAX(MIP_SEQ_ID), $hrmSequenceNumber) AS MAXSEQID FROM MAP_MKTO.MCT_MKTO_PERSON WHERE UPDATE_TS > '$hrmDeployedDate') AS MAXSEQID ON 1 = 1
+             |LEFT JOIN (SELECT NVL(MAX(MIP_SEQ_ID), $hrmSequenceNumber) AS MAXSEQID FROM MAP_MKTO.MCT_MKTO_PERSON
+             |WHERE MIP_SEQ_ID > '$hrmSequenceNumber') AS MAXSEQID ON 1 = 1
              |LEFT JOIN (SELECT EMAIL_MEDIA_ID FROM MAP_MKTO.MCT_MKTO_LEAD_XREF GROUP BY EMAIL_MEDIA_ID) AS XREF
              |ON XREF.EMAIL_MEDIA_ID = CTE1.EMAIL_MEDIA_ID
-             |LEFT JOIN (SELECT NVL(MAX(MIP_ACTIVITY_SEQ_ID), $hrmSequenceNumber) AS MAXACTSEQID FROM MAP_MKTO.MCT_MKTO_CUSTOM_ACTIVITY WHERE UPDATE_TS > '$hrmDeployedDate') AS ACTSEQ ON 1 = 1
+             |LEFT JOIN (SELECT NVL(MAX(MIP_ACTIVITY_SEQ_ID), $hrmSequenceNumber) AS MAXACTSEQID FROM MAP_MKTO.MCT_MKTO_CUSTOM_ACTIVITY
+             |WHERE MIP_ACTIVITY_SEQ_ID > '$hrmSequenceNumber') AS ACTSEQ ON 1 = 1
              |)
              |SELECT *,
              |MAXSEQID + ROW_NUMBER () OVER (ORDER BY CTE2.CREATE_TS ASC) AS MIP_SEQ_ID,
              |MAXACTSEQID + ROW_NUMBER () OVER (ORDER BY CTE2.CREATE_TS ASC) AS MIP_ACTIVITY_SEQ_ID
              |FROM CTE2
-             |WHERE EMAIL_MEDIA_ID_SEQ = 1
              |FETCH FIRST $maxThreshold ROWS ONLY)""".stripMargin
              println(combinedSqlQuery)
 
@@ -875,9 +886,11 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
           "PREF_CODE_17DSR",
           "PREF_CODE_17ENL",
           "PREF_CODE_17YNI",
+          "PREF_CODE_15S8X",
           "STUDENT_FLG",
           "IBMer_FLG",
-          "STATE_CD").where("IDM_ID IS NOT NULL AND EMAIL_MEDIA_ID IS NOT NULL AND EMAIL_ADDR IS NOT NULL").dropDuplicates()
+          "STATE_CD",
+          "WORK_PHONE_PERM").where("IDM_ID IS NOT NULL AND EMAIL_MEDIA_ID IS NOT NULL AND EMAIL_ADDR IS NOT NULL").dropDuplicates()
 
         // Creating Custom Activity Table Dataset from Combined DF
         val customActivityTableDF = combinedDF.select("MIP_ACTIVITY_SEQ_ID",
@@ -926,7 +939,8 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
           "IBM_GBL_IOT_CODE",
           "SUB_REGION_CODE",
           "REGION",
-          "CTRY_CODE").where("STRENGTH IS NOT NULL AND CAMPAIGN_CODE !='' AND CAMPAIGN_CODE IS NOT NULL")
+          "CTRY_CODE",
+          "WORK_PHONE_PERM").where("STRENGTH IS NOT NULL AND CAMPAIGN_CODE !='' AND CAMPAIGN_CODE IS NOT NULL")
         customActivityTableDF.show(false)
 
         // Checking if any Data is Returned
@@ -988,7 +1002,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
           personMarketoDF = personMarketoDF
             .select(personMapDfToMarketoColumns.values.toList.distinct.head, personMapDfToMarketoColumns.values.toList.distinct.tail: _*)
           personMarketoDF = personMarketoDF.drop("STATUS_CODE", "ERROR_CODE", "ERROR_DESC", "MKTO_LEAD_ID",
-            "MIP_TRANS_SRC", "MIP_TRANS_ID", "MKTO_PARTITION_ID", "CREATE_TS", "STATE_CD")
+            "MIP_TRANS_SRC", "MIP_TRANS_ID", "MKTO_PARTITION_ID", "CREATE_TS", "CI_Phone_Permission")
           personMarketoDF = personMarketoDF.dropDuplicates(lookupFieldPerson)
           personMarketoDF.show(false)
 
@@ -1192,7 +1206,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
 
             // INSERT INTO CUSTOM ACTIVITY QUEUEING TABLE
             val customActivityDbDf = customActivityTableDF.drop("RANKING", "CREATE_TS", "REGION", "IBM_GBL_IOT_CODE",
-              "SUB_REGION_CODE", "CTRY_CODE", "MKTO_LEAD_ID").persist()
+              "SUB_REGION_CODE", "CTRY_CODE", "MKTO_LEAD_ID","WORK_PHONE_PERM").persist()
             log.info("Records to be inserted")
             customActivityDbDf.show(false)
             insertCustomActivity(customActivityDbDf, mipSeqIDLeadIdPersonDF, dbCon, tgtTableNameCA)
@@ -1287,10 +1301,10 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
         .option("isolationLevel", Constants.DBIsolationUncommittedRead)
         .jdbc(AppProperties.CommonDBConProperties.getProperty(PropertyNames.EndPoint),
           s""" (SELECT
-	                    JOB_SK JOB_SK, JOB_END_TIME AS MAX_TIMESTAMP
-	                  FROM $jobSeqHistTable
+                      JOB_SK JOB_SK, JOB_END_TIME AS MAX_TIMESTAMP
+                    FROM $jobSeqHistTable
                     WHERE
-	                    JOB_SEQUENCE = '$jobSeqCode' AND JOB_STATUS = '${Constants.JobStatusSucceeded}'
+                      JOB_SEQUENCE = '$jobSeqCode' AND JOB_STATUS = '${Constants.JobStatusSucceeded}'
                     ORDER BY JOB_SK DESC
                     FETCH FIRST ROW ONLY) AS RESULT_TABLE""",
           AppProperties.CommonDBConProperties)
@@ -1322,7 +1336,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
       "COMPANY_EMAIL_SUPR_CODE", "COMPANY_PHONE_SUPR_CODE", "PREF_CODE_IBM", "PREF_CODE_10A00", "PREF_CODE_10G00", "PREF_CODE_10L00",
       "PREF_CODE_10M00", "PREF_CODE_10N00", "PREF_CODE_153QH", "PREF_CODE_15CLV", "PREF_CODE_15IGO", "PREF_CODE_15ITT",
       "PREF_CODE_15MFT", "PREF_CODE_15STT", "PREF_CODE_15WCP", "PREF_CODE_15WSC", "PREF_CODE_17AAL", "PREF_CODE_17BCH",
-      "PREF_CODE_17CPH", "PREF_CODE_17DSR", "PREF_CODE_17ENL", "PREF_CODE_17YNI", "STUDENT_FLG", "IBMer_FLG", "STATE_CD")
+      "PREF_CODE_17CPH", "PREF_CODE_17DSR", "PREF_CODE_17ENL", "PREF_CODE_17YNI", "PREF_CODE_15S8X","STUDENT_FLG", "IBMer_FLG", "STATE_CD", "WORK_PHONE_PERM")
     DataUtilities.runPreparedStatementUsingConnection(
       dbConn,
       personDF,
@@ -1331,10 +1345,10 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |MIP_TRANS_SRC,MIP_TRANS_ID,MKTO_PARTITION_ID,COMPANY_EMAIL_SUPR_CODE,COMPANY_PHONE_SUPR_CODE,PREF_CODE_IBM,PREF_CODE_10A00,
          |PREF_CODE_10G00,PREF_CODE_10L00,PREF_CODE_10M00,PREF_CODE_10N00,PREF_CODE_153QH,PREF_CODE_15CLV,PREF_CODE_15IGO,PREF_CODE_15ITT,
          |PREF_CODE_15MFT,PREF_CODE_15STT,PREF_CODE_15WCP,PREF_CODE_15WSC,PREF_CODE_17AAL,PREF_CODE_17BCH,PREF_CODE_17CPH,PREF_CODE_17DSR,
-         |PREF_CODE_17ENL,PREF_CODE_17YNI,STUDENT_FLG,IBMer_FLG,STATE_CD)
-         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
+         |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM)
+         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
       personDF.columns,
-      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45),
+      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47),
       null,true,insertTableName,"INSERT")
   }
 
@@ -1368,7 +1382,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
       "COMPANY_EMAIL_SUPR_CODE", "COMPANY_PHONE_SUPR_CODE", "PREF_CODE_IBM", "PREF_CODE_10A00", "PREF_CODE_10G00", "PREF_CODE_10L00",
       "PREF_CODE_10M00", "PREF_CODE_10N00", "PREF_CODE_153QH", "PREF_CODE_15CLV", "PREF_CODE_15IGO", "PREF_CODE_15ITT",
       "PREF_CODE_15MFT", "PREF_CODE_15STT", "PREF_CODE_15WCP", "PREF_CODE_15WSC", "PREF_CODE_17AAL", "PREF_CODE_17BCH",
-      "PREF_CODE_17CPH", "PREF_CODE_17DSR", "PREF_CODE_17ENL", "PREF_CODE_17YNI", "STUDENT_FLG", "IBMer_FLG", "STATE_CD")
+      "PREF_CODE_17CPH", "PREF_CODE_17DSR", "PREF_CODE_17ENL", "PREF_CODE_17YNI", "PREF_CODE_15S8X","STUDENT_FLG", "IBMer_FLG", "STATE_CD", "WORK_PHONE_PERM")
     DataUtilities.runPreparedStatementUsingConnection(
       dbConn,
       personDF,
@@ -1377,9 +1391,9 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |MIP_TRANS_SRC,MIP_TRANS_ID,MKTO_PARTITION_ID,COMPANY_EMAIL_SUPR_CODE,COMPANY_PHONE_SUPR_CODE,PREF_CODE_IBM,PREF_CODE_10A00,
          |PREF_CODE_10G00,PREF_CODE_10L00,PREF_CODE_10M00,PREF_CODE_10N00,PREF_CODE_153QH,PREF_CODE_15CLV,PREF_CODE_15IGO,PREF_CODE_15ITT,
          |PREF_CODE_15MFT,PREF_CODE_15STT,PREF_CODE_15WCP,PREF_CODE_15WSC,PREF_CODE_17AAL,PREF_CODE_17BCH,PREF_CODE_17CPH,PREF_CODE_17DSR,
-         |PREF_CODE_17ENL,PREF_CODE_17YNI,STUDENT_FLG,IBMer_FLG,STATE_CD)
-         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
-      personDF.columns,Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45),null,true,insertTableName,"INSERT")
+         |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM)
+         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
+      personDF.columns,Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47),null,true,insertTableName,"INSERT")
   }
 
   def insertIntoXref(dataFrame: DataFrame, dbConn: Connection, insertTableName: String): Unit = {
