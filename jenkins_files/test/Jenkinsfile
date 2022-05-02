@@ -49,6 +49,7 @@ pipeline {
                     JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, true)
 
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${DAG_ID}"
+                    JENKINS_FUNC.moveImage(IMAGE_TAG, "map-dev", "mip-test")
                     JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
                     JENKINS_FUNC.setAirflowVars(AIRFLOW_POD, DAG_ID, IMAGE_TAG, APP_JAR)
                     JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
