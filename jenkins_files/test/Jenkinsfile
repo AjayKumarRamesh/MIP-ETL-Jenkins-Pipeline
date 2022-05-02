@@ -14,7 +14,7 @@ pipeline {
                             emailext to: "${env.deploy_test_approvers}",
                                 subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - Approval for deploy required!",
                                 body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${DAG_NAME} is going to be deployed. \n approval required: ${BUILD_URL}/input "
-                            
+
                             input message: '${DAG_NAME} is going to be deployed. \n Approve Deploy?', ok: 'Yes',
                                 submitter: "${env.BUILD_USER_LAST_NAME} ${env.BUILD_USER_FIRST_NAME} "
                         }
@@ -30,8 +30,8 @@ pipeline {
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
-                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-                    def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    AIRFLOW_DEV_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_DEV_POD, DAG_ID)
                     IMAGE_TAG = image
                     APP_JAR = jar
                 }
@@ -45,8 +45,8 @@ pipeline {
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", false)
-                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-                    JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, true)
+                    AIRFLOW_TEST_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    JENKINS_FUNC.checkDagStatus(AIRFLOW_TEST_POD, DAG_ID, true)
 
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${DAG_ID}"
                     JENKINS_FUNC.moveImage(IMAGE_TAG, "map-dev", "mip-test")
@@ -64,34 +64,34 @@ pipeline {
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", false)
-                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${DAG_ID}"
-                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${DAG_ID}"
-                    JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, false)
+                    AIRFLOW_TEST_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    sh "kubectl exec -n airflow ${AIRFLOW_TEST_POD} -- airflow dags trigger ${DAG_ID}"
+                    sh "kubectl exec -n airflow ${AIRFLOW_TEST_POD} -- airflow dags unpause ${DAG_ID}"
+                    JENKINS_FUNC.checkDagStatus(AIRFLOW_TEST_POD, DAG_ID, false)
                 }
             }
         }
     }
     post {
         always {
-        emailext to: "${env.deploy_test_approvers}", 
+        emailext to: "${env.deploy_test_approvers}",
             subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
             body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}: Check console output at ${env.BUILD_URL} to view the results."
 
         }
-        
+
         failure {
-            
+
             script {
                 def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                 JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "prod", true)
-          
+
                 AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-        
+
                 def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
                 STABLE_IMAGE = image
                 STABLE_JAR = jar
-            
+
 
                 sh "ibmcloud ks cluster config --cluster map-dal10-16x64-02"
                 sh "kubectl config current-context"
@@ -100,6 +100,6 @@ pipeline {
                 JENKINS_FUNC.setAirflowVars(AIRFLOW_POD, DAG_ID, STABLE_IMAGE, STABLE_JAR)
                 JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
             }
-        } 
+        }
     }
 }
