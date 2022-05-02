@@ -50,7 +50,7 @@ pipeline {
 
                     sh "kubectl exec -n airflow ${AIRFLOW_TEST_POD} -- airflow dags pause ${DAG_ID}"
                     def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_TEST_POD, DAG_ID)
-                    JENKINS_FUNC.moveImage((IMAGE_TAG, AIRFLOW_DEV_POD, AIRFLOW_TEST_POD))
+                    JENKINS_FUNC.moveImage((IMAGE_TAG, AIRFLOW_DEV_POD, AIRFLOW_TEST_POD)
                     JENKINS_FUNC.setAirflowVars(AIRFLOW_TEST_POD, DAG_ID, IMAGE_TAG, APP_JAR)
                     JENKINS_FUNC.getAirflowVars(AIRFLOW_TEST_POD, DAG_ID)
                 }
