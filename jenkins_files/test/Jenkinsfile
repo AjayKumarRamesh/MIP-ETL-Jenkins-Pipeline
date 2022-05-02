@@ -30,8 +30,8 @@ pipeline {
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
-                    AIRFLOW_DEV_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-                    def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_DEV_POD, DAG_ID)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
                     IMAGE_TAG = image
                     APP_JAR = jar
                 }
@@ -45,8 +45,8 @@ pipeline {
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", false)
-                    AIRFLOW_TEST_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-                    JENKINS_FUNC.checkDagStatus(AIRFLOW_TEST_POD, DAG_ID, true)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, true)
 
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags pause ${DAG_ID}"
                     JENKINS_FUNC.moveImage(IMAGE_TAG, "map-dev", "mip-test")
@@ -64,10 +64,10 @@ pipeline {
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", false)
-                    AIRFLOW_TEST_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
-                    sh "kubectl exec -n airflow ${AIRFLOW_TEST_POD} -- airflow dags trigger ${DAG_ID}"
-                    sh "kubectl exec -n airflow ${AIRFLOW_TEST_POD} -- airflow dags unpause ${DAG_ID}"
-                    JENKINS_FUNC.checkDagStatus(AIRFLOW_TEST_POD, DAG_ID, false)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${DAG_ID}"
+                    sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${DAG_ID}"
+                    JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, false)
                 }
             }
         }
