@@ -6,7 +6,7 @@
 
     <groupId>com.ibm.map</groupId>
     <artifactId>CompanyIngestion</artifactId>
-    <version>1.0</version>
+    <version>1.2</version>
 
     <properties>
         <scala.version>2.12.10</scala.version>
