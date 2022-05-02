@@ -11,8 +11,8 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             ADHOC_MKTO_LEADXREF:['Adhoc_xref', '.', 'Universal-trustore.jks', 'digikeystore.jks', 'marketo_sftp_pem.pem', 'marketo_sftp_prod.pem'],
             GRP_EVENTS_IDM:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             CMDP_COP_to_MIP:['.', 'AccountIngestion', 'digikeystore.jks', 'javacerts.jks'],
-             'MIP-MARKETO-INTERACTION':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
-             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks']]
+            MIP-MARKETO-INTERACTION:['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
+            MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks']]
 // image, jar 
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
            CDSExtract:['cds_image', 'cds_app_jar'],
