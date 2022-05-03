@@ -23,7 +23,7 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
            BDS_GEO_HIER:['bds_image','bds_app_jar'],
            MIP_SPSS_SCORING:['spss_image','spss_app_jar'],
            ADHOC_MKTO_LEADXREF:['adhoc_image','adhoc_app_jar'],
-           GRP_EVENTS_IDM:['grp_image','grp_app_jar'],
+           GRP_EVENTS_IDM:['grp_idm_ids_image','grp_idm_ids_app_jar'],
            CMDP_COP_to_MIP:['cmdp_cop_image', 'cmdp_cop_jar'],
            'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar'],
            MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar'],
@@ -121,9 +121,13 @@ def moveImage(String image, String source_env, String dest_env) {
 
 def getAirflowVars(String airflow_pod, String dag_ID) {
 
+    sh "echo in getAirflowVars, airflow_pod: ${airflow_pod} and dag_ID: ${dag_ID}"
     image_ref = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][0]}", returnStdout: true).trim()
     jar_ref = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][1]}", returnStdout: true).trim()
 
+    sh "echo image_ref: ${image_ref}"
+    sh "echo jar_ref: ${jar_ref}"
+    
     return [image_ref, jar_ref]
 }
 
