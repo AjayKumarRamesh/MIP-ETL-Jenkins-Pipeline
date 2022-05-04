@@ -1,0 +1,80 @@
+pipeline {
+    agent any
+    environment {
+       IMAGE = "cds-jobs:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
+       APP_JAR = 'com.ibm.map-etl-framework-CDSJobs-2.2.jar'
+       DAG_ID = "${DAG_NAME}" // paramterized due to 3 different dags could be building for. 
+       SOURCE_CODE_FOLDER = "cds"
+    }
+    stages {
+        stage('GitHub Checkout') {
+            steps {
+                git credentialsId: 'sangita_id_rsa' ,
+                url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'  
+            }  //steps
+        } //stage
+
+        stage('Get COS Objects') {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+                IBMCLOUD_COS_CRN = 'bda9a48c-574e-4be0-b2ff-62f2d0f23ead'
+                IBMCLOUD_COS_REGION = 'ap-geo'
+                IBMCLOUD_COS_BUCKET = 'map-dev-01'
+            }
+ 
+            steps{
+                dir("sourcecode/${SOURCE_CODE_FOLDER}") {
+                    sh "pwd"
+                    script {
+                        def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
+                        JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
+                        JENKINS_FUNC.getCOSObjects(IBMCLOUD_CREDS, IBMCLOUD_COS_CRN, 
+                                                   IBMCLOUD_COS_REGION, IBMCLOUD_COS_BUCKET, DAG_ID)
+                    }
+
+                }
+            }
+        }
+        
+        stage('Image build') {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+
+            steps {
+                dir("sourcecode/${SOURCE_CODE_FOLDER}") {
+                    sh "pwd"
+                
+                    //sh "ibmcloud plugin install container-registry"
+                    sh "ibmcloud plugin list"
+                    sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+                    sh "ibmcloud cr login"
+                    sh "docker build -t us.icr.io/map-dev-namespace/${IMAGE} -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
+                    sh "docker images"
+                    sh "docker push us.icr.io/map-dev-namespace/${IMAGE}"
+                    sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
+                }
+            }
+        } //stage
+        
+        
+        stage('Image deploy to Airflow') {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+
+            steps {
+                script {
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", false)
+                    AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    //def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    JENKINS_FUNC.setAirflowVars(AIRFLOW_POD, DAG_ID, IMAGE, APP_JAR)
+                    def (image, jar) = JENKINS_FUNC.getAirflowVars(AIRFLOW_POD, DAG_ID)
+                    sh "echo '${image} ${jar}'"
+                }
+            }
+        }  //stage
+    } //stages
+} //pipeline
+
