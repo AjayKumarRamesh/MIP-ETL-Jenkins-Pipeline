@@ -45,6 +45,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt-get update && apt-get install -y libzstd1 && \
     apt-get update && apt-get install --upgrade libssl1.1 && \
     apt-get update && apt-get install --upgrade openssl && \
+    apt-get update && apt-get install zlib1g && \
+    apt-get update && apt-get install gzip && \
     apt install -y bash tini libc6 libpam-modules libnss3 && \
 	mvn -f /usr/src/app/pom.xml clean package
 
@@ -63,7 +65,7 @@ EXPOSE 8080
 
 
 # Get the build target in the container so you can run it.
-COPY --from=build /usr/src/app/target/UmcUrlsWithNullUtValuesToCsv-0.0.1-SNAPSHOT-jar-with-dependencies.jar .
+COPY --from=build /usr/src/app/target/Drupal-1.0.jar .
 
 
 # Add argument for cloud object store endpoint
@@ -71,4 +73,4 @@ COPY --from=build /usr/src/app/target/UmcUrlsWithNullUtValuesToCsv-0.0.1-SNAPSHO
 
 
 # Use entrypoint so I can pass arguments, aka env variables on the command line.
-ENTRYPOINT ["java","-jar","UmcUrlsWithNullUtValuesToCsv-0.0.1-SNAPSHOT-jar-with-dependencies.jar"]
+ENTRYPOINT ["java","-jar","Drupal-1.0.jar"]
