@@ -1,10 +1,10 @@
 pipeline {
     agent any
     environment {
-       IMAGE = "cds-jobs:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
-       APP_JAR = 'com.ibm.map-etl-framework-CDSJobs-2.2.jar'
+       IMAGE = "drupal:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
+       APP_JAR = 'com.ibm.map-Drupal-1.0.jar'
        DAG_ID = "${DAG_NAME}" // paramterized due to 3 different dags could be building for. 
-       SOURCE_CODE_FOLDER = "cds"
+       SOURCE_CODE_FOLDER = "drupal"
     }
     stages {
         stage('GitHub Checkout') {
