@@ -45,6 +45,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt-get update && apt-get install -y libzstd1 && \
     apt-get update && apt-get install --upgrade libssl1.1 && \
     apt-get update && apt-get install --upgrade openssl && \
+    apt-get update && apt-get install zlib1g && \
+    apt-get update && apt-get install gzip && \
     apt install -y bash tini libc6 libpam-modules libnss3 && \
 	mvn -f /usr/src/app/pom.xml clean package
 
