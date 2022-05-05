@@ -3,7 +3,7 @@ pipeline {
     environment {
        IMAGE = "drupal:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
        APP_JAR = 'com.ibm.map-Drupal-1.0.jar'
-       DAG_ID = "${DAG_NAME}" // paramterized due to 3 different dags could be building for. 
+       DAG_ID = "drupalMerchandising" // paramterized due to 3 different dags could be building for. 
        SOURCE_CODE_FOLDER = "drupal"
     }
     stages {
