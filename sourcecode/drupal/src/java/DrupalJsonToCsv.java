@@ -1,4 +1,4 @@
-package com.ibm.map;
+package java;
 
 import java.io.*;
 import java.net.HttpURLConnection;

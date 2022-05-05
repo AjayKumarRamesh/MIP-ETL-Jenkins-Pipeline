@@ -1,4 +1,4 @@
-package com.ibm.map;
+package java;
 
 
 

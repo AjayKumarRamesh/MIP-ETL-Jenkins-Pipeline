@@ -7,8 +7,8 @@
 </properties>
     <!--  package name and jar name "DrupalJsonToCsv" to be created-->
     <groupId>com.ibm.map</groupId>
-    <artifactId>UTLookupTable</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <artifactId>Drupal</artifactId>
+    <version>1.0</version>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
@@ -48,7 +48,7 @@
                       <archive>
                          <manifest>
                       	    <!--Be sure this main class points to the package location of the jar file you are running. -->
-                            <mainClass>com.ibm.map.UTLookupTable</mainClass>
+                            <!-- <mainClass>com.ibm.map.UTLookupTable</mainClass> -->
                          </manifest>
                       </archive>
                 </configuration>
