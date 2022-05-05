@@ -41,10 +41,12 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh "ibmcloud cos config region --region=${IBMCLOUD_COS_REGION}"
     sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
 
-    //Download and Install Flare
-    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Flare-v2.1-Log4j2.jar' Flare-v2.1-Log4j2.jar"
-    sh "ls -al"
-    sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
+    if (dag_ID != "drupalMerchandising") {
+        //Download and Install Flare
+        sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Flare-v2.1-Log4j2.jar' Flare-v2.1-Log4j2.jar"
+        sh "ls -al"
+        sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
+    }
 
     sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
 
