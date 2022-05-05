@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-       IMAGE = 'spss_scoring:jenkins'                               //can be used in whole pipeline
+       IMAGE = 'spss_scoring:jenkins.build.${env.BUILD_NUMBER}'                               //can be used in whole pipeline
        APP_JAR = 'com.ibm.map-SpssScoring-2.2.jar'
        DAG_ID = "MIP_SPSS_SCORING"
        SOURCE_CODE_FOLDER = "scoring"
