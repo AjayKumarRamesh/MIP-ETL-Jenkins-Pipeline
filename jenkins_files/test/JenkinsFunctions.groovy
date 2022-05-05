@@ -7,13 +7,12 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             CDStoMIP_FullRefresh:['CDS', 'CDStoAdobe', 'digikeystore.jks', 'javacerts.jks'],
             IWM:['IWM', 'MRS', 'digikeystore.jks', 'mrs_db2_cloud_stage.ks', 'mrs_db2_prod_cloud.ks', 'mrs_db2_test.ks'],
             BDS_GEO_HIER:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
-            MIP_SPSS_SCORING:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             ADHOC_MKTO_LEADXREF:['Adhoc_xref', '.', 'Universal-trustore.jks', 'digikeystore.jks', 'marketo_sftp_pem.pem', 'marketo_sftp_prod.pem'],
             GRP_EVENTS_IDM:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             CMDP_COP_to_MIP:['.', 'AccountIngestion', 'digikeystore.jks', 'javacerts.jks'],
             'MIP-MARKETO-INTERACTION':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
-            SPSS_SCORING:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
+            MIP_SPSS_SCORING:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             drupalMerchandising:['.', '.', 'digikeystore.jks', 'javacerts.jks']]
 // image, jar 
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
@@ -22,13 +21,12 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
            CDStoMIP_FullRefresh:['cds_image', 'cds_app_jar'],
            IWM:['iwm_image', 'iwm_app_jar'],
            BDS_GEO_HIER:['bds_image','bds_app_jar'],
-           MIP_SPSS_SCORING:['spss_image','spss_app_jar'],
            ADHOC_MKTO_LEADXREF:['adhoc_image','adhoc_app_jar'],
            GRP_EVENTS_IDM:['grp_idm_ids_image','grp_idm_ids_app_jar'],
            CMDP_COP_to_MIP:['cmdp_cop_image', 'cmdp_cop_jar'],
            'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar'],
            MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar'],
-           SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar'],
+           MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar'],
            drupalMerchandising:['drupal_image', 'drupal_app_jar']]
            
 envNum = [dev:1,test:2,prod:3]
