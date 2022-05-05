@@ -39,12 +39,10 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh "ibmcloud cos config region --region=${IBMCLOUD_COS_REGION}"
     sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
 
-    if (dag_ID != "drupalMerchandising") {
-        //Download and Install Flare
-        sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Flare-v2.1-Log4j2.jar' Flare-v2.1-Log4j2.jar"
-        sh "ls -al"
-        sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
-    }
+    //Download and Install Flare
+    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Flare-v2.1-Log4j2.jar' Flare-v2.1-Log4j2.jar"
+    sh "ls -al"
+    sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
 
     sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
 
@@ -69,6 +67,28 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh 'cp Dockerfile spark-3.0.1-bin-hadoop2.7'
     //Copy Maven artifacts to Spark jars folder
     sh "cp -r ${dagstoCOS[dag_ID][1]}/target/. spark-3.0.1-bin-hadoop2.7/examples/jars"
+}
+
+def getObjectsNoSpark(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN, 
+                  String IBMCLOUD_COS_REGION, String IBMCLOUD_COS_BUCKET, String dag_ID) {
+
+    //Prepare IBMCLOUD COS access
+    sh "ibmcloud plugin install cloud-object-storage"
+    sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
+    sh "ibmcloud cos config region --region=${IBMCLOUD_COS_REGION}"
+    sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}" 
+
+    //Create cert folder
+    sh "mkdir cert"
+
+    //Get certs
+    for (int i = 2; i < dagstoCOS[dag_ID].size(); i++) {
+        sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/${dagstoCOS[dag_ID][0]}/cert/${dagstoCOS[dag_ID][i]}' cert/${dagstoCOS[dag_ID][i]}"
+    } 
+
+    sh 'ls -al cert/'
+
+    sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
 }
 
 def test() {
