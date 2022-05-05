@@ -14,7 +14,7 @@ WORKDIR /usr/src/app
 
 
 # Copy the pom file from the current location into the container WORKDIR directory.
-COPY pom.xml .
+# COPY pom.xml .
 
 
 # Copy the application from under the local src directory into the container WORKDIR/src directory.
@@ -47,8 +47,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt-get update && apt-get install --upgrade openssl && \
     apt-get update && apt-get install zlib1g && \
     apt-get update && apt-get install gzip && \
-    apt install -y bash tini libc6 libpam-modules libnss3 && \
-	mvn -f /usr/src/app/pom.xml clean package
+    apt install -y bash tini libc6 libpam-modules libnss3 
+
+# mvn -f /usr/src/app/pom.xml clean package
 
 
 # Second Docker build stage: copy compiled minimal Java distribution and app from stage 1 to a new image.
