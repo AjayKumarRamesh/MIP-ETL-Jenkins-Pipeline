@@ -13,7 +13,7 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             'MIP-MARKETO-INTERACTION':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             MIP_SPSS_SCORING:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
-            drupalMerchandising:['.', '.', 'digikeystore.jks', 'javacerts.jks']]
+            drupalMerchandising:['.', '.', 'digikeystore.jks', 'javacerts.jks', 'cedp_client.jks', 'MPW_CLIENT.jks']]
 // image, jar 
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
            CDSExtract:['cds_image', 'cds_app_jar'],
