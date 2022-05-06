@@ -119,13 +119,13 @@ def checkDagStatus(String airflow_pod, String dag_ID, boolean canFail) {
             DAG_EXECUTION_DATE = dag_run_object[0]['execution_date']
             while (DAG_STATUS != "success") {
                 DAG_STATUS = sh(script:"""kubectl exec -n airflow ${airflow_pod} -- airflow dags state ${dag_ID} ${DAG_EXECUTION_DATE} | egrep 'running|failed|success'""", returnStdout: true).trim()
-                sh "echo 'Checking DAG status before pause: ${DAG_STATUS}'"
+                sh "echo 'Checking ${dag_ID} DAG status before pause: ${DAG_STATUS}'"
                 if (DAG_STATUS == "failed" && !canFail) {
                     sh "exit 1"
                 }
                 sleep(10)
             }
-            sh "echo 'DAG no longer in run state, continuing with deployment.'"
+            sh "echo '${dag_ID} DAG no longer in run state, continuing with deployment.'"
         } else {
             sh "echo 'No current ${dag_ID} DAGs found running.'"
         }
@@ -135,6 +135,7 @@ def checkDagStatus(String airflow_pod, String dag_ID, boolean canFail) {
 
 def moveImage(String image, String source_env, String dest_env) {
     //move images from dev to test (or source to dest)
+    sh "echo 'moveImage, source_env: ${source_env} and dest_env: ${dest_env}'"
     sh "ibmcloud cr login"
     sh "docker pull us.icr.io/${source_env}-namespace/${image}"
     sh "docker tag us.icr.io/${source_env}-namespace/${image} us.icr.io/${dest_env}-namespace/${image}"
@@ -143,17 +144,18 @@ def moveImage(String image, String source_env, String dest_env) {
 
 def getAirflowVars(String airflow_pod, String dag_ID) {
 
-    sh "echo in getAirflowVars, airflow_pod: ${airflow_pod} and dag_ID: ${dag_ID}"
+    sh "echo 'getAirflowVars, airflow_pod: ${airflow_pod} and dag_ID: ${dag_ID}'"
     image_ref = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][0]}", returnStdout: true).trim()
     jar_ref = sh(script:"kubectl exec -n airflow ${airflow_pod} -- airflow variables get ${airflow[dag_ID][1]}", returnStdout: true).trim()
 
-    sh "echo image_ref: ${image_ref}"
-    sh "echo jar_ref: ${jar_ref}"
+    sh "echo 'image_ref: ${image_ref}'"
+    sh "echo 'jar_ref: ${jar_ref}'"
     
     return [image_ref, jar_ref]
 }
 
 def setAirflowVars(String airflow_pod, String dag_ID, String image, String jar) {
+    sh "echo 'setAirflowVars, airflow_pod: ${airflow_pod} and dag_ID: ${dag_ID}'"
     sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables set ${airflow[dag_ID][0]} ${image}"
     sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables set ${airflow[dag_ID][1]} ${jar}"
 }
