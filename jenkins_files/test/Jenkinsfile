@@ -84,7 +84,7 @@ pipeline {
 
             script {
                 def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
-                JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "prod", true)
+                JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "prod", false)
 
                 AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
 
