@@ -48,7 +48,7 @@
                       <archive>
                          <manifest>
                       	    <!--Be sure this main class points to the package location of the jar file you are running. -->
-                            <mainClass>com.ibm.map.UTLookupTable</mainClass>
+                            <!-- <mainClass>com.ibm.map.UTLookupTable</mainClass> -->
                          </manifest>
                       </archive>
                 </configuration>

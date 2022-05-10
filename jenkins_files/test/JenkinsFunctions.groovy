@@ -122,7 +122,7 @@ def checkDagStatus(String airflow_pod, String dag_ID, boolean canFail) {
                 sh "echo 'Checking ${dag_ID} DAG status before pause: ${DAG_STATUS}'"
                 if (DAG_STATUS == "failed" && !canFail) {
                     sh "exit 1"
-                }
+                } // TODO fix infinite fail loop on canFail
                 sleep(10)
             }
             sh "echo '${dag_ID} DAG no longer in run state, continuing with deployment.'"

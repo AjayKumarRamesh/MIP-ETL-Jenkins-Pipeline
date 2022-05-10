@@ -63,4 +63,4 @@ COPY --from=build /usr/src/app/target/Drupal-1.0.jar .
 
 
 # Use entrypoint so I can pass arguments, aka env variables on the command line.
-ENTRYPOINT ["java","-jar","Drupal-1.0.jar"]
+# ENTRYPOINT ["java","-jar","Drupal-1.0.jar"]
