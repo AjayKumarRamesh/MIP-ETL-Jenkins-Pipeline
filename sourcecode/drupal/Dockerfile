@@ -55,7 +55,7 @@ EXPOSE 8080
 
 
 # Get the build target in the container so you can run it.
-COPY --from=build /usr/src/app/target/Drupal-1.0.jar .
+COPY --from=build /usr/src/app/target/Drupal-1.0-jar-with-dependencies.jar .
 
 
 # Add argument for cloud object store endpoint
