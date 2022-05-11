@@ -1,4 +1,4 @@
-package java;
+package jobs;
 
 import java.io.*;
 import java.net.HttpURLConnection;
