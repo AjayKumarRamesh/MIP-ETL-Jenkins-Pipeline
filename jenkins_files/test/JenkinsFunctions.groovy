@@ -120,9 +120,13 @@ def checkDagStatus(String airflow_pod, String dag_ID, boolean canFail) {
             while (DAG_STATUS != "success") {
                 DAG_STATUS = sh(script:"""kubectl exec -n airflow ${airflow_pod} -- airflow dags state ${dag_ID} ${DAG_EXECUTION_DATE} | egrep 'running|failed|success'""", returnStdout: true).trim()
                 sh "echo 'Checking ${dag_ID} DAG status before pause: ${DAG_STATUS}'"
-                if (DAG_STATUS == "failed" && !canFail) {
-                    sh "exit 1"
-                } // TODO fix infinite fail loop on canFail
+                if (DAG_STATUS == "failed") {
+                    if (!canFail) {
+                        sh "exit 1"
+                    } else {
+                        break;
+                    }
+                } 
                 sleep(10)
             }
             sh "echo '${dag_ID} DAG no longer in run state, continuing with deployment.'"
