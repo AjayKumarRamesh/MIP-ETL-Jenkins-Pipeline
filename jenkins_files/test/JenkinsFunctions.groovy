@@ -40,8 +40,17 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
 
     //Download and Install Flare
-    sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Flare-v2.1-Log4j2.jar' Flare-v2.1-Log4j2.jar"
+    //sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Flare-v2.1-Log4j2.jar' Flare-v2.1-Log4j2.jar"
+
+    GITHUB_API_TOKEN = credentials('github_api_token')
+    GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flare/releases/assets/750716"
+    OUTPUT_FILENAME = "Flare-v2.1-Log4j2.jar"
+
+    sh "echo 'Flare ETL Framework download'"
+    sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+
     sh "ls -al"
+
     sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
 
     sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
