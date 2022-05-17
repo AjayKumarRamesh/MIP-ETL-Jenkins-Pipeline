@@ -48,7 +48,11 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flare/releases/assets/750716"
     OUTPUT_FILENAME = "Flare-v2.1-Log4j2.jar"
 
-    sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+    sh "echo ${GITHUB_API_TOKEN}"
+    sh "echo ${GITHUB_ETL_URL}"
+    sh "echo ${OUTPUT_FILENAME}"
+
+    sh "curl -L -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Accept:application/octet-stream" "${GITHUB_ETL_URL}" -o ${OUTPUT_FILENAME}"
     sh "ls -al"
     sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
     sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
