@@ -52,7 +52,7 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh "echo ${GITHUB_ETL_URL}"
     sh "echo ${OUTPUT_FILENAME}"
 
-    sh "curl -L -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Accept:application/octet-stream" "${GITHUB_ETL_URL}" -o ${OUTPUT_FILENAME}"
+    sh "'curl -L -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Accept:application/octet-stream" "${GITHUB_ETL_URL}" -o ${OUTPUT_FILENAME}'"
     sh "ls -al"
     sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
     sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
