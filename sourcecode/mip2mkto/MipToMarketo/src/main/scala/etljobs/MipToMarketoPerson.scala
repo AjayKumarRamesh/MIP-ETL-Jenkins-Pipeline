@@ -69,6 +69,7 @@ object MipToMarketoPerson extends ETLFrameWork {
 
   //Code to build payload to POST to Marketo
   def buildPayload(transformedDF: DataFrame, action: String, lookUpField: String): String = {
+
     val output_df = transformedDF.select(to_json(struct(col("*"))).alias("content"))
     val testData = output_df.rdd.map(row => row.getString(0)).collect
     val inputData: String = testData.mkString(",")
