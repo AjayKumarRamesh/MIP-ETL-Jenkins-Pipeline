@@ -14,20 +14,20 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             MIP_SPSS_SCORING:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             drupalMerchandising:['.', '.', 'digikeystore.jks', 'javacerts.jks', 'cedp_client.jks', 'MPW_CLIENT.jks']]
-// image, jar 
-airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar'],
-           CDSExtract:['cds_image', 'cds_app_jar'],
-           CDStoMIP:['cds_image', 'cds_app_jar'],
-           CDStoMIP_FullRefresh:['cds_image', 'cds_app_jar'],
-           IWM:['iwm_image', 'iwm_app_jar'],
-           BDS_GEO_HIER:['bds_image','bds_app_jar'],
-           ADHOC_MKTO_LEADXREF:['adhoc_xref_image','adhoc_app_jar'],
-           GRP_EVENTS_IDM:['grp_idm_ids_image','grp_idm_ids_app_jar'],
-           CMDP_COP_to_MIP:['cmdp_cop_image', 'cmdp_cop_jar'],
-           'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar'],
-           MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar'],
-           MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar'],
-           drupalMerchandising:['drupal_image', 'drupal_app_jar']]
+// image variable, jar variable, image value , jar value 
+airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.map-RubyToMIP-2.2.jar'],
+           CDSExtract:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar'],
+           CDStoMIP:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar'],
+           CDStoMIP_FullRefresh:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar'],
+           IWM:['iwm_image', 'iwm_app_jar', 'iwm_to_mip', 'com.ibm.map-IWM-2.2.jar'],
+           BDS_GEO_HIER:['bds_image','bds_app_jar', '', 'MIP-Flare-Framework-2.1.jar'],
+           ADHOC_MKTO_LEADXREF:['adhoc_xref_image','adhoc_app_jar', 'sftp_to_mip_mkto_leadxref', 'MIP-adhoc-ETL-Framework-1.1.jar'],
+           GRP_EVENTS_IDM:['grp_idm_ids_image','grp_idm_ids_app_jar', 'grp_events_to_idmids', 'MIP-Flare-Framework-2.1.jar'],
+           CMDP_COP_to_MIP:['cmdp_cop_image', 'cmdp_cop_jar', 'cmdp_cop_to_mip', 'com.ibm.map-CompanyIngestion-1.2.jar'],
+           'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar', 'mip_mkto_ingestion', 'com.ibm-MAP-ETL-Framework-Mip2Marketo-1.0.jar'],
+           MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar', 'mip_unsubs_email_idm', 'MIP-Flare-Framework-2.1.jar'],
+           MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar', 'spss_scoring', 'com.ibm.map-SpssScoring-2.2.jar'],
+           drupalMerchandising:['drupal_image', 'drupal_app_jar']] // drupal doesn't need extra info 
            
 envNum = [dev:1,test:2,prod:3]
 
