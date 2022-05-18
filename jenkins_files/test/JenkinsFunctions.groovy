@@ -43,6 +43,7 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Flare-v2.1-Log4j2.jar' Flare-v2.1-Log4j2.jar"
     sh "ls -al"
     sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
+
     sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
 
     //Download Spark
@@ -140,9 +141,11 @@ def moveImage(String image, String source_env, String dest_env) {
     //move images from dev to test (or source to dest)
     sh "echo 'moveImage, source_env: ${source_env} and dest_env: ${dest_env}'"
     sh "ibmcloud cr login"
-    sh "docker pull us.icr.io/${source_env}-namespace/${image}"
-    sh "docker tag us.icr.io/${source_env}-namespace/${image} us.icr.io/${dest_env}-namespace/${image}"
-    sh "docker push us.icr.io/${dest_env}-namespace/${image}"
+    sh "ibmcloud cr image-tag us.icr.io/${source_env}-namespace/${image} us.icr.io/${dest_env}-namespace/${image}"
+
+    //sh "docker pull us.icr.io/${source_env}-namespace/${image}"
+    //sh "docker tag us.icr.io/${source_env}-namespace/${image} us.icr.io/${dest_env}-namespace/${image}"
+    //sh "docker push us.icr.io/${dest_env}-namespace/${image}"
 }
 
 def getAirflowVars(String airflow_pod, String dag_ID) {
