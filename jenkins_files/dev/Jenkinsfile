@@ -39,7 +39,7 @@ pipeline {
                     sh 'ls -al'
                     sh 'mvn install:install-file -Dfile=groupId-ETL-Framework-2.1.jar -DgroupId=com.etlframework -DartifactId=base -Dversion=2.1 -Dpackaging=jar'
                     script {
-                        def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                        def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
                         JENKINS_FUNC.mavenBuild()
                     }
                 }
