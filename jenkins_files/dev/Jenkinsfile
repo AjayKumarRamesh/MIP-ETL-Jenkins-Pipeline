@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-       IMAGE_TAG = ''                               //can be used in whole pipeline
+       IMAGE = ''                               //can be used in whole pipeline
        APP_JAR = ''
        DAG_ID = "${DAG_NAME}"
        SOURCE_CODE_FOLDER = ''
@@ -17,8 +17,8 @@ pipeline {
             steps{
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
-                    (IMAGE_TAG, APP_JAR, SOURCE_CODE_FOLDER) = JENKINS_FUNC.getGlobalVars(DAG_ID)
-                    IMAGE_TAG = IMAGE_TAG + ":${env.BUILD_NUMBER}"
+                    (IMAGE, APP_JAR, SOURCE_CODE_FOLDER) = JENKINS_FUNC.getGlobalVars(DAG_ID)
+                    IMAGE = IMAGE + ":${env.BUILD_NUMBER}"
                 }
             }
         }
