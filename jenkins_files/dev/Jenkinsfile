@@ -25,8 +25,8 @@ pipeline {
         stage('Flare ETL Framework download and Maven build'){
             environment {
                 GITHUB_API_TOKEN = credentials('github_api_token')
-                GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flarelets-Developer/releases/assets/608129"
-                OUTPUT_FILENAME = "groupId-ETL-Framework-2.1.jar"
+                GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flare/releases/assets/750716"
+                OUTPUT_FILENAME = "Flare-v2.1-Log4j2.jar"
             }
             steps{
                 dir("sourcecode/${SOURCE_CODE_FOLDER}") {
@@ -37,7 +37,7 @@ pipeline {
 
                     sh 'mvn -version'
                     sh 'ls -al'
-                    sh 'mvn install:install-file -Dfile=groupId-ETL-Framework-2.1.jar -DgroupId=com.etlframework -DartifactId=base -Dversion=2.1 -Dpackaging=jar'
+                    sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1 -Dpackaging=jar'
                     script {
                         def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
                         JENKINS_FUNC.mavenBuild()
