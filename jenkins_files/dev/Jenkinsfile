@@ -17,7 +17,7 @@ pipeline {
             steps{
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
-                    IMAGE_TAG, APP_JAR, SOURCE_CODE_FOLDER = JENKINS_FUNC.getGlobalVars(DAG_ID)
+                    (IMAGE_TAG, APP_JAR, SOURCE_CODE_FOLDER) = JENKINS_FUNC.getGlobalVars(DAG_ID)
                     IMAGE_TAG = IMAGE_TAG + ":${env.BUILD_NUMBER}"
                 }
             }
