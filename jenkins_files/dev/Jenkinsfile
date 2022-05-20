@@ -4,7 +4,7 @@ pipeline {
        IMAGE_TAG = ''                               //can be used in whole pipeline
        APP_JAR = ''
        DAG_ID = "${DAG_NAME}"
-       SOURCE_CODE_FOLDER = ""
+       SOURCE_CODE_FOLDER = ''
     }
     stages {
         stage('GitHub Checkout') {

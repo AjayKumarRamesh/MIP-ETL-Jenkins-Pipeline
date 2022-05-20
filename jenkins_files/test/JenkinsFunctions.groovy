@@ -178,7 +178,7 @@ def getGlobalVars(String dag_ID) {
     jar = airflow[dag_ID][3]
     sourceFolder = airflow[dag_ID][4]
 
-    sh "echo 'image: ${image} jar: ${jar} sourceFolder: ${sourceFolder}"
+    sh "echo 'image: ${image} jar: ${jar} sourceFolder: ${sourceFolder}'"
 
     return [image, jar, sourceFolder]
 }
