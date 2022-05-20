@@ -14,19 +14,19 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             MIP_SPSS_SCORING:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             drupalMerchandising:['.', '.', 'digikeystore.jks', 'javacerts.jks', 'cedp_client.jks', 'MPW_CLIENT.jks']]
-// image variable, jar variable, image value , jar value 
-airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.map-RubyToMIP-2.2.jar'],
-           CDSExtract:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar'],
-           CDStoMIP:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar'],
-           CDStoMIP_FullRefresh:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar'],
-           IWM:['iwm_image', 'iwm_app_jar', 'iwm_to_mip', 'com.ibm.map-IWM-2.2.jar'],
-           BDS_GEO_HIER:['bds_image','bds_app_jar', '', 'MIP-Flare-Framework-2.1.jar'],
-           ADHOC_MKTO_LEADXREF:['adhoc_xref_image','adhoc_app_jar', 'sftp_to_mip_mkto_leadxref', 'MIP-adhoc-ETL-Framework-1.1.jar'],
-           GRP_EVENTS_IDM:['grp_idm_ids_image','grp_idm_ids_app_jar', 'grp_events_to_idmids', 'MIP-Flare-Framework-2.1.jar'],
-           CMDP_COP_to_MIP:['cmdp_cop_image', 'cmdp_cop_jar', 'cmdp_cop_to_mip', 'com.ibm.map-CompanyIngestion-1.2.jar'],
-           'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar', 'mip_mkto_ingestion', 'com.ibm-MAP-ETL-Framework-Mip2Marketo-1.0.jar'],
-           MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar', 'mip_unsubs_email_idm', 'MIP-Flare-Framework-2.1.jar'],
-           MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar', 'spss_scoring', 'com.ibm.map-SpssScoring-2.2.jar'],
+// image variable, jar variable, image value , jar value , sourcecode subfolder 
+airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.map-RubyToMIP-2.2.jar', 'ruby'],
+           CDSExtract:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar', 'cds'],
+           CDStoMIP:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar', 'cds'],
+           CDStoMIP_FullRefresh:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar', 'cds'],
+           IWM:['iwm_image', 'iwm_app_jar', 'iwm_to_mip', 'com.ibm.map-IWM-2.2.jar', 'iwm'],
+           BDS_GEO_HIER:['bds_image','bds_app_jar', '', 'MIP-Flare-Framework-2.1.jar', 'bds'],
+           ADHOC_MKTO_LEADXREF:['adhoc_xref_image','adhoc_app_jar', 'sftp_to_mip_mkto_leadxref', 'MIP-adhoc-ETL-Framework-1.1.jar', 'adhoc'],
+           GRP_EVENTS_IDM:['grp_idm_ids_image','grp_idm_ids_app_jar', 'grp_events_to_idmids', 'MIP-Flare-Framework-2.1.jar', 'GrpIDMIds'],
+           CMDP_COP_to_MIP:['cmdp_cop_image', 'cmdp_cop_jar', 'cmdp_cop_to_mip', 'com.ibm.map-CompanyIngestion-1.2.jar', 'cmdp_cop'],
+           'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar', 'mip_mkto_ingestion', 'com.ibm-MAP-ETL-Framework-Mip2Marketo-1.0.jar', 'mip2mkto'],
+           MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar', 'mip_unsubs_email_idm', 'MIP-Flare-Framework-2.1.jar', 'UnsubEmail'],
+           MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar', 'spss_scoring', 'com.ibm.map-SpssScoring-2.2.jar', 'scoring'],
            drupalMerchandising:['drupal_image', 'drupal_app_jar']] // drupal doesn't need extra info 
            
 envNum = [dev:1,test:2,prod:3]
@@ -39,12 +39,14 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh "ibmcloud cos config region --region=${IBMCLOUD_COS_REGION}"
     sh "ibmcloud cos config crn --crn=${IBMCLOUD_COS_CRN}"
 
+    /**
     //Download and Install Flare
     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/Flare-v2.1-Log4j2.jar' Flare-v2.1-Log4j2.jar"
     sh "ls -al"
     sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
 
     sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
+    */
 
     //Download Spark
     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/spark-3.0.1-bin-hadoop2.7.zip' spark-3.0.1-bin-hadoop2.7.zip"
