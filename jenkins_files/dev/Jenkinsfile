@@ -13,7 +13,38 @@ pipeline {
                 url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'  
             }  //steps
         } //stage
+        stage('Get Global Vars') {
+            steps{
+                script {
+                    def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                    IMAGE_TAG, APP_JAR, SOURCE_CODE_FOLDER = JENKINS_FUNC.getGlobalVars(DAG_ID)
+                    IMAGE_TAG = IMAGE_TAG + ":${env.BUILD_NUMBER}"
+                }
+            }
+        }
+        stage('Flare ETL Framework download and Maven build'){
+            environment {
+                GITHUB_API_TOKEN = credentials('github_api_token')
+                GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flarelets-Developer/releases/assets/608129"
+                OUTPUT_FILENAME = "groupId-ETL-Framework-2.1.jar"
+            }
+            steps{
+                dir("sourcecode/${SOURCE_CODE_FOLDER}") {
+                    sh "pwd"
+                
+                    sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+                    sh 'ls -al'
 
+                    sh 'mvn -version'
+                    sh 'ls -al'
+                    sh 'mvn install:install-file -Dfile=groupId-ETL-Framework-2.1.jar -DgroupId=com.etlframework -DartifactId=base -Dversion=2.1 -Dpackaging=jar'
+                    script {
+                        def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
+                        JENKINS_FUNC.mavenBuild()
+                    }
+                }
+            }
+        }
         stage('Get COS Objects') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')

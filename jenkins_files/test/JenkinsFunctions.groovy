@@ -71,6 +71,10 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
     sh "cp -r ${dagstoCOS[dag_ID][1]}/target/. spark-3.0.1-bin-hadoop2.7/examples/jars"
 }
 
+def mavenBuild() {
+    sh "mvn clean compile package -f ${dagstoCOS[dag_ID][1]}/pom.xml"
+}
+
 def getObjectsNoSpark(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN, 
                   String IBMCLOUD_COS_REGION, String IBMCLOUD_COS_BUCKET, String dag_ID) {
 
@@ -166,6 +170,17 @@ def setAirflowVars(String airflow_pod, String dag_ID, String image, String jar) 
     sh "echo 'setAirflowVars, airflow_pod: ${airflow_pod} and dag_ID: ${dag_ID}'"
     sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables set ${airflow[dag_ID][0]} ${image}"
     sh "kubectl exec -n airflow ${airflow_pod} -- airflow variables set ${airflow[dag_ID][1]} ${jar}"
+}
+
+def getGlobalVars(String dag_ID) {
+
+    image = airflow[dag_ID][2]
+    jar = airflow[dag_ID][3]
+    sourceFolder = airflow[dag_ID][4]
+
+    sh "echo 'image: ${image} jar: ${jar} sourceFolder: ${sourceFolder}"
+
+    return [image, jar, sourceFolder]
 }
 
 return this
