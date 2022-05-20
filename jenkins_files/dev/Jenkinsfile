@@ -37,7 +37,7 @@ pipeline {
 
                     sh 'mvn -version'
                     sh 'ls -al'
-                    sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1 -Dpackaging=jar'
+                    sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
                     script {
                         def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
                         JENKINS_FUNC.mavenBuild()
