@@ -21,7 +21,7 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.ma
            CDStoMIP:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar', 'cds'],
            CDStoMIP_FullRefresh:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar', 'cds'],
            IWM:['iwm_image', 'iwm_app_jar', 'iwm_to_mip', 'com.ibm.map-IWM-2.2.jar', 'iwm'],
-           BDS_GEO_HIER:['bds_image','bds_app_jar', '', 'MIP-Flare-Framework-2.1.jar', 'bds'],
+           BDS_GEO_HIER:['bds_image','bds_app_jar', 'cmdp-bds-geo-hier-mip', 'MIP-Flare-Framework-2.1.jar', 'bds'],
            ADHOC_MKTO_LEADXREF:['adhoc_xref_image','adhoc_app_jar', 'sftp_to_mip_mkto_leadxref', 'MIP-adhoc-ETL-Framework-1.1.jar', 'adhoc'],
            GRP_EVENTS_IDM:['grp_idm_ids_image','grp_idm_ids_app_jar', 'grp_events_to_idmids', 'MIP-Flare-Framework-2.1.jar', 'GrpIDMIds'],
            CMDP_COP_to_MIP:['cmdp_cop_image', 'cmdp_cop_jar', 'cmdp_cop_to_mip', 'com.ibm.map-CompanyIngestion-1.2.jar', 'cmdp_cop'],
