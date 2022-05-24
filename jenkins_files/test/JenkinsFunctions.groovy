@@ -28,7 +28,7 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.ma
            'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar', 'mip_mkto_ingestion', 'com.ibm-MAP-ETL-Framework-Mip2Marketo-1.0.jar', 'mip2mkto'],
            MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar', 'mip_unsubs_email_idm', 'MIP-Flare-Framework-2.1.jar', 'UnsubEmail'],
            MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar', 'spss_scoring', 'com.ibm.map-SpssScoring-2.2.jar', 'scoring'],
-           RUBY_API_TO_MIP:['ruby_api_image','ruby_api_app_jar', '', 'MIP-Flare-Framework-2.1.jar', 'RubyApiToMip'],
+           RUBY_API_TO_MIP:['ruby_api_image','ruby_api_app_jar', '', 'MIP-Flare-Framework-2.1.jar', 'rubyapitomip'],
            drupalMerchandising:['drupal_image', 'drupal_app_jar']] // drupal doesn't need extra info 
            
 envNum = [dev:1,test:2,prod:3]
