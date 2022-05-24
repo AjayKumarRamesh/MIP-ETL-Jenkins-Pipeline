@@ -13,6 +13,7 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             'MIP-MARKETO-INTERACTION':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             MIP_SPSS_SCORING:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
+            RUBY_API_TO_MIP:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             drupalMerchandising:['.', '.', 'digikeystore.jks', 'javacerts.jks', 'cedp_client.jks', 'MPW_CLIENT.jks']]
 // image variable, jar variable, image value , jar value , sourcecode subfolder 
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.map-RubyToMIP-2.2.jar', 'ruby'],
@@ -27,6 +28,7 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.ma
            'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar', 'mip_mkto_ingestion', 'com.ibm-MAP-ETL-Framework-Mip2Marketo-1.0.jar', 'mip2mkto'],
            MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar', 'mip_unsubs_email_idm', 'MIP-Flare-Framework-2.1.jar', 'UnsubEmail'],
            MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar', 'spss_scoring', 'com.ibm.map-SpssScoring-2.2.jar', 'scoring'],
+           RUBY_API_TO_MIP:['ruby_api_image','ruby_api_app_jar', '', 'MIP-Flare-Framework-2.1.jar', 'RubyApiToMip'],
            drupalMerchandising:['drupal_image', 'drupal_app_jar']] // drupal doesn't need extra info 
            
 envNum = [dev:1,test:2,prod:3]
