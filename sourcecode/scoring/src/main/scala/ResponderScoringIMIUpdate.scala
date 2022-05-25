@@ -29,6 +29,7 @@ object ResponderScoringIMIUpdate extends MIPUtilities {
       case e: Throwable => {
         e.printStackTrace()
         log.error(e.getMessage + " - " + e.getCause)
+        println("ResponderScoringIMIUpdate catch block")
         bException = true
       }
     } finally {

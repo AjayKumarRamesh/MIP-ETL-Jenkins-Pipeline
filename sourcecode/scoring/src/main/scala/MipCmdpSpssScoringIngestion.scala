@@ -27,6 +27,7 @@ object MipCmdpSpssScoringIngestion extends MIPUtilities {
       case e: Throwable => {
         e.printStackTrace()
         log.error(e.getMessage + " - " + e.getCause)
+        println("MipCmdpSpssScoringIngestion catch block")
         bException = true
       }
     } finally {

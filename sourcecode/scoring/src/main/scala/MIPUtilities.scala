@@ -1,3 +1,4 @@
+import com.ibm.db2.jcc.am.SqlInvalidAuthorizationSpecException
 import com.ibm.mkt.etlframework.audit.{CRUDMetrics, JobRunArgs}
 import com.ibm.mkt.etlframework.config.JobSequenceService
 import com.ibm.mkt.etlframework.data.DataUtilities
@@ -127,8 +128,11 @@ trait MIPUtilities extends ETLFrameWork {
             isSuccess = true
           } catch {
             case e: Throwable =>
+              e.printStackTrace()
               log.error(s"Exception => ${e.getMessage} -  ${e.getCause}")
-              if(e.getMessage.contains(retryForErrorCode)){
+              println(s"breakable => $e")
+              println(s" Inside if SQL exception => ${e.getMessage}")
+              if(e.getMessage.contains(retryForErrorCode) || e.getMessage.equals(null)){
                 isSuccess = false
               }
               else {
@@ -149,12 +153,13 @@ trait MIPUtilities extends ETLFrameWork {
                      } //finally
         }
       }
+      if (retCRUDMetrics!= null) log.info(s"CRUD Metrics -> ${retCRUDMetrics.toString()}")
 
-      log.info(s"CRUD Metrics -> ${retCRUDMetrics.toString()}")
     } catch {
       case e: Throwable => {
         e.printStackTrace()
         log.error(e.getMessage + " - " + e.getCause)
+        println("ProcessSubseq outside catch block")
         exception = e
         bException = true
       }

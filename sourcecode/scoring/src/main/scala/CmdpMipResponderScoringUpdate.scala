@@ -29,6 +29,7 @@ object CmdpMipResponderScoringUpdate extends MIPUtilities {
       case e: Throwable => {
         e.printStackTrace()
         log.error(e.getMessage + " - " + e.getCause)
+        println("CmdpMipResponderScoringUpdate catch block")
         bException = true
       }
     } finally {
