@@ -21,6 +21,7 @@ pipeline {
                    IBMCLOUD_COS_REGION = 'ap-geo'
                    IBMCLOUD_COS_BUCKET = 'map-dev-01'
                }
+               }
 
            stage('Flare ETL Framework download and Maven build'){
                        environment {
