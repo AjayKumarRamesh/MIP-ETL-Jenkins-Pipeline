@@ -40,7 +40,7 @@ pipeline {
            stage('Flare ETL Framework download and Maven build'){
                        environment {
                            GITHUB_API_TOKEN = credentials('github_api_token')
-                           GITHUB_ETL_URL = "https://github.ibm.com/CIO-Mkt-DataEng/Flare/releases/tag/2.1-Log4j2-Temp"
+                           GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flare/releases/assets/750716"
                            OUTPUT_FILENAME = "Flare-v2.1-Log4j2.jar"
                        }
                        steps{
