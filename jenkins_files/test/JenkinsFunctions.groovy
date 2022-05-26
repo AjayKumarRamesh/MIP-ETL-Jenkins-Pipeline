@@ -12,7 +12,7 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             CMDP_COP_to_MIP:['.', 'AccountIngestion', 'digikeystore.jks', 'javacerts.jks'],
             'MIP-MARKETO-INTERACTION':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
-            MIP_SPSS_SCORING:['.', 'scoring', 'digikeystore.jks', 'javacerts.jks'],
+            MIP_SPSS_SCORING:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             RUBY_API_TO_MIP:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             drupalMerchandising:['.', '.', 'digikeystore.jks', 'javacerts.jks', 'cedp_client.jks', 'MPW_CLIENT.jks']]
 // image variable, jar variable, image value , jar value , sourcecode subfolder 
