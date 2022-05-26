@@ -27,13 +27,15 @@ pipeline {
                                    script {
                                        def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
                                        JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
-                                       JENKINS_FUNC.getCOSObjects(IBMCLOUD_CREDS, IBMCLOUD_COS_CRN,
-                                                                  IBMCLOUD_COS_REGION, IBMCLOUD_COS_BUCKET, DAG_ID)
+                                      /* JENKINS_FUNC.getCOSObjects(IBMCLOUD_CREDS, IBMCLOUD_COS_CRN,
+                                                                  IBMCLOUD_COS_REGION, IBMCLOUD_COS_BUCKET, DAG_ID)*/
                                    }
 
                                }
                            }
                }
+
+
 
            stage('Flare ETL Framework download and Maven build'){
                        environment {
