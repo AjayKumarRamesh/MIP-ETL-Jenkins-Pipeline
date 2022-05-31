@@ -8,6 +8,7 @@ import org.apache.spark.sql.functions.{desc, explode}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.sql.{Connection, DriverManager}
+import java.text.{ParseException, SimpleDateFormat}
 import scala.collection.mutable.Map
 
 object RubyApiToMip extends ETLFrameWork {
@@ -20,6 +21,7 @@ object RubyApiToMip extends ETLFrameWork {
   var fetchedTS: String = null
 
   def main(args: Array[String]): Unit = {
+
     try {
       log.info("Initialization started")
       this.initializeFramework(args)
@@ -52,7 +54,7 @@ object RubyApiToMip extends ETLFrameWork {
         }
       }
 
-      if (runDate == null || runDate == "" || runDate == "null") {
+      if (runDate == null || runDate == "" || runDate == "null" || runDate == "''") {
         lastRun = getLastRecordTimeStamp(jobClassName).toString
         if (lastRun == null || lastRun == "" || lastRun == "null") {
           log.info("Both lastRun and runDate are empty. Please provide runDate. {}", lastRun)
@@ -65,12 +67,18 @@ object RubyApiToMip extends ETLFrameWork {
       }
 
       val tgtsqlStr = """MERGE INTO MAP_CORE.MCT_RUBY_CAMPAIGN t USING TABLE ( VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ) as v (CMPN_CD,CMPN_UT_10,CMPN_UT_15,CMPN_UT_17,CMPN_UT_20,CMPN_UT_30,PLAN_NAME,PLAN_CD,PLAN_TYPE_CD,SUB_PLAN_NAME,SUB_PLAN_CD,SUB_PLAN_UT_15,GLOBAL_CMPN_NAME,GLOBAL_CMPN_CD,GLOBAL_CMPN_TYPE_CD,ACTV_FLG) ON t.CMPN_CD = v.CMPN_CD WHEN MATCHED THEN UPDATE SET t.CMPN_UT_10 = v.CMPN_UT_10,t.CMPN_UT_15 = v.CMPN_UT_15,t.CMPN_UT_17 = v.CMPN_UT_17,t.CMPN_UT_20 = v.CMPN_UT_20,t.CMPN_UT_30 = v.CMPN_UT_30,t.PLAN_NAME = v.PLAN_NAME,t.PLAN_CD = v.PLAN_CD,t.PLAN_TYPE_CD = v.PLAN_TYPE_CD,t.SUB_PLAN_NAME = v.SUB_PLAN_NAME,t.SUB_PLAN_CD = v.SUB_PLAN_CD,t.SUB_PLAN_UT_15 = v.SUB_PLAN_UT_15,t.GLOBAL_CMPN_NAME = v.GLOBAL_CMPN_NAME,t.GLOBAL_CMPN_CD = v.GLOBAL_CMPN_CD,t.GLOBAL_CMPN_TYPE_CD = v.GLOBAL_CMPN_TYPE_CD,t.ACTV_FLG = v.ACTV_FLG WHEN NOT MATCHED THEN INSERT (CMPN_CD,CMPN_UT_10,CMPN_UT_15,CMPN_UT_17,CMPN_UT_20,CMPN_UT_30,PLAN_NAME,PLAN_CD,PLAN_TYPE_CD,SUB_PLAN_NAME,SUB_PLAN_CD,SUB_PLAN_UT_15,GLOBAL_CMPN_NAME,GLOBAL_CMPN_CD,GLOBAL_CMPN_TYPE_CD,ACTV_FLG) VALUES (v.CMPN_CD,v.CMPN_UT_10,v.CMPN_UT_15,v.CMPN_UT_17,v.CMPN_UT_20,v.CMPN_UT_30,v.PLAN_NAME,v.PLAN_CD,v.PLAN_TYPE_CD,v.SUB_PLAN_NAME,v.SUB_PLAN_CD,v.SUB_PLAN_UT_15,v.GLOBAL_CMPN_NAME,v.GLOBAL_CMPN_CD,v.GLOBAL_CMPN_TYPE_CD,v.ACTV_FLG)""".stripMargin
-      runJobSequence(tgtsqlStr, dbCon, runDate)
-      //DataUtilities.recordJobHistory(AppProperties.SparkSession, AppProperties.CommonJobSeqCode, "", Constants.JobSucceeded)
       val jobrun = new JobRunArgs
-      //val jobrun:JobRunArgs = new JobRunArgs()
-      jobrun.jobSpecific1 = fetchedTS
-      DataUtilities.recordJobHistory(AppProperties.SparkSession, AppProperties.CommonJobSeqCode, "", Constants.JobSucceeded, jobrun)
+      if (runDate.matches("(\\d{4})-(\\d{1,2})-(\\d{1,2})\\s(\\d{1,2}):(\\d{1,2}):(\\d{1,2}).(\\d{6})$")) {
+        runJobSequence(tgtsqlStr, dbCon, runDate)
+        jobrun.jobSpecific1 = fetchedTS
+        DataUtilities.recordJobHistory(AppProperties.SparkSession, AppProperties.CommonJobSeqCode, "", Constants.JobSucceeded, jobrun)
+      } else {
+        jobrun.jobSpecific2 = "Invalid run date format"
+        log.info(s"Invalid run date format : $runDate")
+        DataUtilities.recordJobHistory(AppProperties.SparkSession, AppProperties.CommonJobSeqCode, "", Constants.JobFailed, jobrun)
+        bException = true
+      }
+
       log.info(s"Completed Job => $jobClassName.")
       println("fetchedTS===> " + fetchedTS)
     } catch {
@@ -89,6 +97,7 @@ object RubyApiToMip extends ETLFrameWork {
       }
     }
   }
+
 
   def runJobSequence(tgtsqlStr: String, targetDB: Connection, runDate: String): Unit = {
     log.info("runJobSequence started.")
@@ -116,7 +125,7 @@ object RubyApiToMip extends ETLFrameWork {
     val codes = getCampaignCodes(runDate) //"2021-06-01"
     val campaignDF = parseCampaignData(spark, codes)
     campaignDF.show(false)
-    fetchedTS = campaignDF.orderBy(desc("updated_date")).first().getString(3).split("\\.")(0)
+    fetchedTS = campaignDF.orderBy(desc("updated_date")).first().getString(3)
 
     import spark.implicits._
     val metaDF = if (!campaignDF.isEmpty) {
@@ -248,7 +257,7 @@ object RubyApiToMip extends ETLFrameWork {
   }
 
   @throws(classOf[Exception])
-  def getLastRecordTimeStamp(jobSeqCode: String):String = {
+  def getLastRecordTimeStamp(jobSeqCode: String): String = {
     var dfResult: DataFrame = null
     var maxTs = ""
     try {
@@ -270,7 +279,7 @@ object RubyApiToMip extends ETLFrameWork {
         val firstRow = dfResult.collect().head
         maxTs = firstRow.getString(1)
       }
-     // else maxTs = null
+      // else maxTs = null
     } finally {
       if (dfResult != null) dfResult.unpersist()
     }
