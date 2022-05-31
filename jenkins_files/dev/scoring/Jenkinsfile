@@ -21,20 +21,45 @@ pipeline {
                    IBMCLOUD_COS_REGION = 'ap-geo'
                    IBMCLOUD_COS_BUCKET = 'map-dev-01'
                }
+                steps{
+                               dir("sourcecode/${SOURCE_CODE_FOLDER}") {
+                                   sh "pwd"
+                                   script {
+                                       def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
+                                       JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
+                                       JENKINS_FUNC.getCOSObjects(IBMCLOUD_CREDS, IBMCLOUD_COS_CRN,
+                                                                  IBMCLOUD_COS_REGION, IBMCLOUD_COS_BUCKET, DAG_ID)
+                                   }
 
-               steps{
-                   dir("sourcecode/${SOURCE_CODE_FOLDER}") {
-                       sh "pwd"
-                       script {
-                           def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
-                           JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
-                           JENKINS_FUNC.getCOSObjects(IBMCLOUD_CREDS, IBMCLOUD_COS_CRN,
-                                                      IBMCLOUD_COS_REGION, IBMCLOUD_COS_BUCKET, DAG_ID)
-                       }
-
-                   }
+                               }
+                           }
                }
-           }
+
+
+
+           stage('Flare ETL Framework download and Maven build'){
+                       environment {
+                           GITHUB_API_TOKEN = credentials('github_api_token')
+                           GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flare/releases/assets/750716"
+                           OUTPUT_FILENAME = "Flare-v2.1-Log4j2.jar"
+                       }
+                       steps{
+                           dir("sourcecode/${SOURCE_CODE_FOLDER}") {
+                               sh "pwd"
+
+                               sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+                               sh 'ls -al'
+
+                               sh 'mvn -version'
+                               sh 'ls -al'
+                               sh 'mvn install:install-file -Dfile=Flare-v2.1-Log4j2.jar -DgroupId=com.flare -DartifactId=base -Dversion=2.1-Log4j2 -Dpackaging=jar'
+                               script {
+                                   def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
+                                   JENKINS_FUNC.mavenBuild()
+                               }
+                           }
+                       }
+                   }
 
            stage('Image build') {
                   environment {
