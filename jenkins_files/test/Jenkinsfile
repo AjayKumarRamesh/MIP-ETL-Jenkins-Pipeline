@@ -7,7 +7,7 @@ pipeline {
        IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
     }
     stages {
-        /*
+        
         stage('Request Approval') {
             steps {
                 script {
@@ -22,7 +22,7 @@ pipeline {
                 }
             }
         }
-        */
+        
         stage('Get DEV image and jar refernece') {
             environment {
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
