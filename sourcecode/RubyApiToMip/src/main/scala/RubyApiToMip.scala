@@ -156,7 +156,7 @@ object RubyApiToMip extends ETLFrameWork {
     val apiConProps = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, CmpnSource)
     val activityEndpoint = apiConProps.getProperty(PropertyNames.EndPoint) // This will provide the Api url
     val activityId = apiConProps.getProperty(PropertyNames.ClientSecret)
-    val leadEndpoint = apiConProps.getProperty(PropertyNames.LeadEndpoint) //This will provide rest of the path
+    val leadEndpoint = apiConProps.getProperty(PropertyNames.ResourceSpecific_1) //This will provide rest of the path
 
     //println(s"RUBY_API_CMPN_URL=$activityEndpoint$leadEndpoint?apikey=$activityId&timestamp=$lastRunTimestamp")
     var requiredDateTime = lastRunTimestamp.replace(":", "%3A").replace(" ", "%20")
@@ -183,7 +183,7 @@ object RubyApiToMip extends ETLFrameWork {
     val apiConProps = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, CmpnMetaSource)
     val activityEndpoint = apiConProps.getProperty(PropertyNames.EndPoint)
     val activityId = apiConProps.getProperty(PropertyNames.ClientSecret)
-    val leadEndpoint = apiConProps.getProperty(PropertyNames.LeadEndpoint)
+    val leadEndpoint = apiConProps.getProperty(PropertyNames.ResourceSpecific_1)
     val campaignsMap = Map[String, String]()
 
     for (campaign_code <- campaign_codes) {
