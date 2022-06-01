@@ -8,7 +8,6 @@ import org.apache.spark.sql.functions.{desc, explode}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.sql.{Connection, DriverManager}
-import java.text.{ParseException, SimpleDateFormat}
 import scala.collection.mutable.Map
 
 object RubyApiToMip extends ETLFrameWork {
@@ -98,28 +97,20 @@ object RubyApiToMip extends ETLFrameWork {
     }
   }
 
-
+  @throws(classOf[Exception])
   def runJobSequence(tgtsqlStr: String, targetDB: Connection, runDate: String): Unit = {
     log.info("runJobSequence started.")
-    try {
-      val targetDF = extractor(AppProperties.SparkSession, runDate)
-      targetDF.show(false)
-      if (targetDF.isEmpty) {
-        log.info(s"Target Data set is empty...")
-      } else {
-        loadDataToDB(AppProperties.SparkSession, targetDB, tgtsqlStr, targetDF)
-      }
-    } catch {
-      case e: Throwable => {
-        e.printStackTrace()
-        log.error(e.getMessage + " - " + e.getCause)
-        bException = true
-      }
-
-        log.info("runJobSequence ended.")
+    val targetDF = extractor(AppProperties.SparkSession, runDate)
+    targetDF.show(false)
+    if (targetDF.isEmpty) {
+      log.info(s"Target Data set is empty...")
+    } else {
+      loadDataToDB(targetDB, tgtsqlStr, targetDF)
     }
+    log.info("runJobSequence ended.")
   }
 
+  @throws(classOf[Exception])
   def extractor(spark: SparkSession, runDate: String): DataFrame = {
     log.info("extractor has triggered.")
     val codes = getCampaignCodes(runDate) //"2021-06-01"
@@ -153,11 +144,13 @@ object RubyApiToMip extends ETLFrameWork {
     metaDF
   }
 
-  def loadDataToDB(spark: SparkSession, targetDB: Connection, tgtsqlStr: String, tgtDF: DataFrame): Unit = {
-    DataUtilities.runPreparedStatementUsingConnection(targetDB, tgtDF, tgtsqlStr, tgtDF.columns, null, null, true, null, "merge")
+  @throws(classOf[Exception])
+  def loadDataToDB(targetDB: Connection, tgtsqlStr: String, tgtDF: DataFrame): Unit = {
+    DataUtilities.runPreparedStatementUsingConnection(targetDB, tgtDF, tgtsqlStr, tgtDF.columns,
+      null, null, true, null, "merge")
   }
 
-
+  @throws(classOf[Exception])
   def getCampaignCodes(lastRunTimestamp: String): String = {
     log.info("Get Campaign Code logic started.")
     val apiConProps = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, CmpnSource)
@@ -167,7 +160,8 @@ object RubyApiToMip extends ETLFrameWork {
 
     //println(s"RUBY_API_CMPN_URL=$activityEndpoint$leadEndpoint?apikey=$activityId&timestamp=$lastRunTimestamp")
     var requiredDateTime = lastRunTimestamp.replace(":", "%3A").replace(" ", "%20")
-    log.info("Campaign Url : {}", s"$activityEndpoint$leadEndpoint?apikey=$activityId&timestamp=$requiredDateTime")
+    log.info("Campaign Url : {}",
+      s"$activityEndpoint$leadEndpoint?apikey=$activityId&timestamp=$requiredDateTime")
     val httpClient: CloseableHttpClient = HttpClients.custom().build()
     val httpGetToken = new HttpGet(
       s"$activityEndpoint$leadEndpoint?apikey=$activityId&timestamp=$requiredDateTime")
@@ -183,6 +177,7 @@ object RubyApiToMip extends ETLFrameWork {
     response
   }
 
+  @throws(classOf[Exception])
   def getCampaignMetaData(campaign_codes: Array[String]): Map[String, String] = {
     log.info("Meta data api call started")
     val apiConProps = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, CmpnMetaSource)
@@ -205,7 +200,6 @@ object RubyApiToMip extends ETLFrameWork {
       } catch {
         case ex: HttpResponseException =>
           //println(s"No meta data found for $campaign_code.\n" + ex.printStackTrace())
-
           log.info(s"No meta data found for $campaign_code.\n {}", ex.printStackTrace())
       }
 
@@ -217,14 +211,10 @@ object RubyApiToMip extends ETLFrameWork {
         campaignsMap += (campaign_code -> response)
       }
     }
-    val dt = java.time.Instant.now()
-
-    println("timestamp:" + dt)
-
-
     campaignsMap
   }
 
+  @throws(classOf[Exception])
   def parseCampaignData(spark: SparkSession, response: String): DataFrame = {
     val parsedDF = if (response != null) {
       import spark.implicits._
@@ -238,6 +228,7 @@ object RubyApiToMip extends ETLFrameWork {
     parsedDF
   }
 
+  @throws(classOf[Exception])
   def parseCampaignMetaData(spark: SparkSession, campaignsMap: Map[String, String]): DataFrame = {
     import spark.implicits._
     val dd = campaignsMap.values.toSeq
@@ -252,7 +243,9 @@ object RubyApiToMip extends ETLFrameWork {
         "data.sub_plan.code as SUB_PLAN_CD", "data.sub_plan.type_code as sub_plan_code_type",
         "data.sub_plan.name as SUB_PLAN_NAME", "data.sub_plan.ut_15_code as SUB_PLAN_UT_15",
         "data.plan.code as PLAN_CD", "data.plan.type_code as PLAN_TYPE_CD", "data.plan.name as PLAN_NAME")
-      .select("CMPN_CD", "CMPN_UT_10", "CMPN_UT_15", "CMPN_UT_17", "CMPN_UT_20", "CMPN_UT_30", "PLAN_NAME", "PLAN_CD", "PLAN_TYPE_CD", "SUB_PLAN_NAME", "SUB_PLAN_CD", "SUB_PLAN_UT_15", "GLOBAL_CMPN_NAME", "GLOBAL_CMPN_CD", "GLOBAL_CMPN_TYPE_CD", "ACTV_FLG")
+      .select("CMPN_CD", "CMPN_UT_10", "CMPN_UT_15", "CMPN_UT_17", "CMPN_UT_20", "CMPN_UT_30",
+        "PLAN_NAME", "PLAN_CD", "PLAN_TYPE_CD", "SUB_PLAN_NAME", "SUB_PLAN_CD", "SUB_PLAN_UT_15",
+        "GLOBAL_CMPN_NAME", "GLOBAL_CMPN_CD", "GLOBAL_CMPN_TYPE_CD", "ACTV_FLG")
     parsedDF
   }
 
@@ -285,6 +278,5 @@ object RubyApiToMip extends ETLFrameWork {
     }
     maxTs
   }
-
 
 }
