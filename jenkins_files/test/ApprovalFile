@@ -1,18 +1,17 @@
 pipeline {
-    agent any
+    agent pod-code-signing-agent
     stages {
         stage('Request Approval') {
             steps {
                 script {
-                        timeout(time: 2, unit: "HOURS") {
-                            emailext to: "${env.deploy_test_approvers}",
-                                subject: "Approval for deploy required!",
-                                body: "TEST is going to be deployed. \n approval required: ${BUILD_URL}/input "
+                    timeout(time: 2, unit: "HOURS") {
+                        emailext to: "${env.deploy_test_approvers}",
+                            subject: "Approval for deploy required!",
+                            body: "TEST is going to be deployed. \n approval required: ${BUILD_URL}/input "
 
-                            input message: "TEST is going to be deployed. \n Approve Deploy?", ok: 'Yes'
-
-                            echo "Build submitted by ${env.BUILD_USER_LAST_NAME} ${env.BUILD_USER_FIRST_NAME}"
-                        }
+                        input message: "TEST is going to be deployed. \n Approve Deploy?", ok: 'Yes'
+                        echo "Build submitted by ${env.BUILD_USER}"
+                    }
                 }
             }
         }
