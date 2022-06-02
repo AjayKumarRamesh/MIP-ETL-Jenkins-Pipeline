@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'pod-code-signing-agent' }
+    agent { label 'code-signing-agent' }
     stages {
         stage('Request Approval') {
             steps {
