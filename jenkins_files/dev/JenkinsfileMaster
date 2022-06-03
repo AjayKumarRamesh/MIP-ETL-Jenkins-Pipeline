@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'kube_pod_slave' }
     stages {
         /*stage('GitHub Checkout') {
             git credentialsId: 'sangita_id_rsa' ,
