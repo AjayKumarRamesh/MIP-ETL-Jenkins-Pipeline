@@ -15,7 +15,7 @@ pipeline {
                         def name = x
 
                         builds[name] = {
-                            build job: name, propagate: true, wait: false
+                            build job: name, propagate: true, wait: true
                         }
 
                     }
