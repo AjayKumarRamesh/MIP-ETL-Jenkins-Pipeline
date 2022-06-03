@@ -10,7 +10,7 @@ pipeline {
                 script{
                     def builds = [:]
                     def names = "${JOB_NAMES}".split('\n')
-
+                    
                     for (x in names) {
                         def name = x
 
@@ -19,8 +19,8 @@ pipeline {
                         }
 
                     }
+                    parallel builds
                 }
-                parallel builds
             }
         }
     }
