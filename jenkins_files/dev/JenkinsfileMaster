@@ -7,7 +7,9 @@ pipeline {
         }*/
         stage('Kickoff Jobs') {
             steps {
-                build job: 'MIP_DEV_Ruby_Pipeline', propagate: true, wait: true
+                build job: 'MIP_DEV_Ruby_Pipeline', propagate: true, wait: false
+                build job: 'MIP_DEV_DRUPAL_PIPELINE', propagate: true, wait: false
+                build job: 'MIP_DEV_ADHOC-XREF_PIPELINE', propagate: true, wait: false
             }
         }
     }
