@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'code-signing-agent' }
+    agent { label 'kube_pod_slave' }
     stages {
         stage('Request Approval') {
             steps {
