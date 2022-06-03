@@ -6,7 +6,9 @@ pipeline {
             url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'  
         }*/
         stage('Kickoff Jobs') {
-            build job: 'MIP_DEV_Ruby_Pipeline', propagate: true, wait: true
+            steps {
+                build job: 'MIP_DEV_Ruby_Pipeline', propagate: true, wait: true
+            }
         }
     }
 }
