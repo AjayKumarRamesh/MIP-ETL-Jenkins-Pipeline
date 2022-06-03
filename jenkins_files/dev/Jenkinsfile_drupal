@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'code-signing-agent' }
     environment {
        IMAGE = "drupal:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
        APP_JAR = 'Drupal-1.0-jar-with-dependencies.jar'

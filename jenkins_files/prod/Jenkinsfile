@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'code-signing-agent' }
     environment {
        IMAGE_TAG = ''                               //can be used in whole pipeline
        APP_JAR = ''
