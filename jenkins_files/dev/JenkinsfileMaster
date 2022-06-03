@@ -8,19 +8,19 @@ pipeline {
         stage('Kickoff Jobs') {
             steps {
                 script{
-                def builds = [:]
-                def names = "${JOB_NAMES}".split('\n')
+                    def builds = [:]
+                    def names = "${JOB_NAMES}".split('\n')
 
-                for (x in names) {
-                    def name = x
+                    for (x in names) {
+                        def name = x
 
-                    builds[name] = {
-                        build job: name, propagate: true, wait: false
+                        builds[name] = {
+                            build job: name, propagate: true, wait: false
+                        }
+
                     }
-
                 }
                 parallel builds
-                }
             }
         }
     }
