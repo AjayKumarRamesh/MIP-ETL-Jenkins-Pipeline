@@ -7,9 +7,18 @@ pipeline {
         }*/
         stage('Kickoff Jobs') {
             steps {
-                build job: 'MIP_DEV_Ruby_Pipeline', propagate: true, wait: false
-                build job: 'MIP_DEV_DRUPAL_PIPELINE', propagate: true, wait: false
-                build job: 'MIP_DEV_ADHOC-XREF_PIPELINE', propagate: true, wait: false
+                def builds = [:]
+                def names = "${JOB_NAMES}".split('\n')
+
+                for (x in names) {
+                    def name = x
+
+                    builds[name] = {
+                        build job: name, propagate: true, wait: false
+                    }
+
+                }
+                parallel builds
             }
         }
     }
