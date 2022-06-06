@@ -10,6 +10,7 @@ pipeline {
                 script{
                     def builds = [:]
                     def build_results = [:]
+                    echo "${build_results.getClass()}"
                     def names = "${JOB_NAMES}".split('\n')
 
                     for (x in names) {
