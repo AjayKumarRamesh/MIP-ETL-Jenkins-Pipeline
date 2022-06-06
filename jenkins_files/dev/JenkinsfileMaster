@@ -17,7 +17,8 @@ pipeline {
                         builds[name] = {
                             build job: name, propagate: true, wait: true
                         }
-                        echo "${builds[name].getClass()}"
+                        def temp_build = builds[name]
+                        echo "${temp_build.status}"
 
                     }
                     parallel builds
