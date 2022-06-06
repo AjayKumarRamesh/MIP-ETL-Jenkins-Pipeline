@@ -24,4 +24,23 @@ pipeline {
             }
         }
     }
+    post {
+        always {
+            script {
+                def body_text = ''
+                for (key in builds) {
+                    body_text += builds[key].getDisplayName() + " - Build # " + builds[key].getNumber + " - " + builds[key].getResult
+
+                    if (builds[key].getResult == 'FAILURE') {
+                        body_text += ": Check console output at " + builds[key].getAbsoluteUrl() + " to view the results.\n"
+                    } else {
+                        body_text += "\n"
+                    }
+                }
+            }
+            emailext to: "caseyboerst@ibm.com"
+            subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
+            body: body_text
+        }
+    }
 }
