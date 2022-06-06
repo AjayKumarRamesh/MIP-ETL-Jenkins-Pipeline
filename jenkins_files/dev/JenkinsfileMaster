@@ -30,9 +30,9 @@ pipeline {
                     def body_text = ''
                     for (name in names) {
                     def key = name
-                    body_text += key + " - Build # " + build_results[key].getDisplayName + " - " + build_results[key].getResult
+                    body_text += key + " - Build # " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
 
-                    if (build_results[key].getResult == 'FAILURE') {
+                    if (build_results[key].getResult() == 'FAILURE') {
                         body_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
                     } else {
                         body_text += "\n"
