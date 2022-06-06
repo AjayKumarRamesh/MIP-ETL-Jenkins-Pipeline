@@ -17,14 +17,16 @@ pipeline {
                         builds[name] = {
                             build job: name, propagate: true, wait: true
                         }
+                        echo "${builds[name].getClass()}"
 
                     }
                     parallel builds
 
+                    /*
                     def body_text = ''
                     for (name in names) {
                     def key = name
-                    body_text += builds[key].getDisplayName() + " - Build # " + builds[key].getNumber + " - " + builds[key].getResult
+                    body_text += key + " - Build # " + builds[key].number + " - " + builds[key].status
 
                     if (builds[key].getResult == 'FAILURE') {
                         body_text += ": Check console output at " + builds[key].getAbsoluteUrl() + " to view the results.\n"
@@ -34,30 +36,10 @@ pipeline {
                 }
                 emailext to: "caseyboerst@ibm.com",
                 subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-                body: body_text
+                body: body_text */
 
                 }
             }
         }
     }
-    /*post {
-        always {
-            script {
-                def body_text = ''
-                for (name in names) {
-                    def key = name
-                    body_text += builds[key].getDisplayName() + " - Build # " + builds[key].getNumber + " - " + builds[key].getResult
-
-                    if (builds[key].getResult == 'FAILURE') {
-                        body_text += ": Check console output at " + builds[key].getAbsoluteUrl() + " to view the results.\n"
-                    } else {
-                        body_text += "\n"
-                    }
-                }
-            }
-            emailext to: "caseyboerst@ibm.com",
-            subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-            body: body_text
-        }
-    }*/
 }
