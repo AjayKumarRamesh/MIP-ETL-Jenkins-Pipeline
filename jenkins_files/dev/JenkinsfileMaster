@@ -18,11 +18,14 @@ pipeline {
                             build job: name, propagate: true, wait: true
                         }
                         def temp_build = builds[name]
-                        echo "${temp_build.getClass()}"
+                        //echo "${temp_build.getClass()}"
 
                     }
                     parallel builds
 
+                    for (n in names) {
+                        echo "${builds[n].getClass()}"
+                    }
                     /*
                     def body_text = ''
                     for (name in names) {
