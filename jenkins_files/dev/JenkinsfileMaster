@@ -11,14 +11,6 @@ pipeline {
                     def builds = [:]
                     def build_results = [:]
                     def names = "${JOB_NAMES}".split('\n')
-                    
-                    def buildClosure(String name) {
-                        return {
-                            def runWrapper = build(job: name, propagate: true, wait: true)
-                            build_results[name] = runWrapper
-                        }
-
-                    }
 
                     for (x in names) {
                         def name = x
@@ -54,3 +46,10 @@ pipeline {
         }
     }
 }
+
+def buildClosure(String name) {
+                        return {
+                            def runWrapper = build(job: name, propagate: true, wait: true)
+                            build_results[name] = runWrapper
+                        }
+                    }
