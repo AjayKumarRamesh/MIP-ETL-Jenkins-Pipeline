@@ -23,24 +23,24 @@ pipeline {
                     }
                     parallel builds
 
-                    for (n in names) {
-                        echo "${build_results[n].getClass()}"
-                    }
-                    /*
+                    //for (n in names) {
+                    //    echo "${build_results[n].getClass()}"
+                    //}
+                    
                     def body_text = ''
                     for (name in names) {
                     def key = name
-                    body_text += key + " - Build # " + builds[key].number + " - " + builds[key].status
+                    body_text += key + " - Build # " + build_results[key].getDisplayName + " - " + build_results[key].getResult
 
-                    if (builds[key].getResult == 'FAILURE') {
-                        body_text += ": Check console output at " + builds[key].getAbsoluteUrl() + " to view the results.\n"
+                    if (build_results[key].getResult == 'FAILURE') {
+                        body_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
                     } else {
                         body_text += "\n"
                     }
                 }
                 emailext to: "caseyboerst@ibm.com",
                 subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-                body: body_text */
+                body: body_text
 
                 }
             }
