@@ -9,22 +9,29 @@ pipeline {
             steps {
                 script{
                     def builds = [:]
+                    def build_results = [:]
                     def names = "${JOB_NAMES}".split('\n')
                     
+                    def buildClosure(String name) {
+                        return {
+                            def runWrapper = build(job: name, propagate: true, wait: true)
+                            build_results[name] = runWrapper
+                        }
+
+                    }
+
                     for (x in names) {
                         def name = x
 
-                        builds[name] = {
-                            build job: name, propagate: true, wait: true
-                        }
-                        def temp_build = builds[name]
+                        builds[name] = buildClosure(name)
+                        //def temp_build = builds[name]
                         //echo "${temp_build.getClass()}"
 
                     }
                     parallel builds
 
                     for (n in names) {
-                        echo "${builds[n].getClass()}"
+                        echo "${build_results[n].getClass()}"
                     }
                     /*
                     def body_text = ''
