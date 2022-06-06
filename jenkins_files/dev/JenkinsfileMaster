@@ -38,7 +38,7 @@ pipeline {
                         body_text += "\n"
                     }
                 }
-                emailext to: "caseyboerst@ibm.com",
+                emailext to: "caseyboerst@ibm.com,Timothy.Figgins1@ibm.com",
                 subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
                 body: body_text
 
