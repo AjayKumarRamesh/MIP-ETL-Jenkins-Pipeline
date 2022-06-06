@@ -29,18 +29,18 @@ pipeline {
                     
                     def body_text = ''
                     for (name in names) {
-                    def key = name
-                    body_text += key + " - Build # " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
+                        def key = name
+                        body_text += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
 
-                    if (build_results[key].getResult() == 'FAILURE') {
-                        body_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
-                    } else {
-                        body_text += "\n"
+                        if (build_results[key].getResult() == 'FAILURE') {
+                            body_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
+                        } else {
+                            body_text += "\n"
+                        }
                     }
-                }
-                emailext to: "caseyboerst@ibm.com,Timothy.Figgins1@ibm.com",
-                subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-                body: body_text
+                    emailext to: "caseyboerst@ibm.com,Timothy.Figgins1@ibm.com",
+                    subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
+                    body: body_text
 
                 }
             }
