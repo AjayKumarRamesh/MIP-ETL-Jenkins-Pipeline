@@ -16,7 +16,7 @@ pipeline {
                     for (x in names) {
                         def name = x
 
-                        builds[name] = buildClosure(name)
+                        builds[name] = buildClosure(name, build_results)
                         //def temp_build = builds[name]
                         //echo "${temp_build.getClass()}"
 
@@ -48,7 +48,7 @@ pipeline {
     }
 }
 
-def buildClosure(String name) {
+def buildClosure(String name, LinkedHashMap build_results) {
                         return {
                             def runWrapper = build(job: name, propagate: true, wait: true)
                             build_results[name] = runWrapper
