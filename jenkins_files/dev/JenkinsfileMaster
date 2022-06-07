@@ -12,6 +12,8 @@ pipeline {
                     def build_results = [:]
                     echo "${build_results.getClass()}"
                     def names = "${JOB_NAMES}".split('\n')
+                    echo "${names.getClass()}"
+
 
                     for (x in names) {
                         def name = x
@@ -38,7 +40,7 @@ pipeline {
                             body_text += "\n"
                         }
                     }
-                    emailext to: "caseyboerst@ibm.com,Timothy.Figgins1@ibm.com",
+                    emailext to: "caseyboerst@ibm.com",
                     subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
                     body: body_text
 
@@ -47,6 +49,8 @@ pipeline {
         }
     }
 }
+
+//def sendEmail()
 
 def buildClosure(String name, LinkedHashMap build_results) {
                         return {
