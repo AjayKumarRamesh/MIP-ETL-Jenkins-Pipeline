@@ -14,43 +14,39 @@ pipeline {
                     def names = "${JOB_NAMES}".split('\n')
                     echo "${names.getClass()}"
 
-
                     for (x in names) {
                         def name = x
 
                         builds[name] = buildClosure(name, build_results)
                         //def temp_build = builds[name]
                         //echo "${temp_build.getClass()}"
-
                     }
                     parallel builds
 
-                    //for (n in names) {
-                    //    echo "${build_results[n].getClass()}"
-                    //}
-                    
-                    def body_text = ''
-                    for (name in names) {
-                        def key = name
-                        body_text += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
-
-                        if (build_results[key].getResult() == 'FAILURE') {
-                            body_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
-                        } else {
-                            body_text += "\n"
-                        }
-                    }
-                    emailext to: "caseyboerst@ibm.com",
-                    subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-                    body: body_text
-
+                    sendEmail(names, build_results)
                 }
             }
         }
     }
 }
 
-//def sendEmail()
+def sendEmail(String[] names, LinkedHashMap build_results) {
+    def body_text = ''
+    for (name in names) {
+        def key = name
+        body_text += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
+
+        if (build_results[key].getResult() == 'FAILURE') {
+            body_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
+        } else {
+            body_text += "\n"
+        }
+    }
+    emailext to: "caseyboerst@ibm.com",
+    subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
+    body: body_text
+
+}
 
 def buildClosure(String name, LinkedHashMap build_results) {
                         return {
