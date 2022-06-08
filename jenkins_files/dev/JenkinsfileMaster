@@ -15,10 +15,10 @@ pipeline {
                     def builds = [:]
                     def build_results = [:]
                     echo "${build_results.getClass()}"
-                    NAMES = "${JOB_NAMES}".split('\n')
+                    def names = "${JOB_NAMES}".split('\n')
                     //echo "${names.getClass()}"
 
-                    for (x in NAMES) {
+                    for (x in names) {
                         def name = x
 
                         builds[name] = buildClosure(name, build_results)
