@@ -45,7 +45,7 @@ pipeline {
         stage('Email Build Results') {
             steps {
                 script {
-                    emailext to: "caseyboerst@ibm.com",
+                    emailext to: "${env.BUILD_USER_EMAIL},${env.dev_build_manager}",
                     subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
                     body: BODY_TEXT
                 }
