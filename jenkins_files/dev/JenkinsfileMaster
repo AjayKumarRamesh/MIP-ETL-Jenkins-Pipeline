@@ -1,10 +1,9 @@
 pipeline {
     agent { label 'kube_pod_slave' }
     environment {
-        BUILD_RESULTS = [:]
-        NAMES = [:]
+        BODY_TEXT = ''
     }
-    
+
     stages {
         /*stage('GitHub Checkout') {
             git credentialsId: 'sangita_id_rsa' ,
@@ -28,37 +27,42 @@ pipeline {
                     }
                     parallel builds
 
-                    //sendEmail(NAMES, BUILD_RESULTS)
+                    buildBody(names, build_results)
                 }
             }
         }
         stage('Email Build Results') {
             steps {
                 script {
-                    sendEmail(NAMES, BUILD_RESULTS)
+                    emailext to: "caseyboerst@ibm.com",
+                    subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
+                    body: BODY_TEXT
                 }
             }
         }
     }
 }
 
-def sendEmail(String[] names, LinkedHashMap build_results) {
-    def body_text = ''
+def buildBody(String[] names, LinkedHashMap build_results) {
     for (name in names) {
         def key = name
-        body_text += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
+        BODY_TEXT += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
 
         if (build_results[key].getResult() == 'FAILURE') {
-            body_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
+            BODY_TEXT += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
         } else {
-            body_text += "\n"
+            BODY_TEXT += "\n"
         }
     }
+}
+
+/*
+def sendEmail(String[] names, LinkedHashMap build_results) {
     emailext to: "caseyboerst@ibm.com",
     subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
     body: body_text
 
-}
+} */
 
 def buildClosure(String name, LinkedHashMap build_results) {
                         return {
