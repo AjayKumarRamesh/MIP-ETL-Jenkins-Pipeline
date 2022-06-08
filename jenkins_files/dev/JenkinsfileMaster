@@ -27,7 +27,17 @@ pipeline {
                     }
                     parallel builds
 
-                    buildBody(names, build_results)
+                    for (name in names) {
+                        def key = name
+                        BODY_TEXT += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
+
+                        if (build_results[key].getResult() == 'FAILURE') {
+                            BODY_TEXT += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
+                        } else {
+                            BODY_TEXT += "\n"
+                        }
+                    }
+                    //buildBody(names, build_results)
                 }
             }
         }
@@ -43,6 +53,7 @@ pipeline {
     }
 }
 
+/*
 def buildBody(String[] names, LinkedHashMap build_results) {
     for (name in names) {
         def key = name
@@ -54,7 +65,7 @@ def buildBody(String[] names, LinkedHashMap build_results) {
             BODY_TEXT += "\n"
         }
     }
-}
+} */
 
 /*
 def sendEmail(String[] names, LinkedHashMap build_results) {
