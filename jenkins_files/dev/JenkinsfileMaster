@@ -5,17 +5,12 @@ pipeline {
     }
 
     stages {
-        /*stage('GitHub Checkout') {
-            git credentialsId: 'sangita_id_rsa' ,
-            url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'  
-        }*/
         stage('Kickoff Dev Pipeline Jobs') {
             steps {
                 script{
                     def builds = [:]
                     def build_results = [:]
-                    //def email = env.BUILD_USER_EMAIL
-                    //echo "${email}
+
                     echo "${build_results.getClass()}"
                     def names = "${JOB_NAMES}".split('\n')
                     //echo "${names.getClass()}"
@@ -24,23 +19,12 @@ pipeline {
                         def name = x
 
                         builds[name] = buildClosure(name, build_results)
-                        //def temp_build = builds[name]
-                        //echo "${temp_build.getClass()}"
+
                     }
                     parallel builds
 
                     def tmp_text = buildBody(names, build_results)
                     BODY_TEXT = tmp_text
-                    /*for (name in names) {
-                        def key = name
-                        tmp_text += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
-
-                        if (build_results[key].getResult() == 'FAILURE') {
-                            tmp_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
-                        } else {
-                            tmp_text += "\n"
-                        }
-                    } */
                 }
             }
         }
@@ -51,8 +35,7 @@ pipeline {
                     wrap([$class: 'BuildUser']) {
                         build_usr = "${BUILD_USER_EMAIL}"
                     }
-                    emailext to: "${build_usr}",
-                    //${env.dev_build_manager}"
+                    emailext to: "${build_usr},${env.dev_build_manager}",
                     subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
                     body: BODY_TEXT
                 }
@@ -76,14 +59,6 @@ def buildBody(String[] names, LinkedHashMap build_results) {
     }
     return tmp_text
 }
-
-/*
-def sendEmail(String[] names, LinkedHashMap build_results) {
-    emailext to: "caseyboerst@ibm.com",
-    subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-    body: body_text
-
-} */
 
 def buildClosure(String name, LinkedHashMap build_results) {
                         return {
