@@ -66,7 +66,7 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
      //Copy db2jcc4.jar zip to spark jars folder
     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2jcc4.jar' ./db2jcc4.jar"
 
-    if(dag_ID = 'MIP_SPSS_SCORING'){
+    if(dag_ID == "MIP_SPSS_SCORING"){
         //spss
         sh "mkdir spark-3.0.1-bin-hadoop2.7/spss"
         for (int i = 2; i < dagstoCOS[dag_ID].size(); i++) {
