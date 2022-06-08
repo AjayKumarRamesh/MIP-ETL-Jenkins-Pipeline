@@ -27,17 +27,18 @@ pipeline {
                     }
                     parallel builds
 
-                    for (name in names) {
+                    def tmp_text = buildBody(names, build_results)
+                    BODY_TEXT = tmp_text
+                    /*for (name in names) {
                         def key = name
-                        BODY_TEXT += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
+                        tmp_text += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
 
                         if (build_results[key].getResult() == 'FAILURE') {
-                            BODY_TEXT += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
+                            tmp_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
                         } else {
-                            BODY_TEXT += "\n"
+                            tmp_text += "\n"
                         }
-                    }
-                    //buildBody(names, build_results)
+                    } */
                 }
             }
         }
@@ -53,19 +54,21 @@ pipeline {
     }
 }
 
-/*
+
 def buildBody(String[] names, LinkedHashMap build_results) {
+    def tmp_text = ''
     for (name in names) {
         def key = name
-        BODY_TEXT += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
+        tmp_text += key + " - Build " + build_results[key].getDisplayName() + " - " + build_results[key].getResult()
 
         if (build_results[key].getResult() == 'FAILURE') {
-            BODY_TEXT += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
+            tmp_text += ": Check console output at " + build_results[key].getAbsoluteUrl() + " to view the results.\n"
         } else {
-            BODY_TEXT += "\n"
+            tmp_text += "\n"
         }
     }
-} */
+    return tmp_text
+}
 
 /*
 def sendEmail(String[] names, LinkedHashMap build_results) {
