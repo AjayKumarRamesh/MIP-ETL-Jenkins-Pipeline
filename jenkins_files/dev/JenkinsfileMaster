@@ -15,10 +15,7 @@ pipeline {
                     def builds = [:]
                     def build_results = [:]
                     //def email = env.BUILD_USER_EMAIL
-                    //echo "${email}"
-                    wrap([$class: 'BuildUser']) {
-                        echo "userId=${BUILD_USER_ID},fullName=${BUILD_USER},email=${BUILD_USER_EMAIL}"
-                    }
+                    //echo "${email}
                     echo "${build_results.getClass()}"
                     def names = "${JOB_NAMES}".split('\n')
                     //echo "${names.getClass()}"
@@ -50,7 +47,11 @@ pipeline {
         stage('Email Build Results') {
             steps {
                 script {
-                    emailext to: "${env.BUILD_USER_EMAIL},${env.dev_build_manager}",
+                    def build_usr = ''
+                    wrap([$class: 'BuildUser']) {
+                        build_usr = "${BUILD_USER_EMAIL}"
+                    }
+                    emailext to: "build_usr,${env.dev_build_manager}",
                     subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
                     body: BODY_TEXT
                 }
