@@ -1,5 +1,10 @@
 pipeline {
     agent { label 'kube_pod_slave' }
+    environment {
+        BUILD_RESULTS = [:]
+        NAMES = [:]
+    }
+    
     stages {
         /*stage('GitHub Checkout') {
             git credentialsId: 'sangita_id_rsa' ,
@@ -9,12 +14,12 @@ pipeline {
             steps {
                 script{
                     def builds = [:]
-                    def build_results = [:]
+                    //def build_results = [:]
                     echo "${build_results.getClass()}"
-                    def names = "${JOB_NAMES}".split('\n')
-                    echo "${names.getClass()}"
+                    NAMES = "${JOB_NAMES}".split('\n')
+                    //echo "${names.getClass()}"
 
-                    for (x in names) {
+                    for (x in NAMES) {
                         def name = x
 
                         builds[name] = buildClosure(name, build_results)
@@ -23,7 +28,14 @@ pipeline {
                     }
                     parallel builds
 
-                    sendEmail(names, build_results)
+                    //sendEmail(NAMES, BUILD_RESULTS)
+                }
+            }
+        }
+        stage('Email Build Results') {
+            steps {
+                script {
+                    sendEmail(NAMES, BUILD_RESULTS)
                 }
             }
         }
