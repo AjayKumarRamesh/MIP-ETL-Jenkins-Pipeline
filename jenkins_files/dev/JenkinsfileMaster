@@ -9,7 +9,7 @@ pipeline {
             git credentialsId: 'sangita_id_rsa' ,
             url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'  
         }*/
-        stage('Kickoff Jobs') {
+        stage('Kickoff Dev Pipeline Jobs') {
             steps {
                 script{
                     def builds = [:]
@@ -51,7 +51,8 @@ pipeline {
                     wrap([$class: 'BuildUser']) {
                         build_usr = "${BUILD_USER_EMAIL}"
                     }
-                    emailext to: "build_usr,${env.dev_build_manager}",
+                    emailext to: "${build_usr}",
+                    //${env.dev_build_manager}"
                     subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
                     body: BODY_TEXT
                 }
