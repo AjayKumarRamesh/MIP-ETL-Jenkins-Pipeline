@@ -12,7 +12,7 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             CMDP_COP_to_MIP:['.', 'AccountIngestion', 'digikeystore.jks', 'javacerts.jks'],
             'MIP-MARKETO-INTERACTION':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
-            MIP_SPSS_SCORING:['.', 'SpssScoring', 'digikeystore.jks', 'javacerts.jks'],
+            MIP_SPSS_SCORING:['spss', 'SpssScoring', 'digikeystore.jks', 'javacerts.jks','keystore.jks','spssconfigdev.properties','spssconfigprod.properties','spsswebrunjob.jar'],
             RUBY_API_TO_MIP:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             drupalMerchandising:['.', '.', 'digikeystore.jks', 'javacerts.jks', 'cedp_client.jks', 'MPW_CLIENT.jks']]
 // image variable, jar variable, image value , jar value , sourcecode subfolder 
@@ -65,6 +65,15 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
 
      //Copy db2jcc4.jar zip to spark jars folder
     sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/db2jcc4.jar' ./db2jcc4.jar"
+
+    if(dag_ID = 'MIP_SPSS_SCORING'){
+        //spss
+        sh "mkdir spark-3.0.1-bin-hadoop2.7/spss"
+        for (int i = 2; i < dagstoCOS[dag_ID].size(); i++) {
+            sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/${dagstoCOS[dag_ID][0]}/cert/${dagstoCOS[dag_ID][i]}' spark-3.0.1-bin-hadoop2.7/spss/${dagstoCOS[dag_ID][i]}"
+        }
+    }
+
     //sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
     sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
     //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
