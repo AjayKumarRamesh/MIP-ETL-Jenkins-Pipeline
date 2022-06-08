@@ -14,8 +14,11 @@ pipeline {
                 script{
                     def builds = [:]
                     def build_results = [:]
-                    def email = env.BUILD_USER_EMAIL
-                    echo "${email}"
+                    //def email = env.BUILD_USER_EMAIL
+                    //echo "${email}"
+                    wrap([$class: 'BuildUser']) {
+                        echo "userId=${BUILD_USER_ID},fullName=${BUILD_USER},email=${BUILD_USER_EMAIL}"
+                    }
                     echo "${build_results.getClass()}"
                     def names = "${JOB_NAMES}".split('\n')
                     //echo "${names.getClass()}"
