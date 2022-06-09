@@ -545,9 +545,9 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |IMI.LEAD_DESC,
              |CASE WHEN IMI.MARKETING_INTERACTION_TYPE_CD = ('MAIL') THEN SUBSTRING(TRIM(IMI.LEAD_NOTE) || ' ' ||
              |CASE WHEN (Q_HELP = '' or Q_HELP IS NULL) THEN '' ELSE NVL(Q_HELP||' ','') END ||
-             |CASE WHEN (Ans_Q_QRADAR_BP = '' or Ans_Q_QRADAR_BP IS NULL) THEN '' ELSE NVL('| Q_QRADAR_BP='||Ans_Q_QRADAR_BP||' ','') END ||
+             |CASE WHEN (Ans_Q_QRADAR_BP = '' or Ans_Q_QRADAR_BP IS NULL) THEN '' ELSE NVL('| Business Partner='||Ans_Q_QRADAR_BP||' ','') END ||
              |CASE WHEN (Ans_Q_MAIL_CONSENT = '' or Ans_Q_MAIL_CONSENT IS NULL) THEN '' ELSE NVL('| Q_MAIL_CONSENT='||Ans_Q_MAIL_CONSENT||' ','') END ||
-             |CASE WHEN (Ans_Q_QRDATA = '' or Ans_Q_QRDATA IS NULL) THEN '' ELSE NVL('| Q_QRDATA='||Ans_Q_QRDATA||' ','') END,1,3072)
+             |CASE WHEN (Ans_Q_QRDATA = '' or Ans_Q_QRDATA IS NULL) THEN '' ELSE NVL('| QRader Estimator values='||Ans_Q_QRDATA||' ','') END,1,3072)
              |END AS LEAD_NOTE,
              |IMI.LEAD_SRC AS LEAD_SRC_NAME,
              |IMI.MARKETING_INTERACTION_TYPE_CD AS INTERACTION_TYPE_CODE,
