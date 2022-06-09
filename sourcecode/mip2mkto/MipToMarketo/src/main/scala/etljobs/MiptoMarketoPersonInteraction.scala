@@ -543,9 +543,11 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |IMI.MKTO_QUEUED_TS AS INTERACTION_TS,
              |IMI.SUB_SRC_DESC,
              |IMI.LEAD_DESC,
-             |CASE
-             |WHEN IMI.MARKETING_INTERACTION_TYPE_CD = ('MAIL')
-             |THEN SUBSTRING(TRIM(IMI.LEAD_NOTE) || ' ' || CASE WHEN (Q_HELP = '' or Q_HELP IS NULL) THEN '' ELSE NVL(Q_HELP||' ','') END || CASE WHEN (employees = '' or employees IS NULL) THEN '' ELSE NVL('| employees='||employees||' ','') END || CASE WHEN (servers = '' or servers IS NULL) THEN '' ELSE NVL('| servers='||servers||' ','') END || CASE WHEN (ndr ='' or ndr IS NULL ) THEN '' ELSE NVL('| ndr='||ndr||' ','') END || CASE WHEN (CloudPrem = '' or CloudPrem IS NULL) THEN '' ELSE NVL('| CloudPrem='||CloudPrem||' ','') END || CASE WHEN (higherPrice = '' or higherPrice IS NULL) THEN '' ELSE NVL('| higherPrice='||higherPrice||' ','') END || CASE WHEN (lowerPrice = '' or lowerPrice IS NULL)  THEN '' ELSE NVL('| lowerPrice='||lowerPrice||' ','') END || CASE WHEN (bpconsent = '' or bpconsent IS NULL) THEN '' ELSE NVL('| bpconsent='||bpconsent||' ','') END || CASE WHEN (preferred_bp = '' or  preferred_bp IS NULL) THEN '' ELSE NVL('| preferred_bp='||preferred_bp||' ','') END,1,3072)
+             |CASE WHEN IMI.MARKETING_INTERACTION_TYPE_CD = ('MAIL') THEN SUBSTRING(TRIM(IMI.LEAD_NOTE) || ' ' ||
+             |CASE WHEN (Q_HELP = '' or Q_HELP IS NULL) THEN '' ELSE NVL(Q_HELP||' ','') END ||
+             |CASE WHEN (Ans_Q_QRADAR_BP = '' or Ans_Q_QRADAR_BP IS NULL) THEN '' ELSE NVL('| Q_QRADAR_BP='||Ans_Q_QRADAR_BP||' ','') END ||
+             |CASE WHEN (Ans_Q_MAIL_CONSENT = '' or Ans_Q_MAIL_CONSENT IS NULL) THEN '' ELSE NVL('| Q_MAIL_CONSENT='||Ans_Q_MAIL_CONSENT||' ','') END ||
+             |CASE WHEN (Ans_Q_QRDATA = '' or Ans_Q_QRDATA IS NULL) THEN '' ELSE NVL('| Q_QRDATA='||Ans_Q_QRDATA||' ','') END,1,3072)
              |END AS LEAD_NOTE,
              |IMI.LEAD_SRC AS LEAD_SRC_NAME,
              |IMI.MARKETING_INTERACTION_TYPE_CD AS INTERACTION_TYPE_CODE,
@@ -664,16 +666,11 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |LEFT OUTER JOIN (
              |SELECT
              |mqap.INBOUND_MKTG_ID,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'employees' THEN mqap.ANSWER ELSE NULL END) AS employees,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'servers' THEN mqap.ANSWER ELSE NULL END) AS servers,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'ndr' THEN mqap.ANSWER ELSE NULL END) AS ndr,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'CloudPrem' THEN mqap.ANSWER ELSE NULL END) AS CloudPrem,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'higherPrice' THEN mqap.ANSWER ELSE NULL END) AS higherPrice,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'lowerPrice' THEN mqap.ANSWER ELSE NULL END) AS lowerPrice,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'bpconsent' THEN mqap.ANSWER ELSE NULL END) AS bpconsent,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'preferred_bp' THEN mqap.ANSWER ELSE NULL END) AS preferred_bp,
              |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_HELP' THEN mqap.ANSWER ELSE NULL END) AS Q_HELP,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_STUDENT' THEN mqap.ANSWER ELSE NULL END) AS Q_STUDENT
+             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_STUDENT' THEN mqap.ANSWER ELSE NULL END) AS Q_STUDENT,
+             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_QRADAR_BP' THEN mqap.ANSWER ELSE NULL END) AS Ans_Q_QRADAR_BP,
+             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_MAIL_CONSENT' THEN mqap.ANSWER ELSE NULL END) AS Ans_Q_MAIL_CONSENT,
+             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_QRDATA' THEN mqap.ANSWER ELSE NULL END) AS Ans_Q_QRDATA
              |FROM MAP_CORE.MCT_QUESTION_ANSWER_PAIRS mqap GROUP BY INBOUND_MKTG_ID ORDER BY 1) QA_PAIRS
              |ON imi.INBOUND_MKTG_ID = QA_PAIRS.INBOUND_MKTG_ID
              |LEFT OUTER JOIN MAP_CORE.MCT_COP_XREF COP
@@ -1316,12 +1313,12 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
         .option("isolationLevel", Constants.DBIsolationUncommittedRead)
         .jdbc(AppProperties.CommonDBConProperties.getProperty(PropertyNames.EndPoint),
           s""" (SELECT
-                      JOB_SK JOB_SK, JOB_END_TIME AS MAX_TIMESTAMP
-                    FROM $jobSeqHistTable
-                    WHERE
-                      JOB_SEQUENCE = '$jobSeqCode' AND JOB_STATUS = '${Constants.JobStatusSucceeded}'
-                    ORDER BY JOB_SK DESC
-                    FETCH FIRST ROW ONLY) AS RESULT_TABLE""",
+               JOB_SK JOB_SK, JOB_END_TIME AS MAX_TIMESTAMP
+               FROM $jobSeqHistTable
+               WHERE
+               JOB_SEQUENCE = '$jobSeqCode' AND JOB_STATUS = '${Constants.JobStatusSucceeded}'
+               ORDER BY JOB_SK DESC
+               FETCH FIRST ROW ONLY) AS RESULT_TABLE""",
           AppProperties.CommonDBConProperties)
       if (log.isDebugEnabled || log.isInfoEnabled()) dfResult.show(false)
       if (dfResult.count() > 0) {
