@@ -61,28 +61,6 @@ pipeline {
                        }
                    }
 
-            stage('Get COS Objects') {
-                       environment {
-                           IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
-                           IBMCLOUD_COS_CRN = 'bda9a48c-574e-4be0-b2ff-62f2d0f23ead'
-                           IBMCLOUD_COS_REGION = 'ap-geo'
-                           IBMCLOUD_COS_BUCKET = 'map-dev-01'
-                       }
-
-                       steps{
-                           dir("sourcecode/${SOURCE_CODE_FOLDER}") {
-                               sh "pwd"
-                               script {
-                                   def JENKINS_FUNC = load "./../../jenkins_files/test/JenkinsFunctions.groovy"
-                                   JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "dev", true)
-                                   JENKINS_FUNC.getCOSObjects(IBMCLOUD_CREDS, IBMCLOUD_COS_CRN,
-                                                              IBMCLOUD_COS_REGION, IBMCLOUD_COS_BUCKET, DAG_ID)
-                               }
-
-                           }
-                       }
-                   }
-
            stage('Image build') {
                   environment {
                       IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
