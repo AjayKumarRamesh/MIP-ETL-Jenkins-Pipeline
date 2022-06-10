@@ -68,12 +68,12 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
 
     if(dag_ID == "MIP_SPSS_SCORING"){
         //spss
-        sh "mkdir -p spark-3.0.1-bin-hadoop2.7/work-dir/spss"
+        sh "mkdir spark-3.0.1-bin-hadoop2.7/spss"
         for (int i = 2; i < dagstoCOS[dag_ID].size(); i++) {
-            sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/${dagstoCOS[dag_ID][0]}/cert/${dagstoCOS[dag_ID][i]}' spark-3.0.1-bin-hadoop2.7/work-dir/spss/${dagstoCOS[dag_ID][i]}"
+            sh "ibmcloud cos object-get --bucket ${IBMCLOUD_COS_BUCKET} --key 'map_project_files/${dagstoCOS[dag_ID][0]}/cert/${dagstoCOS[dag_ID][i]}' spark-3.0.1-bin-hadoop2.7/spss/${dagstoCOS[dag_ID][i]}"
         }
     }
-    sh 'ls -al spark-3.0.1-bin-hadoop2.7/work-dir/spss/'
+    sh 'ls -al spark-3.0.1-bin-hadoop2.7/spss/'
     //sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
     sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
     //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
