@@ -17,9 +17,8 @@ pipeline {
                                 subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - Approval for deploy required!",
                                 body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${DAG_NAME} is going to be deployed. \n approval required: ${BUILD_URL}/input "
 
-                            input message: "${DAG_NAME} is going to be deployed. \n Approve Deploy?", ok: 'Yes'
-
-                            echo "Build submitted by ${env.BUILD_USER_LAST_NAME} ${env.BUILD_USER_FIRST_NAME}"
+                            input message: "${DAG_NAME} is going to be deployed. \n Approve Deploy?", ok: 'Yes',
+                            submitter: "${env.deploy_prod_approvers}"
                         }
                 }
             }
