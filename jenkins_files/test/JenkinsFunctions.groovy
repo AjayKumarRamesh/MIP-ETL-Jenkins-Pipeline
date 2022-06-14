@@ -74,7 +74,6 @@ def getCOSObjects(String IBMCLOUD_CREDS, String IBMCLOUD_COS_CRN,
         }
         sh 'ls -al spark-3.0.1-bin-hadoop2.7/spss/'
     }
-    //sh 'ls -al spark-3.0.1-bin-hadoop2.7/spss/'
     //sh "unzip db2_db2driver_for_jdbc_sqlj.zip"
     sh "cp db2jcc4.jar spark-3.0.1-bin-hadoop2.7/jars"
     //Copy the Dockerfile to spark-3.0.1-bin-hadoop2.7
