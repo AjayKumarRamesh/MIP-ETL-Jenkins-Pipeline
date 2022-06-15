@@ -26,7 +26,7 @@ pipeline {
                 //SonarQube Project Key - replace <sonar_key> with the project name eg. MAP-ETL-Framework
                 SONAR_PROJECT_KEY="MIP-ETL-Jenkins-Pipeline"
                 //File or folders than need to be excluded from scans
-                SONAR_EXCLUSIONS="**/*.java, **/docs/**"
+                //SONAR_EXCLUSIONS="**/*.java, **/docs/**"
             }
             steps {
                 script {
