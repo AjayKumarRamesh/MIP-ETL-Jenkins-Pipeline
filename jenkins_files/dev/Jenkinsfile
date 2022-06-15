@@ -27,6 +27,7 @@ pipeline {
                 SONAR_PROJECT_KEY="MIP-ETL-Jenkins-Pipeline"
                 //File or folders than need to be excluded from scans
                 //SONAR_EXCLUSIONS="**/*.java, **/docs/**"
+                SONAR_EXCLUSIONS=""
             }
             steps {
                 script {
