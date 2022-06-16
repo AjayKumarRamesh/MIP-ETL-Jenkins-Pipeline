@@ -146,11 +146,12 @@ pipeline {
             agent { label 'code-signing-agent' }
             environment {
                 CERTIFICATE_ALIAS = 'IBMCodeSignCert1221'
+                DAG_LOWER = DAG_NAME.toLowerCase()
                 PUBLIC_KEY_FILE = "/tmp/${CERTIFICATE_ALIAS}-key.pub"
                 PFX_FILE = credentials('signing-pfx-file')
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
-                IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${DAG_NAME}:${BUILD_NUMBER}"
-                IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${DAG_NAME}:signed"
+                IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${DAG_LOWER}:${BUILD_NUMBER}"
+                IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${DAG_LOWER}:signed"
             }
             steps {
                 echo '\n=== Preparing the Environment for Image Signing ==='
