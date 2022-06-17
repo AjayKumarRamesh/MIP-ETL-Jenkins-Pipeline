@@ -72,7 +72,7 @@ pipeline {
                 script {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     (IMAGE, APP_JAR, SOURCE_CODE_FOLDER) = JENKINS_FUNC.getGlobalVars(DAG_ID)
-                    IMAGE = IMAGE + ":${env.BUILD_NUMBER}"
+                    //IMAGE = IMAGE + ":${env.BUILD_NUMBER}"
                 }
             }
         }
@@ -150,7 +150,7 @@ pipeline {
                 PUBLIC_KEY_FILE = "/tmp/${CERTIFICATE_ALIAS}-key.pub"
                 PFX_FILE = credentials('signing-pfx-file')
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
-                IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${IMAGE}"
+                IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${IMAGE}:${env.BUILD_NUMBER}"
                 IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${IMAGE}:signed"
             }
             steps {
