@@ -136,8 +136,8 @@ pipeline {
                     sh "ibmcloud cr login"
                     sh "docker build -t us.icr.io/map-dev-namespace/${IMAGE} -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
                     sh "docker images"
-                    sh "docker push us.icr.io/map-dev-namespace/${IMAGE}"
-                    sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
+                    //sh "docker push us.icr.io/map-dev-namespace/${IMAGE}"
+                    //sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
         } //stage
@@ -146,12 +146,12 @@ pipeline {
             agent { label 'code-signing-agent' }
             environment {
                 CERTIFICATE_ALIAS = 'IBMCodeSignCert1221'
-                DAG_LOWER = DAG_NAME.toLowerCase()
+                // = DAG_NAME.toLowerCase()
                 PUBLIC_KEY_FILE = "/tmp/${CERTIFICATE_ALIAS}-key.pub"
                 PFX_FILE = credentials('signing-pfx-file')
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
-                IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${DAG_LOWER}:${BUILD_NUMBER}"
-                IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${DAG_LOWER}:signed"
+                IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${IMAGE}"
+                IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${IMAGE}:signed"
             }
             steps {
                 echo '\n=== Preparing the Environment for Image Signing ==='
