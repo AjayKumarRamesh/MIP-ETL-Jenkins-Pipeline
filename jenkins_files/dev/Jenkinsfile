@@ -151,7 +151,7 @@ pipeline {
                 PFX_FILE = credentials('signing-pfx-file')
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
                 IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${IMAGE}:${env.BUILD_NUMBER}"
-                IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${IMAGE}:${env.BUILD_NUMBER}:signed"
+                IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${IMAGE}:${env.BUILD_NUMBER}"
             }
             steps {
                 echo '\n=== Preparing the Environment for Image Signing ==='
