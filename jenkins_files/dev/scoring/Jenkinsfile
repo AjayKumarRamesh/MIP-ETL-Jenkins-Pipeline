@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-       IMAGE = "spss_scoring:jenkins.build"                    //can be used in whole pipeline
+       IMAGE = "spss_scoring:${env.BUILD_NUMBER}"                    //can be used in whole pipeline
        APP_JAR = 'com.ibm.map-SpssScoring-2.2.jar'
        DAG_ID = "MIP_SPSS_SCORING"
        SOURCE_CODE_FOLDER = "scoring"
@@ -74,7 +74,7 @@ pipeline {
                           sh "ibmcloud plugin list"
                           sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                           sh "ibmcloud cr login"
-                          sh "docker build -t us.icr.io/map-dev-namespace/${IMAGE}.${env.BUILD_NUMBER} -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
+                          sh "docker build -t us.icr.io/map-dev-namespace/${IMAGE} -f spark-3.0.1-bin-hadoop2.7/Dockerfile ./spark-3.0.1-bin-hadoop2.7"
                           sh "docker images"
                           //sh "docker push us.icr.io/map-dev-namespace/${IMAGE}"
                           //sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
@@ -90,8 +90,8 @@ pipeline {
                     PUBLIC_KEY_FILE = "/tmp/${CERTIFICATE_ALIAS}-key.pub"
                     PFX_FILE = credentials('signing-pfx-file')
                     IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
-                    IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${IMAGE}.${env.BUILD_NUMBER}"
-                    IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${IMAGE}:signed"
+                    IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${IMAGE}"
+                    IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${IMAGE}"
                 }
                 steps {
                     echo '\n=== Preparing the Environment for Image Signing ==='
@@ -131,7 +131,6 @@ pipeline {
            stage('Image deploy to Airflow') {
                   environment {
                         IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
-                        IMAGE = "spss_scoring:jenkins.build.${env.BUILD_NUMBER}"
                   }
 
                 steps {
