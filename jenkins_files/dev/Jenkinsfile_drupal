@@ -1,7 +1,7 @@
 pipeline {
     agent { label 'kube_pod_slave' }
     environment {
-       IMAGE = "drupal"                               //can be used in whole pipeline
+       IMAGE = "drupal:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
        APP_JAR = 'Drupal-1.0-jar-with-dependencies.jar'
        DAG_ID = "drupalMerchandising" // paramterized due to 3 different dags could be building for. 
        SOURCE_CODE_FOLDER = "drupal"
@@ -50,7 +50,7 @@ pipeline {
                     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                     sh "ibmcloud cr login"
                     sh "ls -al"
-                    sh "docker build -t us.icr.io/map-dev-namespace/${IMAGE}:${env.BUILD_NUMBER} -f Dockerfile ."
+                    sh "docker build -t us.icr.io/map-dev-namespace/${IMAGE} -f Dockerfile ."
                     sh "docker images"
                     //sh "docker push us.icr.io/map-dev-namespace/${IMAGE}"
                     //sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
@@ -66,8 +66,8 @@ pipeline {
                 PUBLIC_KEY_FILE = "/tmp/${CERTIFICATE_ALIAS}-key.pub"
                 PFX_FILE = credentials('signing-pfx-file')
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
-                IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${IMAGE}:${env.BUILD_NUMBER}"
-                IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${IMAGE}:signed"
+                IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${IMAGE}"
+                IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${IMAGE}"
             }
             steps {
                 echo '\n=== Preparing the Environment for Image Signing ==='
