@@ -1,7 +1,7 @@
 pipeline {
     agent { label 'kube_pod_slave' }
     environment {
-       IMAGE = "drupal:${env.BUILD_NUMBER}"                               //can be used in whole pipeline
+       IMAGE = "drupal"                               //can be used in whole pipeline
        APP_JAR = 'Drupal-1.0-jar-with-dependencies.jar'
        DAG_ID = "drupalMerchandising" // paramterized due to 3 different dags could be building for. 
        SOURCE_CODE_FOLDER = "drupal"
@@ -50,14 +50,59 @@ pipeline {
                     sh "ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south"
                     sh "ibmcloud cr login"
                     sh "ls -al"
-                    sh "docker build -t us.icr.io/map-dev-namespace/${IMAGE} -f Dockerfile ."
+                    sh "docker build -t us.icr.io/map-dev-namespace/${IMAGE}:${env.BUILD_NUMBER} -f Dockerfile ."
                     sh "docker images"
-                    sh "docker push us.icr.io/map-dev-namespace/${IMAGE}"
-                    sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
+                    //sh "docker push us.icr.io/map-dev-namespace/${IMAGE}"
+                    //sh "ibmcloud cr image-list --restrict 'map-dev-namespace'"
                 }
             }
         } //stage
         
+        stage('Sign and push Dev Image') {
+            agent { label 'code-signing-agent' }
+            environment {
+                CERTIFICATE_ALIAS = 'IBMCodeSignCert1221'
+                // = DAG_NAME.toLowerCase()
+                PUBLIC_KEY_FILE = "/tmp/${CERTIFICATE_ALIAS}-key.pub"
+                PFX_FILE = credentials('signing-pfx-file')
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+                IMAGE_BUILD_TAG="us.icr.io/map-dev-namespace/${IMAGE}:${env.BUILD_NUMBER}"
+                IMAGE_RELEASE_TAG="us.icr.io/map-dev-namespace/${IMAGE}:signed"
+            }
+            steps {
+                echo '\n=== Preparing the Environment for Image Signing ==='
+                // Inject the PFX file to the required location
+                echo '\nInjecting the PFX file...'
+                sh '''
+                chmod 644 ${PFX_FILE}
+                sudo cp ${PFX_FILE} /etc/ekm
+                '''
+
+                // Configure local PGP keys for use in signing
+                echo '\nConfigure local PGP keys for use in signing'
+                sh '''
+                    # Download local 'pointer keys' referencing the actual private and public keys stored in the HSM (Hardware Security Module)
+                    sudo ucl pgp-key -n ${CERTIFICATE_ALIAS}
+                    # Export our public key to be used for image verification
+                    sudo gpg2 --armor --output ${PUBLIC_KEY_FILE} --export ${CERTIFICATE_ALIAS}
+                '''
+
+                // Signing and Publishing the Image
+                echo '\n=== Signing and Publishing the Image ==='
+                sh '''
+                    docker images
+                    FINGERPRINT=$(sudo gpg2 --no-tty --batch --fingerprint --with-colons "${CERTIFICATE_ALIAS}" | grep '^fpr' | cut -d : -f 10 | head -n 1)
+                    LOCAL_DAEMON=$(echo ${DOCKER_HOST} | sed s/tcp/http/)
+                    sudo skopeo copy \
+                        --dest-creds iamapikey:${IBMCLOUD_CREDS_PSW} \
+                        --remove-signatures \
+                        --sign-by ${FINGERPRINT} \
+                        --src-daemon-host "${LOCAL_DAEMON}" \
+                        docker-daemon:${IMAGE_BUILD_TAG} \
+                        docker://${IMAGE_RELEASE_TAG}
+                '''
+            } //steps
+        }
         
         stage('Image deploy to Airflow') {
             environment {
