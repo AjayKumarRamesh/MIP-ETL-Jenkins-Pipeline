@@ -80,13 +80,18 @@ pipeline {
             environment {
                 GITHUB_API_TOKEN = credentials('github_api_token')
                 GITHUB_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flare/releases/assets/750716"
+                GITHUB_SPSS_ETL_URL = "https://github.ibm.com/api/v3/repos/CIO-Mkt-DataEng/Flare/releases/assets/786093"
                 OUTPUT_FILENAME = "Flare-v2.1-Log4j2.jar"
             }
             steps{
                 dir("sourcecode/${SOURCE_CODE_FOLDER}") {
                     sh "pwd"
-                
-                    sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+
+                    if(dag_ID == "MIP_SPSS_SCORING"){
+                      sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_SPSS_ETL_URL" -o $OUTPUT_FILENAME'
+                    } else{
+                      sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+                    }
                     sh 'ls -al'
 
                     sh 'mvn -version'
