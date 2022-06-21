@@ -87,10 +87,12 @@ pipeline {
                 dir("sourcecode/${SOURCE_CODE_FOLDER}") {
                     sh "pwd"
 
-                    if(dag_ID == "MIP_SPSS_SCORING"){
-                      sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_SPSS_ETL_URL" -o $OUTPUT_FILENAME'
-                    } else{
-                      sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+                   script{
+                     if(dag_ID == "MIP_SPSS_SCORING"){
+                       sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_SPSS_ETL_URL" -o $OUTPUT_FILENAME'
+                     } else{
+                       sh 'curl -L -H "Authorization: token $GITHUB_API_TOKEN" -H "Accept:application/octet-stream" "$GITHUB_ETL_URL" -o $OUTPUT_FILENAME'
+                     }
                     }
                     sh 'ls -al'
 
