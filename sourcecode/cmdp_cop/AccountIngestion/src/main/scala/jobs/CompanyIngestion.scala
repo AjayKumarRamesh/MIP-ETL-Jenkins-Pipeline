@@ -37,7 +37,7 @@ object CompanyIngestion extends ETLFrameWork {
 
 
     log.info("Getting Last Successful Run Time")
-    val successfulTimestamp = DataUtilities.getLastSuccessfulRunTime(AppProperties.SparkSession, "CompanyIngestion")
+    val successfulTimestamp = DataUtilities.getLastSuccessfulRunTime(AppProperties.SparkSession, "CMDP_COP_to_MIP")
     var t = "1000-01-01-01.00.00.000000"
     if (!successfulTimestamp.isEmpty) {
       t = "\'" + successfulTimestamp("JOB_START_TIME") + "\'"
