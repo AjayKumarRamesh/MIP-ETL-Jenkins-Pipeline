@@ -133,7 +133,7 @@ object CDStoMIP extends ETLFrameWork {
       val df_unordered = cdsDF.na.drop(Seq("UUC_ID"))
       df_unordered.cache()
       // Reorder columns so that it matches expected order for prepared statement.
-      val df = df_unordered.select("UUC_ID","ASSET_DEFAULT_TITLE","CONTENT_URL","DLVRY_URL","DLVRY_URL_ID","UT10_CODE","UT15_CODE","UT17_CODE","UT20_CODE","UT30_CODE","COUNTRY_CODE","LANG_CODE","CONTENT_TYPE_ID","OV_CODE")
+      val df = df_unordered.select("UUC_ID","ASSET_DEFAULT_TITLE","CONTENT_URL","DLVRY_URL","DLVRY_URL_ID","UT10_CODE","UT15_CODE","UT17_CODE","UT20_CODE","UT30_CODE","COUNTRY_CODE","LANG_CODE","CONTENT_TYPE_ID","OV_CODE", "CONTENT_FORMAT_CD")
       df.cache()
       df.show()
 
@@ -270,6 +270,7 @@ object CDStoMIP extends ETLFrameWork {
         val ut20Cd = ovCodeCoreAttributes.get("ut20Cd");
         val ut30Cd = ovCodeCoreAttributes.get("ut30Cd");
         val contentType = ovCodeCoreAttributes.get("contentType");
+        val contentFormat = ovCodeCoreAttributes.get("contentFormat");
 
 
         val JsonValues = new JSONObject()
@@ -287,6 +288,7 @@ object CDStoMIP extends ETLFrameWork {
           .put("LANG_CODE", langCd)
           .put("CONTENT_TYPE_ID", contentType)
           .put("OV_CODE", ovCode)
+          .put("CONTENT_FORMAT_CD", contentFormat)
 
 
         // TODO need entity.name (from title)
