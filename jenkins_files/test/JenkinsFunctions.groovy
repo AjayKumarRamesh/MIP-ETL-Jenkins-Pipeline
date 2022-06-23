@@ -31,7 +31,7 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.ma
            MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar', 'spss_scoring', 'com.ibm.map-SpssScoring-2.2.jar', 'scoring'],
            RUBY_API_TO_MIP:['ruby_api_image','ruby_api_app_jar', 'rubyapitomip', 'MIP-Flare-Framework-2.1.jar', 'RubyApiToMip'],
            drupalMerchandising:['drupal_image', 'drupal_app_jar'], // drupal doesn't need extra info
-           MIP_DSR_DAG:['mkto_dsr_image','mkto_dsr_app_jar', 'mip-marketo-dsr', 'marketo.delete.1.2.jar', 'mkto_dsr']]
+           MIP_DSR_DAG:['mkto_dsr_image','mkto_dsr_app_jar', 'mip-marketo-dsr', 'marketo-delete-1.2.jar', 'mkto_dsr']]
            
 envNum = [dev:1,test:2,prod:3]
 

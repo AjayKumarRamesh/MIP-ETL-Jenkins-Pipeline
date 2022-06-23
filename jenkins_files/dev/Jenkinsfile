@@ -222,7 +222,7 @@ pipeline {
                 }
                 emailext to: "${build_usr},${env.dev_build_manager}",
                 subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-                body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}: Check console output at ${env.BUILD_URL} to view the results."
+                body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}. \n Check console output at following link to view the build results. \n ${env.BUILD_URL}"
             }
         }
     }
