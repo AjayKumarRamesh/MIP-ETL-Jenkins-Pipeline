@@ -221,7 +221,7 @@ pipeline {
                     }
                     emailext to: "${build_usr},${env.dev_build_manager}",
                     subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-                    body: BODY_TEXT
+                    body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}: Check console output at ${env.BUILD_URL} to view the results."
                 }
             }
         }
