@@ -177,8 +177,8 @@ object CDStoMIP extends ETLFrameWork {
       val responseCode = urlConnection.getResponseCode
       println(responseCode)
       if (responseCode == 404) {
-          log.info("No data withing provided date range")
-          return ""
+        log.info("No data withing provided date range")
+        return ""
       }
       if (responseCode == 500 || responseCode == 504) {
         log.info("Unexpected network error occurred...retrying")

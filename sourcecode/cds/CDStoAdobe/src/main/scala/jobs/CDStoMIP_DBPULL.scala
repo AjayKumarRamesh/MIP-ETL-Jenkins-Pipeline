@@ -111,7 +111,7 @@ object CDStoMIP_DBPULL extends ETLFrameWork {
       log.info("Perform dataframe transformations for formatting...")
     // Drop any columns with null UUC_ID values (before turning those values to "").
     val df = df_unord.na.drop(Seq("UUC_ID"))
-              .select("UUC_ID","ASSET_DEFAULT_TITLE","CONTENT_URL","DLVRY_URL","DLVRY_URL_ID","UT10_CODE","UT15_CODE","UT17_CODE","UT20_CODE","UT30_CODE","COUNTRY_CODE","LANG_CODE","CONTENT_TYPE_ID","OV_CODE")
+              .select("UUC_ID","ASSET_DEFAULT_TITLE","CONTENT_URL","DLVRY_URL","DLVRY_URL_ID","UT10_CODE","UT15_CODE","UT17_CODE","UT20_CODE","UT30_CODE","COUNTRY_CODE","LANG_CODE","CONTENT_TYPE_ID","OV_CODE","CONTENT_FORMAT_CD")
     df.cache()
 
 
