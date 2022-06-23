@@ -213,17 +213,17 @@ pipeline {
             }
         }  //stage
         stage('Email Notification Build Results') {
-        steps {
-            script {
-                def build_usr = ''
-                wrap([$class: 'BuildUser']) {
-                    build_usr = "${BUILD_USER_EMAIL}"
+            steps {
+                script {
+                    def build_usr = ''
+                    wrap([$class: 'BuildUser']) {
+                        build_usr = "${BUILD_USER_EMAIL}"
+                    }
+                    emailext to: "${build_usr},${env.dev_build_manager}",
+                    subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
+                    body: BODY_TEXT
                 }
-                emailext to: "${build_usr},${env.dev_build_manager}",
-                subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-                body: BODY_TEXT
             }
         }
     } //stages
 } //pipeline
-
