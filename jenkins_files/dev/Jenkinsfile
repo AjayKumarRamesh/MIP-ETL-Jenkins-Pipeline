@@ -219,10 +219,10 @@ pipeline {
                 def build_usr = ''
                 wrap([$class: 'BuildUser']) {
                     build_usr = "${BUILD_USER_EMAIL}"
-                }
-                emailext to: "${build_usr},${env.dev_build_manager}",
-                subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
-                body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}. \n Check console output at following link to view the build results. \n ${env.BUILD_URL}"
+            }
+            emailext to: "${build_usr},${env.dev_build_manager}",
+            subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
+            body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}. \n Check console output at following link to view the build results. \n ${env.BUILD_URL}"
             }
         }
     }
