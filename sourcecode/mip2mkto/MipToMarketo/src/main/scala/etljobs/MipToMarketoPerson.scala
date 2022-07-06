@@ -70,8 +70,8 @@ object MipToMarketoPerson extends ETLFrameWork {
   //Code to build payload to POST to Marketo
   def buildPayload(transformedDF: DataFrame, action: String, lookUpField: String): String = {
 
-    val output_df = transformedDF.select(to_json(struct(col("*"))).alias("content"))
-    val testData = output_df.rdd.map(row => row.getString(0)).collect
+    val outputDF = transformedDF.select(to_json(struct(col("*"))).alias("content"))
+    val testData = outputDF.rdd.map(row => row.getString(0)).collect
     val inputData: String = testData.mkString(",")
     val strNew1  = inputData.replaceAll("[\"][a-zA-Z0-9_]*[\"]:\"\"[,]?", "")
     val finalStr  = strNew1.replaceAll("[,]?}", "}")
@@ -161,11 +161,10 @@ object MipToMarketoPerson extends ETLFrameWork {
     log.info(s"Starting ETL Job => $jobClassName....")
 
     val jobSequence = s"$jobClassName"
-    //val jobSequence = "testUTC"
-    val last_run_timestamp = getMaxRecordTimestampTest(jobSequence)
-    println(last_run_timestamp)
-    var mip_seq_id = Array[MipToMarketoPerson.mipSeqId]()
-    var lead_id = Array[MipToMarketoPerson.leadId]()
+    val lastRunTimestamp = getMaxRecordTimestampTest(jobSequence)
+    println(lastRunTimestamp)
+    var mip_seq_id = Array[MipToMarketoPerson.mipSeqId]() //NOSONAR
+    var lead_id = Array[MipToMarketoPerson.leadId]() //NOSONAR
     var dbCon:Connection = null
 
     var mapIds = scala.collection.mutable.Map[Long, Long]()
@@ -197,7 +196,7 @@ object MipToMarketoPerson extends ETLFrameWork {
            |SELECT
            |$minBatchSize record_limit,
            |$elapsedTime elapsed_time_limit_in_mins ,
-           |'$last_run_timestamp' AS last_sync_timestamp
+           |'$lastRunTimestamp' AS last_sync_timestamp
            |FROM sysibm.sysdummy1)
            |SELECT *
            |FROM
@@ -354,7 +353,6 @@ object MipToMarketoPerson extends ETLFrameWork {
           val errorDetailsPerson = testDF.select(explode(col("reasons")).as("reasons")).select("reasons.*")
           errorCode = errorDetailsPerson.head().getString(0)
           errorDesc = errorDetailsPerson.head().getString(1).replace("'", "")
-          //personFlag = 1
           log.info(errorCode)
           log.info(errorDesc)
 

@@ -406,10 +406,10 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
       val jobSequence = s"$jobClassName"
 
       //Variables From PERSON Code
-      val last_run_timestamp = getMaxRecordTimestampTest(jobSequence)
-      println(last_run_timestamp)
-      var mip_seq_id = Array[MiptoMarketoPersonInteraction.mipSeqId]()
-      var lead_id = Array[MiptoMarketoPersonInteraction.leadId]()
+      val lastRunTimestamp = getMaxRecordTimestampTest(jobSequence)
+      println(lastRunTimestamp)
+      var mip_seq_id = Array[MiptoMarketoPersonInteraction.mipSeqId]() //NOSONAR need to keep vars readable
+      var lead_id = Array[MiptoMarketoPersonInteraction.leadId]() //NOSONAR need to keep vars readable
       var dbCon: Connection = null
       var mapPersonIds = scala.collection.mutable.Map[Long, Long]()
       var personFlag = 0
