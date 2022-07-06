@@ -296,7 +296,15 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                    "apiName": "Item_URL",
          |                    "value": "${removeControlChar(row.getString(23))}"
          |
-         |                }
+         |                },
+         |                {
+         |                    "apiName": "Item_Name",
+         |                    "value": "${removeControlChar(row.getString(0))}"
+         |                },
+         |                {
+         |                    "apiName": "Item_Language_Code",
+         |                    "value": "${removeControlChar(row.getString(12))}"
+         |                },
          |          ]
          |}""".stripMargin
 
@@ -517,6 +525,9 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |END AS STATE_CD,
              |RP_PHONE1.sp_type AS WORK_PHONE_PERM,
              |COP.SAP_CUST_NUM,
+             |COP.MAIN_DOM_CLIENT_ID,
+             |COP.DOM_BUY_GRP,
+             |COP.LANDING_CTRY,
              |'P' AS STATUS_CODE,
              |CAST (NULL AS VARCHAR) AS ERROR_CODE,
              |CAST (NULL AS VARCHAR) AS ERROR_DESC,
@@ -546,8 +557,8 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |CASE WHEN IMI.MARKETING_INTERACTION_TYPE_CD = ('MAIL') THEN SUBSTRING(TRIM(IMI.LEAD_NOTE) || ' ' ||
              |CASE WHEN (Q_HELP = '' or Q_HELP IS NULL) THEN '' ELSE NVL(Q_HELP||' ','') END ||
              |CASE WHEN (Ans_Q_QRADAR_BP = '' or Ans_Q_QRADAR_BP IS NULL) THEN '' ELSE NVL('| Business Partner='||Ans_Q_QRADAR_BP||' ','') END ||
-             |CASE WHEN (Ans_Q_MAIL_CONSENT = '' or Ans_Q_MAIL_CONSENT IS NULL) THEN '' ELSE NVL('| Q_MAIL_CONSENT='||Ans_Q_MAIL_CONSENT||' ','') END ||
-             |CASE WHEN (Ans_Q_QRDATA = '' or Ans_Q_QRDATA IS NULL) THEN '' ELSE NVL('| QRader Estimator values='||Ans_Q_QRDATA||' ','') END,1,3072)
+             |CASE WHEN (Ans_Q_MAIL_CONSENT = '' or Ans_Q_MAIL_CONSENT IS NULL) THEN '' ELSE NVL('| Mail Consent='||Ans_Q_MAIL_CONSENT||' ','') END ||
+             |CASE WHEN (Ans_Q_QRDATA = '' or Ans_Q_QRDATA IS NULL) THEN '' ELSE NVL('| QRadar Estimator values='||Ans_Q_QRDATA||' ','') END,1,3072)
              |END AS LEAD_NOTE,
              |IMI.LEAD_SRC AS LEAD_SRC_NAME,
              |IMI.MARKETING_INTERACTION_TYPE_CD AS INTERACTION_TYPE_CODE,
@@ -591,7 +602,11 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |CAST (NULL AS VARCHAR(256)) AS WEB_PAGE_SRC,
              |CAST (NULL AS BIGINT) AS MKTO_ACTIVITY_ID,
              |IMI.EVENT_REF_ID,
-             |IMI.REFERRER_URL AS REFERRER_URL,
+             |CASE
+             |WHEN IMI.ASSET_DLVRY_URL = ''
+             |THEN IMI.REFERRER_URL
+             |ELSE IMI.ASSET_DLVRY_URL
+             |END AS REFERRER_URL,
              |IMI.ACTIVITY_CMPN_CD AS ACTIVITY_CMPN_CD,
              |MC.IBM_GBL_IOT_CODE,
              |MC.SUB_REGION_CODE,
@@ -774,11 +789,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |ELSE NULL
              |END AS STATE_CD,
              |CTE1.WORK_PHONE_PERM,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.SAP_CUST_NUM
-             |ELSE NULL
-             |END AS SAP_CUST_NUM,
+             |CTE1.SAP_CUST_NUM,
              |CTE1.STATUS_CODE,
              |CTE1.ERROR_CODE,
              |CTE1.ERROR_DESC,
@@ -825,6 +836,9 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |CTE1.EVENT_REF_ID,
              |CTE1.REFERRER_URL,
              |CTE1.ACTIVITY_CMPN_CD,
+             |CTE1.MAIN_DOM_CLIENT_ID,
+             |CTE1.DOM_BUY_GRP,
+             |CTE1.LANDING_CTRY,
              |MAXSEQID.MAXSEQID AS MAXSEQID,
              |ACTSEQ.MAXACTSEQID AS MAXACTSEQID
              |FROM CTE1
@@ -853,55 +867,59 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
         combinedDF.show(false)
 
         // Creating PersonDF from CombinedDF
-        val personTableDF = combinedDF.select("MIP_SEQ_ID",
-          "IDM_ID",
-          "EMAIL_MEDIA_ID",
-          "NEW_TO_IDM_IND",
-          "FIRST_NAME",
-          "LAST_NAME",
-          "EMAIL_ADDR",
-          "COMPANY_NAME",
-          "CTRY_CODE",
-          "IDM_COMPANY_ID",
-          "DQ_EMAIL_IND",
-          "DQ_NAME_IND",
-          "DQ_PHONE_IND",
-          "IDM_FEDGOV_IND",
-          "STATUS_CODE",
-          "ERROR_CODE",
-          "ERROR_DESC",
-          "MIP_TRANS_SRC",
-          "MIP_TRANS_ID",
-          "MKTO_PARTITION_ID",
-          "CREATE_TS",
-          "COMPANY_EMAIL_SUPR_CODE",
-          "COMPANY_PHONE_SUPR_CODE",
-          "PREF_CODE_IBM",
-          "PREF_CODE_10A00",
-          "PREF_CODE_10G00",
-          "PREF_CODE_10L00",
-          "PREF_CODE_10M00",
-          "PREF_CODE_10N00",
-          "PREF_CODE_153QH",
-          "PREF_CODE_15CLV",
-          "PREF_CODE_15IGO",
-          "PREF_CODE_15ITT",
-          "PREF_CODE_15MFT",
-          "PREF_CODE_15STT",
-          "PREF_CODE_15WCP",
-          "PREF_CODE_15WSC",
-          "PREF_CODE_17AAL",
-          "PREF_CODE_17BCH",
-          "PREF_CODE_17CPH",
-          "PREF_CODE_17DSR",
-          "PREF_CODE_17ENL",
-          "PREF_CODE_17YNI",
-          "PREF_CODE_15S8X",
-          "STUDENT_FLG",
-          "IBMer_FLG",
-          "STATE_CD",
-          "WORK_PHONE_PERM",
-          "SAP_CUST_NUM").where("IDM_ID IS NOT NULL AND EMAIL_MEDIA_ID IS NOT NULL AND EMAIL_ADDR IS NOT NULL").dropDuplicates()
+        val personTableDF = combinedDF.select(
+          col("MIP_SEQ_ID"),
+          col("IDM_ID"),
+          col("EMAIL_MEDIA_ID"),
+          col("NEW_TO_IDM_IND"),
+          col("FIRST_NAME"),
+          col("LAST_NAME"),
+          col("EMAIL_ADDR"),
+          col("COMPANY_NAME"),
+          col("CTRY_CODE"),
+          col("IDM_COMPANY_ID"),
+          col("DQ_EMAIL_IND"),
+          col("DQ_NAME_IND"),
+          col("DQ_PHONE_IND"),
+          col("IDM_FEDGOV_IND"),
+          col("STATUS_CODE"),
+          col("ERROR_CODE"),
+          col("ERROR_DESC"),
+          col("MIP_TRANS_SRC"),
+          col("MIP_TRANS_ID"),
+          col("MKTO_PARTITION_ID"),
+          col("CREATE_TS"),
+          col("COMPANY_EMAIL_SUPR_CODE"),
+          col("COMPANY_PHONE_SUPR_CODE"),
+          col("PREF_CODE_IBM"),
+          col("PREF_CODE_10A00"),
+          col("PREF_CODE_10G00"),
+          col("PREF_CODE_10L00"),
+          col("PREF_CODE_10M00"),
+          col("PREF_CODE_10N00"),
+          col("PREF_CODE_153QH"),
+          col("PREF_CODE_15CLV"),
+          col("PREF_CODE_15IGO"),
+          col("PREF_CODE_15ITT"),
+          col("PREF_CODE_15MFT"),
+          col("PREF_CODE_15STT"),
+          col("PREF_CODE_15WCP"),
+          col("PREF_CODE_15WSC"),
+          col("PREF_CODE_17AAL"),
+          col("PREF_CODE_17BCH"),
+          col("PREF_CODE_17CPH"),
+          col("PREF_CODE_17DSR"),
+          col("PREF_CODE_17ENL"),
+          col("PREF_CODE_17YNI"),
+          col("PREF_CODE_15S8X"),
+          col("STUDENT_FLG"),
+          col("IBMer_FLG"),
+          col("STATE_CD"),
+          col("WORK_PHONE_PERM"),
+          col("SAP_CUST_NUM"),
+          col("MAIN_DOM_CLIENT_ID").as("DOM_CLIENT_ID"),
+          concat_ws("-", col("DOM_BUY_GRP"), col("LANDING_CTRY")).as("DOM_BUY_GRP_CTRY")
+        ).where("IDM_ID IS NOT NULL AND EMAIL_MEDIA_ID IS NOT NULL AND EMAIL_ADDR IS NOT NULL").dropDuplicates()
 
         // Creating Custom Activity Table Dataset from Combined DF
         val customActivityTableDF = combinedDF.select("MIP_ACTIVITY_SEQ_ID",
@@ -1348,8 +1366,8 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
       "COMPANY_EMAIL_SUPR_CODE", "COMPANY_PHONE_SUPR_CODE", "PREF_CODE_IBM", "PREF_CODE_10A00", "PREF_CODE_10G00", "PREF_CODE_10L00",
       "PREF_CODE_10M00", "PREF_CODE_10N00", "PREF_CODE_153QH", "PREF_CODE_15CLV", "PREF_CODE_15IGO", "PREF_CODE_15ITT",
       "PREF_CODE_15MFT", "PREF_CODE_15STT", "PREF_CODE_15WCP", "PREF_CODE_15WSC", "PREF_CODE_17AAL", "PREF_CODE_17BCH",
-      "PREF_CODE_17CPH", "PREF_CODE_17DSR", "PREF_CODE_17ENL", "PREF_CODE_17YNI", "PREF_CODE_15S8X","STUDENT_FLG", "IBMer_FLG", "STATE_CD", "WORK_PHONE_PERM",
-      "SAP_CUST_NUM")
+      "PREF_CODE_17CPH", "PREF_CODE_17DSR", "PREF_CODE_17ENL", "PREF_CODE_17YNI", "PREF_CODE_15S8X","STUDENT_FLG", "IBMer_FLG",
+      "STATE_CD", "WORK_PHONE_PERM", "SAP_CUST_NUM", "DOM_CLIENT_ID", "DOM_BUY_GRP_CTRY")
     DataUtilities.runPreparedStatementUsingConnection(
       dbConn,
       personDF,
@@ -1358,8 +1376,9 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |MIP_TRANS_SRC,MIP_TRANS_ID,MKTO_PARTITION_ID,COMPANY_EMAIL_SUPR_CODE,COMPANY_PHONE_SUPR_CODE,PREF_CODE_IBM,PREF_CODE_10A00,
          |PREF_CODE_10G00,PREF_CODE_10L00,PREF_CODE_10M00,PREF_CODE_10N00,PREF_CODE_153QH,PREF_CODE_15CLV,PREF_CODE_15IGO,PREF_CODE_15ITT,
          |PREF_CODE_15MFT,PREF_CODE_15STT,PREF_CODE_15WCP,PREF_CODE_15WSC,PREF_CODE_17AAL,PREF_CODE_17BCH,PREF_CODE_17CPH,PREF_CODE_17DSR,
-         |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM,SAP_CUST_NUM)
-         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
+         |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM,SAP_CUST_NUM,
+         |"DOM_CLIENT_ID","DOM_BUY_GRP_CTRY")
+         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
       personDF.columns,
       Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48),
       null,true,insertTableName,"INSERT")
@@ -1396,7 +1415,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
       "PREF_CODE_10M00", "PREF_CODE_10N00", "PREF_CODE_153QH", "PREF_CODE_15CLV", "PREF_CODE_15IGO", "PREF_CODE_15ITT",
       "PREF_CODE_15MFT", "PREF_CODE_15STT", "PREF_CODE_15WCP", "PREF_CODE_15WSC", "PREF_CODE_17AAL", "PREF_CODE_17BCH",
       "PREF_CODE_17CPH", "PREF_CODE_17DSR", "PREF_CODE_17ENL", "PREF_CODE_17YNI", "PREF_CODE_15S8X","STUDENT_FLG", "IBMer_FLG", "STATE_CD",
-      "WORK_PHONE_PERM","SAP_CUST_NUM")
+      "WORK_PHONE_PERM", "SAP_CUST_NUM", "DOM_CLIENT_ID", "DOM_BUY_GRP_CTRY")
     DataUtilities.runPreparedStatementUsingConnection(
       dbConn,
       personDF,
@@ -1405,9 +1424,10 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |MIP_TRANS_SRC,MIP_TRANS_ID,MKTO_PARTITION_ID,COMPANY_EMAIL_SUPR_CODE,COMPANY_PHONE_SUPR_CODE,PREF_CODE_IBM,PREF_CODE_10A00,
          |PREF_CODE_10G00,PREF_CODE_10L00,PREF_CODE_10M00,PREF_CODE_10N00,PREF_CODE_153QH,PREF_CODE_15CLV,PREF_CODE_15IGO,PREF_CODE_15ITT,
          |PREF_CODE_15MFT,PREF_CODE_15STT,PREF_CODE_15WCP,PREF_CODE_15WSC,PREF_CODE_17AAL,PREF_CODE_17BCH,PREF_CODE_17CPH,PREF_CODE_17DSR,
-         |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM,SAP_CUST_NUM)
-         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
-      personDF.columns,Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48),null,true,insertTableName,"INSERT")
+         |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM,SAP_CUST_NUM,
+         |"DOM_CLIENT_ID", "DOM_BUY_GRP_CTRY")
+         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
+      personDF.columns,Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50),null,true,insertTableName,"INSERT")
   }
 
   def insertIntoXref(dataFrame: DataFrame, dbConn: Connection, insertTableName: String): Unit = {
