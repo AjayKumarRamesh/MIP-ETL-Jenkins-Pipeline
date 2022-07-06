@@ -7,15 +7,15 @@ import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.{BasicResponseHandler, CloseableHttpClient, HttpClients}
 import org.apache.spark.sql.execution.streaming.CommitMetadata.format
-import org.apache.spark.sql.functions.{to_json, _}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.json4s.JArray
 import org.json4s.jackson.JsonMethods.parse
-import play.api.libs.json.{Json}
+import play.api.libs.json.Json
 
 import java.net.SocketTimeoutException
-import java.sql.{Connection, DriverManager, Statement, Timestamp}
+import java.sql.{Connection, DriverManager, Timestamp}
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneOffset}
@@ -304,7 +304,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                {
          |                    "apiName": "Item_Language_Code",
          |                    "value": "${removeControlChar(row.getString(12))}"
-         |                },
+         |                }
          |          ]
          |}""".stripMargin
 
@@ -424,7 +424,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
       var interactionFlag = 0
       var errorCodeCA: String = null
       var errorDescCA: String = null
-      var mapInteractionIds = scala.collection.mutable.Map[Option[Long], Long]()
+      val mapInteractionIds = scala.collection.mutable.Map[Option[Long], Long]()
 
       // Logging Job Status in ETLJobHistory Table
       DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobStarted, "GOOD LUCK", null, null)
@@ -1091,7 +1091,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
             mipSeqIDLeadIdPersonDF.show(false)
 
             // Creating Custom Activity Dataframe containing only successful Mip_Seq_Id records that are sent to Marketo-Person.
-            var marketoSuccessMipSeqIDList = mipSeqIDLeadIdPersonDF
+            val marketoSuccessMipSeqIDList = mipSeqIDLeadIdPersonDF
               .select("mipSeqID", "leadId").where("leadId not like '-%'").distinct()
             personSuccessCount = marketoSuccessMipSeqIDList.count()
 
@@ -1377,10 +1377,10 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |PREF_CODE_10G00,PREF_CODE_10L00,PREF_CODE_10M00,PREF_CODE_10N00,PREF_CODE_153QH,PREF_CODE_15CLV,PREF_CODE_15IGO,PREF_CODE_15ITT,
          |PREF_CODE_15MFT,PREF_CODE_15STT,PREF_CODE_15WCP,PREF_CODE_15WSC,PREF_CODE_17AAL,PREF_CODE_17BCH,PREF_CODE_17CPH,PREF_CODE_17DSR,
          |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM,SAP_CUST_NUM,
-         |"DOM_CLIENT_ID","DOM_BUY_GRP_CTRY")
+         |DOM_CLIENT_ID,DOM_BUY_GRP_CTRY)
          |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
       personDF.columns,
-      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48),
+      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50),
       null,true,insertTableName,"INSERT")
   }
 
@@ -1425,7 +1425,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |PREF_CODE_10G00,PREF_CODE_10L00,PREF_CODE_10M00,PREF_CODE_10N00,PREF_CODE_153QH,PREF_CODE_15CLV,PREF_CODE_15IGO,PREF_CODE_15ITT,
          |PREF_CODE_15MFT,PREF_CODE_15STT,PREF_CODE_15WCP,PREF_CODE_15WSC,PREF_CODE_17AAL,PREF_CODE_17BCH,PREF_CODE_17CPH,PREF_CODE_17DSR,
          |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM,SAP_CUST_NUM,
-         |"DOM_CLIENT_ID", "DOM_BUY_GRP_CTRY")
+         |DOM_CLIENT_ID, DOM_BUY_GRP_CTRY)
          |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
       personDF.columns,Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50),null,true,insertTableName,"INSERT")
   }
