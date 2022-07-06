@@ -27,6 +27,7 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.ma
            GRP_EVENTS_IDM:['grp_idm_ids_image','grp_idm_ids_app_jar', 'grp_events_to_idmids', 'MIP-Flare-Framework-2.1.jar', 'GrpIDMIds'],
            CMDP_COP_to_MIP:['cmdp_cop_image', 'cmdp_cop_jar', 'cmdp_cop_to_mip', 'com.ibm.map-CompanyIngestion-1.2.jar', 'cmdp_cop'],
            'MIP-MARKETO-INTERACTION':['mip_mkto_image','mip_mkto_app_jar', 'mip_mkto_ingestion', 'com.ibm-MAP-ETL-Framework-Mip2Marketo-1.0.jar', 'mip2mkto'],
+           'MIP-PERSON-INTERACTION-MARKETO-HRM':['mip_mkto_image','mip_mkto_app_jar', 'mip_mkto_ingestion', 'com.ibm-MAP-ETL-Framework-Mip2Marketo-1.0.jar', 'mip2mkto'],
            MKTO_UNSUB_EMAIL_ACTIVITY:['unsubemail_image','unsubemail_app_jar', 'mip_unsubs_email_idm', 'MIP-Flare-Framework-2.1.jar', 'UnsubEmail'],
            MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar', 'spss_scoring', 'com.ibm.map-SpssScoring-2.2.jar', 'scoring'],
            RUBY_API_TO_MIP:['ruby_api_image','ruby_api_app_jar', 'rubyapitomip', 'MIP-Flare-Framework-2.1.jar', 'RubyApiToMip'],
