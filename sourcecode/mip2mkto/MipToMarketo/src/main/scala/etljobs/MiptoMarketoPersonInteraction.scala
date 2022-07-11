@@ -528,6 +528,11 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |COP.MAIN_DOM_CLIENT_ID,
              |COP.DOM_BUY_GRP,
              |COP.LANDING_CTRY,
+             |CASE WHEN COP.DOM_BUY_GRP IS NOT NULL
+             |    THEN TRIM(COP.DOM_BUY_GRP)||
+             |        CASE WHEN COP.LANDING_CTRY IS NOT NULL THEN '-'||COP.LANDING_CTRY ELSE '' END
+             |    ELSE NULL
+             |    END AS DOM_BUY_GRP_CTRY,
              |'P' AS STATUS_CODE,
              |CAST (NULL AS VARCHAR) AS ERROR_CODE,
              |CAST (NULL AS VARCHAR) AS ERROR_DESC,
@@ -839,6 +844,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
              |CTE1.MAIN_DOM_CLIENT_ID,
              |CTE1.DOM_BUY_GRP,
              |CTE1.LANDING_CTRY,
+             |CTE1.DOM_BUY_GRP_CTRY,
              |MAXSEQID.MAXSEQID AS MAXSEQID,
              |ACTSEQ.MAXACTSEQID AS MAXACTSEQID
              |FROM CTE1
@@ -867,7 +873,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
         combinedDF.show(false)
 
         // Creating PersonDF from CombinedDF
-        val personTableDF = combinedDF.select(
+        val personTableRawDF = combinedDF.select(
           col("MIP_SEQ_ID"),
           col("IDM_ID"),
           col("EMAIL_MEDIA_ID"),
@@ -917,9 +923,12 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
           col("STATE_CD"),
           col("WORK_PHONE_PERM"),
           col("SAP_CUST_NUM"),
-          col("MAIN_DOM_CLIENT_ID").as("DOM_CLIENT_ID"),
-          concat_ws("-", col("DOM_BUY_GRP"), col("LANDING_CTRY")).as("DOM_BUY_GRP_CTRY")
+          col("MAIN_DOM_CLIENT_ID"),
+          col("DOM_BUY_GRP_CTRY")
         ).where("IDM_ID IS NOT NULL AND EMAIL_MEDIA_ID IS NOT NULL AND EMAIL_ADDR IS NOT NULL").dropDuplicates()
+
+        val personTableDF = personTableRawDF
+          .withColumnRenamed("MAIN_DOM_CLIENT_ID", "DOM_CLIENT_ID")
 
         // Creating Custom Activity Table Dataset from Combined DF
         val customActivityTableDF = combinedDF.select("MIP_ACTIVITY_SEQ_ID",
