@@ -326,13 +326,16 @@ object MipToMarketoPerson extends ETLFrameWork {
           println(mapIds)
           val mipSeqIDList = mapIds.values.toString().substring(7,mapIds.values.toString().length)
           val postDF = mapIds.toSeq.toDF("leadId","mipSeqID")
-
-          postDF.show(false)
+          //PS 07/12
+          val badLeadIDsDF = postDF.filter(col("leadId") <= 0)
+          val goodLeadIdsDF = postDF.except(badLeadIDsDF)
+          badLeadIDsDF.show(false)
+          goodLeadIdsDF.show(false)
 
           log.info("Updating the lead id's")
           //Function which will update the LeadID for the processed messages
-          updatePostStatusv2(postDF,dbCon,tgtTableName)
-          updateErrorStatus(postDF,dbCon,tgtTableName,errorCode,errorDesc)
+          updatePostStatusv2(goodLeadIdsDF,dbCon,tgtTableName)
+          updateErrorStatus(badLeadIDsDF,dbCon,tgtTableName,errorCode,errorDesc)
 
           log.info("Inserting into MAP_MKTO.MCT_MKTO_LEAD_XREF")
           val sqlData2 =
@@ -467,7 +470,7 @@ object MipToMarketoPerson extends ETLFrameWork {
     DataUtilities.runPreparedStatementUsingConnection(
       dbConn,
       dfUpd,
-      s"""UPDATE $updateTableName SET STATUS_CODE = 'E', ERROR_CODE = '$errorCode', ERROR_DESC = '$errorDesc', MKTO_LEAD_ID = NULL WHERE MKTO_LEAD_ID < 0 AND MIP_SEQ_ID= ?""",
+      s"""UPDATE $updateTableName SET STATUS_CODE = 'E', ERROR_CODE = '$errorCode', ERROR_DESC = '$errorDesc', MKTO_LEAD_ID = NULL WHERE  MIP_SEQ_ID= ?""",
       dfUpd.columns,
       Array(0),
       null,
