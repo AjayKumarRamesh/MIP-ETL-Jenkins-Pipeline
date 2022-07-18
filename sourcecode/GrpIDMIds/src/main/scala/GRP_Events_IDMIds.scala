@@ -1,83 +1,53 @@
 import com.ibm.mkt.etlframework.audit.JobRunArgs
 import com.ibm.mkt.etlframework.data.DataUtilities
-import com.ibm.mkt.etlframework.{AppProperties, Constants, ETLFrameWork}
+import com.ibm.mkt.etlframework.{AppProperties, Constants, ETLFrameWork, PropertyNames}
 
 object GRP_Events_IDMIds extends ETLFrameWork {
   val jobClassName: String = this.getClass.getSimpleName.stripSuffix("$")
   var errstr: String = null
   var dbExtrSource: String = null
   var dbTgtSource: String = null
-  var processedCount: Long = 0
+  var mergedCount: Long = 0
+  var sourceCount: Long = 0
+  var errorCount: Long = 0
 
   def main(args: Array[String]): Unit = {
     var isJobFailed: Boolean = false
 
-    var xtrSql: String = null //creating command line arguments for extract and upload sql
-    var uplSql: String = null
+    val xtrSql: String =
+      """SELECT
+        |	IORDNUM,
+        |	IDM_PERSON_EID,
+        |	IDM_ORG_EID,
+        |	EMAIL_MEDIA_ID,
+        |	MOD(ROW_NUMBER() OVER(ORDER BY IORDNUM), 4) AS PARTCOL
+        |FROM MAP_CORE.MCT_EVENT_IDM_XREF
+        |WHERE PROCESSED_FLG = 'N'""".stripMargin
+
+    val uplSql: String =
+      """MERGE INTO GRP_MAP.IORDXREF t
+        |USING TABLE ( VALUES (?,?,?,?) ) as v (IORDNUM , IDM_PERSON_EID,IDM_ORG_EID,EMAIL_MEDIA_ID)
+        |	ON t.IORDNUM = v.IORDNUM
+        |WHEN MATCHED THEN
+        |	UPDATE SET t.IDM_PERSON_EID = v.IDM_PERSON_EID, t.IDM_ORG_EID = v.IDM_ORG_EID,t.EMAIL_MEDIA_ID = v.EMAIL_MEDIA_ID
+        |WHEN NOT MATCHED THEN
+        |	INSERT (IORDNUM, IDM_PERSON_EID, IDM_ORG_EID,EMAIL_MEDIA_ID) VALUES (v.IORDNUM, v.IDM_PERSON_EID, v.IDM_ORG_EID,v.EMAIL_MEDIA_ID)""".stripMargin
+
     dbExtrSource = args(args.indexOf("--dbExtrSource") + 1)
     dbTgtSource = args(args.indexOf("--dbTgtSource") + 1)
     try {
-
       log.info("Initialization started")
       this.initializeFramework(args)
       log.info("Initialization completed.")
 
       log.info(s"Starting ETL Job => $jobClassName....")
-
-      // Log job status START - DB
-      // log.info(s"CommonDBConnProperties => ${this.CommonDBConProperties}")
-      // log.info(s"Log to JobHistoryLogTable => ${AppProperties.JobHistoryLogTable}")
-      //DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobStarted, "GOOD LUCK", null, null)
       DataUtilities.recordJobHistory(AppProperties.SparkSession, AppProperties.CommonJobSeqCode, "", Constants.JobStarted)
 
-
-      // TODO: ETL Logic goes here...
-      log.info("ETL logic goes here...")
-      val xtrSqlIndex = args.indexOf("--xtrSql") //creating loop variables to takeup cmd line args
-      val uplSqlIndex = args.indexOf("--uplSql")
-      if (xtrSqlIndex >= 0) {
-        log.info(s"Arg 'xtrSql' found at index: $xtrSqlIndex")
-        if (args.length > (xtrSqlIndex + 1)) {
-          xtrSql = args(xtrSqlIndex + 1)
-          log.info(s"Value for arg 'xtrSql' value: $xtrSql")
-        } else {
-          throw new IllegalArgumentException(
-            "Value for arg 'xtrSql' could not be found. Please pass the value."
-          )
-        }
-      }
-
-      if (uplSqlIndex >= 0) {
-        log.info(s"Arg 'xtrSql' found at index: $uplSqlIndex")
-        if (args.length > (uplSqlIndex + 1)) {
-          uplSql = args(uplSqlIndex + 1)
-          log.info(s"Value for arg 'xtrSql' value: $uplSql")
-        } else {
-          throw new IllegalArgumentException(
-            "Value for arg 'xtrSql' could not be found. Please pass the value."
-          )
-        }
-      }
       runJobSequence(xtrSql, uplSql)
-      /* Note: You have access to the following instances:
-        - CommonDBConProperties (connection properties to connect to App Config DB)
-        - commonJobSeqCode (job sequence code)
-        - sparkSession (spark session instance)
 
-        At this point, you should have access to Common functions
-        e.g: this.getDataSourceDetails(sparkSession, dataSourceCode = "ISAP")
-
-        If you need to extract and save/write data, then use the Object: DataUtilities
-        This object is a facade to all functions available.
-        e.g: DataUtilities.readDataWithColumnPartitioning(...)
-      */
-
-
-      //     logging job run statistics into Job history table
-      // Log job status POST - DB
-      //DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobSucceeded, "Job completed without any error", null, "Total Count of Records Processed "+ processedCount)
       val jobrun = new JobRunArgs
-      jobrun.jobMetrics = "Total Count of Records Processed " + processedCount
+      jobrun.jobMetrics = s"Source Count: $sourceCount, Merged Count: $mergedCount, Error Count: $errorCount"
+
       DataUtilities.recordJobHistory(AppProperties.SparkSession, AppProperties.CommonJobSeqCode, "", Constants.JobSucceeded, jobrun)
       log.info(s"Completed Job => $jobClassName.") //logging when job is succeeded
 
@@ -102,49 +72,64 @@ object GRP_Events_IDMIds extends ETLFrameWork {
   @throws(classOf[Exception])
   def runJobSequence(xtrSql: String, uplSql: String) = {
     log.info("runJobSequence started")
-    // ETL Logic goes here
-    /* Note: You have access to the following instances:
-        - CommonDBConProperties (connection properties to connect to App Config DB)
-        - commonJobSeqCode (job sequence code)
-        - sparkSession (spark session instance)
-
-        At this point, you should have access to Common functions
-        e.g: this.getDataSourceDetails(sparkSession, dataSourceCode = "ISAP")
-
-        If you need to extract and save/write data, then use the Object: DataUtilities
-        This object is a facade to all functions available.
-        e.g: DataUtilities.readDataWithColumnPartitioning(...)
-    */
-    val conn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbExtrSource) //connecting to source MIP database
-    val df = DataUtilities.readDataByPartitioningType( //creating dataframe for Source extract operation
+    val sourceConn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbExtrSource) //connecting to source MIP database
+    val extractDF = DataUtilities.readDataByPartitioningType( //creating dataframe for Source extract operation
       AppProperties.SparkSession,
-      conn,
+      sourceConn,
       xtrSql, //passing argument to use extract sql
       Constants.PartitionTypeByColumn,
       null,
       "PARTCOL"
     )
-    log.info(s"${df.count()} row(s) extracted")
-    df.show(numRows = 100, truncate = false) //logging purpose
-    log.info(s"Num Partitions: ${df.rdd.getNumPartitions}")
-    val connTgt = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbTgtSource) //connecting to target GRP database
-    val dfTgt = df.drop("PARTCOL") //creating dataframe for merge operation
-    processedCount = dfTgt.count()
+    sourceCount = extractDF.count()
+    log.info(s"$sourceCount row(s) extracted")
+    extractDF.show(numRows = 100, truncate = false) //logging purpose
+    log.info(s"Num Partitions: ${extractDF.rdd.getNumPartitions}")
+    val targetConn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbTgtSource) //connecting to target GRP database
+    val targetDF = extractDF.drop("PARTCOL") //creating dataframe for merge operation
     DataUtilities.runPreparedStatement(
-      connTgt,
-      dfTgt,
+      targetConn,
+      targetDF,
       uplSql,
-      dfTgt.columns, //passing argument to use upload sql
+      targetDF.columns, //passing argument to use upload sql
       null, null, "merge"
     )
-    val dfUpd = df.select("IORDNUM") //creating dataframe with column that can be used to join
-    DataUtilities.runPreparedStatement(
-      conn,
-      dfUpd,
-      "UPDATE MAP_CORE.MCT_EVENT_IDM_XREF SET PROCESSED_FLG = 'Y' WHERE IORDNUM = ?",
-      dfUpd.columns,
-      null, null, "update")
+
+    val srcCompareDF = targetDF.select("IORDNUM")
+    val iordNums = srcCompareDF.collect().map(row => row.getString(0)).mkString("','")
+    val updatedSql =
+      s"""SELECT
+         |	IORDNUM
+         |FROM GRP_MAP.IORDXREF
+         |WHERE IORDNUM IN ('$iordNums')""".stripMargin
+    //Reading target table
+    val targetCompareDF = AppProperties.SparkSession.read.jdbc(targetConn.getProperty(PropertyNames.EndPoint), updatedSql, targetConn)
+    val diffDF = srcCompareDF.except(targetCompareDF)
+    //val updateTargetDF = srcCompareDF.except(diffDF)
+    mergedCount = targetCompareDF.count()
+    errorCount = diffDF.count()
+
+    if(mergedCount > 0 ) {
+      DataUtilities.runPreparedStatement(
+        sourceConn,
+        targetCompareDF,
+        "UPDATE MAP_CORE.MCT_EVENT_IDM_XREF SET PROCESSED_FLG = 'Y' WHERE IORDNUM = ?",
+        targetCompareDF.columns,
+        Array(0), null, "update")
+    }
+
+    if(errorCount > 0 ) {
+      DataUtilities.runPreparedStatement(
+        sourceConn,
+        diffDF,
+        "UPDATE MAP_CORE.MCT_EVENT_IDM_XREF SET PROCESSED_FLG = 'E' WHERE IORDNUM = ?",
+        diffDF.columns,
+        Array(0), null, "update")
+    }
 
   }
 
+
+
 }
+
