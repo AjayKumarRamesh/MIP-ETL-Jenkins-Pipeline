@@ -9,18 +9,18 @@ import org.apache.spark.sql.execution.streaming.CommitMetadata.format
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.storage.StorageLevel
 import org.json4s.jackson.JsonMethods.parse
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.Reads._
 import play.api.libs.json.{JsPath, Json, Reads}
 
 import java.net.SocketTimeoutException
-import java.sql.{Connection, DriverManager, Statement, Timestamp}
+import java.sql.{Connection, DriverManager, Timestamp}
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.Properties
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.sys.exit
 import scala.util.Try
 
@@ -162,6 +162,7 @@ object MipToMarketoPerson extends ETLFrameWork {
 
     val jobSequence = s"$jobClassName"
     val lastRunTimestamp = getMaxRecordTimestampTest(jobSequence)
+    println("lastRunTimestamp----->"+lastRunTimestamp)
     println(lastRunTimestamp)
     var mip_seq_id = Array[MipToMarketoPerson.mipSeqId]() //NOSONAR
     var lead_id = Array[MipToMarketoPerson.leadId]() //NOSONAR
@@ -212,12 +213,12 @@ object MipToMarketoPerson extends ETLFrameWork {
 
       print(sqlData)
       val conProp1: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbSource)
-      val dfResult1 = AppProperties.SparkSession.read.jdbc(conProp1.getProperty(PropertyNames.EndPoint), sqlData, conProp1)
+      val dfResult1 = AppProperties.SparkSession.read.jdbc(conProp1.getProperty(PropertyNames.EndPoint), sqlData, conProp1).persist(StorageLevel.MEMORY_ONLY)
       dfResult1.show(false)
 
 
       count = dfResult1.count()
-      var counter = count
+      log.info("source count -->"+ count )
 
       val dbConnectionInfo = conProp1.getProperty(PropertyNames.EndPoint)
       dbCon = DriverManager.getConnection(dbConnectionInfo, conProp1)
@@ -226,6 +227,7 @@ object MipToMarketoPerson extends ETLFrameWork {
 
         log.info("Reading unprocessed data")
         dfResult1.show(false)
+        log.info("source count 2nd time -->"+ dfResult1.count() )
 
         //Get configuration from ETL_DATA_SOURCE
         val appProp: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, configSource)
@@ -293,7 +295,8 @@ object MipToMarketoPerson extends ETLFrameWork {
         //Generate the dataframe to update to the source table
         var testDF = parsedJson.select(explode(col("result")).as("result")).select("result.*")
         testDF.show(false)
-
+        var counter = testDF.count()
+        log.info("response count->>"+counter)
         def hasColumnPerson(df: DataFrame, path: String) = Try(df(path)).isSuccess
 
         if (hasColumnPerson(testDF, "id")) {
@@ -360,7 +363,7 @@ object MipToMarketoPerson extends ETLFrameWork {
           log.info(errorDesc)
 
           updateErrorStatusV2(limitDF, dbCon, tgtTableName,errorCode,errorDesc)
-          bException = true
+          //bException = true
         }
       }
       else{
