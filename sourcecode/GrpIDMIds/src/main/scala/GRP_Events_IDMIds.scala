@@ -98,18 +98,21 @@ object GRP_Events_IDMIds extends ETLFrameWork {
     val srcCompareDF = targetDF.select("IORDNUM")
     val iordNums = srcCompareDF.collect().map(row => row.getString(0)).mkString("','")
     val updatedSql =
-      s"""SELECT
-         |	IORDNUM
+      s"""(SELECT
+         |IORDNUM
          |FROM GRP_MAP.IORDXREF
-         |WHERE IORDNUM IN ('$iordNums')""".stripMargin
+         |WHERE IORDNUM IN('$iordNums'))""".stripMargin
+
+    //println("updatedSql: " + updatedSql)
     //Reading target table
     val targetCompareDF = AppProperties.SparkSession.read.jdbc(targetConn.getProperty(PropertyNames.EndPoint), updatedSql, targetConn)
+
     val diffDF = srcCompareDF.except(targetCompareDF)
     //val updateTargetDF = srcCompareDF.except(diffDF)
     mergedCount = targetCompareDF.count()
     errorCount = diffDF.count()
-
-    if(mergedCount > 0 ) {
+    //log.info(s"Source Count: $sourceCount, Merged Count: $mergedCount, Error Count: $errorCount")
+    if (mergedCount > 0) {
       DataUtilities.runPreparedStatement(
         sourceConn,
         targetCompareDF,
@@ -118,7 +121,7 @@ object GRP_Events_IDMIds extends ETLFrameWork {
         Array(0), null, "update")
     }
 
-    if(errorCount > 0 ) {
+    if (errorCount > 0) {
       DataUtilities.runPreparedStatement(
         sourceConn,
         diffDF,
@@ -128,7 +131,6 @@ object GRP_Events_IDMIds extends ETLFrameWork {
     }
 
   }
-
 
 
 }
