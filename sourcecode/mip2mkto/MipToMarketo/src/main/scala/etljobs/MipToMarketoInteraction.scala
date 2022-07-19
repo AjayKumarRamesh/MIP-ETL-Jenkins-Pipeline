@@ -191,6 +191,14 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                    "apiName": "Item_URL",
          |                    "value": "${removeControlChar(row.getString(23))}"
          |
+         |                },
+         |                {
+         |                    "apiName": "Item_Name",
+         |                    "value": "${removeControlChar(row.getString(0))}"
+         |                },
+         |                {
+         |                    "apiName": "Item_Language_Code",
+         |                    "value": "${removeControlChar(row.getString(12))}"
          |                }
          |          ]
          |}""".stripMargin
@@ -603,9 +611,13 @@ object MipToMarketoInteraction extends ETLFrameWork {
            |SELECT CAMPAIGN_CODE,
            |RANK() OVER(
            |ORDER BY a.CREATE_TS ASC) ranking,
-           |MKTO_ACTIVITY_ID, COUNTRY_CODE, ACTIVITY_TYPE_ID, LANG_CODE, ACTIVITY_NAME, ASSET_TYPE, ACTIVITY_URL, UUC_ID, DRIVER_CAMPAIGN_CODE, FORM_NAME, INTERACTION_ID,
-           |INTERACTION_TS, INTERACTION_TYPE_CODE, STRENGTH, UT10_CODE, UT15_CODE, UT17_CODE, UT20_CODE, UT30_CODE, WEB_PAGE_SRC, a.MKTO_LEAD_ID, ACTIVITY_TS, CTRY_CODE, IBM_GBL_IOT_CODE, SUB_REGION_CODE, CAMPAIGN_NAME,
-           |LEAD_DESC, LEAD_NOTE, LEAD_SRC_NAME, SALES_CHANNEL_NAME, CONTACT_PHONE, REGION, SUB_SRC_DESC, a.CREATE_TS, EVENT_REF_ID, a.MIP_ACTIVITY_SEQ_ID, REFERRER_URL, ACTIVITY_CMPN_CD, a.WORK_PHONE_PERM
+           |MKTO_ACTIVITY_ID, COUNTRY_CODE, ACTIVITY_TYPE_ID, LANG_CODE, ACTIVITY_NAME, ASSET_TYPE, ACTIVITY_URL, UUC_ID,
+           |DRIVER_CAMPAIGN_CODE, FORM_NAME, INTERACTION_ID, INTERACTION_TS, INTERACTION_TYPE_CODE, STRENGTH, UT10_CODE,
+           |UT15_CODE, UT17_CODE, UT20_CODE, UT30_CODE, WEB_PAGE_SRC, a.MKTO_LEAD_ID, ACTIVITY_TS, CTRY_CODE, IBM_GBL_IOT_CODE,
+           |SUB_REGION_CODE, CAMPAIGN_NAME, LEAD_DESC, LEAD_NOTE, LEAD_SRC_NAME, SALES_CHANNEL_NAME, CONTACT_PHONE, REGION,
+           |SUB_SRC_DESC, a.CREATE_TS, EVENT_REF_ID, a.MIP_ACTIVITY_SEQ_ID,
+           |CASE WHEN ACTIVITY_URL IS NULL THEN REFERRER_URL ELSE ACTIVITY_URL END AS REFERRER_URL,
+           |ACTIVITY_CMPN_CD, a.WORK_PHONE_PERM
            |FROM
            |MAP_MKTO.MCV_MKTO_CUSTOM_ACTIVITY a
            |LEFT JOIN
@@ -630,7 +642,6 @@ object MipToMarketoInteraction extends ETLFrameWork {
            |ranked_data)
            |OR timestampdiff( 4, CURRENT timestamp - last_sync_timestamp ) > elapsed_time_limit_in_mins
            |FETCH FIRST $maxThreshold ROWS ONLY)""".stripMargin
-
 
       println(sqlData1)
       val conProp1: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbSource)

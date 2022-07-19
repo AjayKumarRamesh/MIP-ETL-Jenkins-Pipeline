@@ -351,984 +351,984 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     postResponse
   }
 
-    def sendPostWithTokenInteraction(payload: String, token: String): String = {
+  def sendPostWithTokenInteraction(payload: String, token: String): String = {
 
-      val apiConProps: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, apiSourceInteraction)
-      val externalEndpoint = apiConProps.getProperty(PropertyNames.ResourceSpecific_1)
-      var postResponse: String = null
-      val httpPostToken = null
-      val httpClient: CloseableHttpClient = HttpClients.custom().build()
+    val apiConProps: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, apiSourceInteraction)
+    val externalEndpoint = apiConProps.getProperty(PropertyNames.ResourceSpecific_1)
+    var postResponse: String = null
+    val httpPostToken = null
+    val httpClient: CloseableHttpClient = HttpClients.custom().build()
 
-      //Exception handling for duplicates in Payload
-      try {
-        val httpPostToken = new HttpPost(s"$externalEndpoint?access_token=$token")
-        httpPostToken.addHeader("Content-type", "application/json;charset=UTF-8")
-        httpPostToken.addHeader("Accept", "application/json")
-        httpPostToken.setEntity(new StringEntity(payload, "UTF-8"))
-        postResponse = httpClient.execute(httpPostToken, new BasicResponseHandler())
-      }
-
-      catch {
-        // Case statement
-        case _: SocketTimeoutException =>
-          //Second Call
-          postResponse = httpClient.execute(httpPostToken, new BasicResponseHandler())
-      }
-      postResponse
+    //Exception handling for duplicates in Payload
+    try {
+      val httpPostToken = new HttpPost(s"$externalEndpoint?access_token=$token")
+      httpPostToken.addHeader("Content-type", "application/json;charset=UTF-8")
+      httpPostToken.addHeader("Accept", "application/json")
+      httpPostToken.setEntity(new StringEntity(payload, "UTF-8"))
+      postResponse = httpClient.execute(httpPostToken, new BasicResponseHandler())
     }
 
+    catch {
+      // Case statement
+      case _: SocketTimeoutException =>
+        //Second Call
+        postResponse = httpClient.execute(httpPostToken, new BasicResponseHandler())
+    }
+    postResponse
+  }
 
-    def main(args: Array[String]): Unit = {
-      //Args to the job
-      tgtTableNameP = args(args.indexOf("--tgtTablePerson") + 1)
-      tgtTableNameCA = args(args.indexOf("--tgtTableInteraction") + 1)
-      tgtImiTableName = args(args.indexOf("--tgtImiTable") + 1)
-      tgtXrefTableName = args(args.indexOf("--tgtXrefTable") + 1)
-      apiSourcePerson = args(args.indexOf("--apiSourcePerson") + 1)
-      apiSourceInteraction = args(args.indexOf("--apiSourceInteraction") + 1)
-      dbSource = args(args.indexOf("--dbSource") + 1)
-      configSourcePerson = args(args.indexOf("--configSourcePerson") + 1)
-      configSourceInteraction = args(args.indexOf("--configSourceInteraction") + 1)
-      minBatchSize = args(args.indexOf("--minBatchSize") + 1).toInt
-      maxThreshold = args(args.indexOf("--maxThreshold") + 1).toInt
-      elapsedTime = args(args.indexOf("--elapsedTime") + 1).toInt
-      action = args(args.indexOf("--action") + 1)
-      lookupFieldPerson = args(args.indexOf("--lookupFieldPerson") + 1)
-      lookupFieldInteraction = args(args.indexOf("--lookupFieldInteraction") + 1)
-      hrmDeployedDate = args(args.indexOf("--hrmDeployedDate") + 1)
-      hrmSequenceNumber = args(args.indexOf("--hrmSequenceNumber") + 1).toLong
-      contactInteraction = args(args.indexOf("--contactInteraction") + 1).toLong
 
-      log.info("Initialization started")
-      this.initializeFramework(args)
-      log.info("Initialization completed.")
-      log.info(s"Starting ETL Job => $jobClassName....")
-      val jobSequence = s"$jobClassName"
+  def main(args: Array[String]): Unit = {
+    //Args to the job
+    tgtTableNameP = args(args.indexOf("--tgtTablePerson") + 1)
+    tgtTableNameCA = args(args.indexOf("--tgtTableInteraction") + 1)
+    tgtImiTableName = args(args.indexOf("--tgtImiTable") + 1)
+    tgtXrefTableName = args(args.indexOf("--tgtXrefTable") + 1)
+    apiSourcePerson = args(args.indexOf("--apiSourcePerson") + 1)
+    apiSourceInteraction = args(args.indexOf("--apiSourceInteraction") + 1)
+    dbSource = args(args.indexOf("--dbSource") + 1)
+    configSourcePerson = args(args.indexOf("--configSourcePerson") + 1)
+    configSourceInteraction = args(args.indexOf("--configSourceInteraction") + 1)
+    minBatchSize = args(args.indexOf("--minBatchSize") + 1).toInt
+    maxThreshold = args(args.indexOf("--maxThreshold") + 1).toInt
+    elapsedTime = args(args.indexOf("--elapsedTime") + 1).toInt
+    action = args(args.indexOf("--action") + 1)
+    lookupFieldPerson = args(args.indexOf("--lookupFieldPerson") + 1)
+    lookupFieldInteraction = args(args.indexOf("--lookupFieldInteraction") + 1)
+    hrmDeployedDate = args(args.indexOf("--hrmDeployedDate") + 1)
+    hrmSequenceNumber = args(args.indexOf("--hrmSequenceNumber") + 1).toLong
+    contactInteraction = args(args.indexOf("--contactInteraction") + 1).toLong
 
-      //Variables From PERSON Code
-      val lastRunTimestamp = getMaxRecordTimestampTest(jobSequence)
-      println(lastRunTimestamp)
-      var mip_seq_id = Array[MiptoMarketoPersonInteraction.mipSeqId]() //NOSONAR need to keep vars readable
-      var lead_id = Array[MiptoMarketoPersonInteraction.leadId]() //NOSONAR need to keep vars readable
-      var dbCon: Connection = null
-      var mapPersonIds = scala.collection.mutable.Map[Long, Long]()
-      var personFlag = 0
-      var errorCodePerson: String = null
-      var errorDescPerson: String = null
+    log.info("Initialization started")
+    this.initializeFramework(args)
+    log.info("Initialization completed.")
+    log.info(s"Starting ETL Job => $jobClassName....")
+    val jobSequence = s"$jobClassName"
 
-      //Variables From Custom Activity Code
-      var interIds = scala.collection.mutable.Map[Int, Long]()
-      var mip_act_seq_id = Array[MiptoMarketoPersonInteraction.mipActSeqId]()
-      var marketoID = Array[guID]()
-      val sortedmipActSeqId = ArrayBuffer[Option[Long]]()
-      var interactionFlag = 0
-      var errorCodeCA: String = null
-      var errorDescCA: String = null
-      val mapInteractionIds = scala.collection.mutable.Map[Option[Long], Long]()
+    //Variables From PERSON Code
+    val lastRunTimestamp = getMaxRecordTimestampTest(jobSequence)
+    println(lastRunTimestamp)
+    var mip_seq_id = Array[MiptoMarketoPersonInteraction.mipSeqId]() //NOSONAR need to keep vars readable
+    var lead_id = Array[MiptoMarketoPersonInteraction.leadId]() //NOSONAR need to keep vars readable
+    var dbCon: Connection = null
+    var mapPersonIds = scala.collection.mutable.Map[Long, Long]()
+    var personFlag = 0
+    var errorCodePerson: String = null
+    var errorDescPerson: String = null
 
-      // Logging Job Status in ETLJobHistory Table
-      DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobStarted, "GOOD LUCK", null, null)
-      log.info("ETL logic goes here...")
+    //Variables From Custom Activity Code
+    var interIds = scala.collection.mutable.Map[Int, Long]()
+    var mip_act_seq_id = Array[MiptoMarketoPersonInteraction.mipActSeqId]()
+    var marketoID = Array[guID]()
+    val sortedmipActSeqId = ArrayBuffer[Option[Long]]()
+    var interactionFlag = 0
+    var errorCodeCA: String = null
+    var errorDescCA: String = null
+    val mapInteractionIds = scala.collection.mutable.Map[Option[Long], Long]()
 
-      // Reading the Required Data from the Source Table (IMI)
-      try {
-        val combinedSqlQuery =
-          s"""(WITH CTE1 AS(SELECT
-             |IMI.INBOUND_MKTG_ID AS INBOUND_MKTG_ID,
-             |IMI.IDM_ID,
-             |IMI.EMAIL_MEDIA_ID,
-             |CASE
-             |WHEN COALESCE(IDM.IDM_PERSON_CREATED_TS, IDM.CREATE_TS) > (CURRENT_TIMESTAMP - 24 HOURS)
-             |THEN 'T'
-             |ELSE 'F'
-             |END AS NEW_TO_IDM_IND,
-             |RRG.FIRSTNAME AS FIRST_NAME,
-             |RRG.LASTNAME AS LAST_NAME,
-             |IMI.EMAIL_ADDR,
-             |IMI.COMPANY_NAME,
-             |IMI.PERSON_CTRY_CD AS CTRY_CODE,
-             |IMI.IDM_COMPANY_ID,
-             |CASE
-             |WHEN IDM.EMAIL_OC = '100001'
-             |THEN 'N'
-             |ELSE
-             |CASE
-             |WHEN IDM.EMAIL_OC IS NULL
-             |AND ( IDM.IDM_EMAIL_ADDRESS_CC IS NOT NULL
-             |AND IDM.IDM_EMAIL_ADDRESS_CC NOT IN (999999, 999999999))
-             |THEN 'N'
-             |ELSE 'Y'
-             |END
-             |END AS DQ_EMAIL_IND,
-             |CASE
-             |WHEN IDM.PERSON_NAME_OC IS NULL
-             |AND ( IDM.IDM_PERSON_NAME_CC IS NOT NULL
-             |AND IDM.IDM_PERSON_NAME_CC NOT IN (999999, 999999999))
-             |THEN 'N'
-             |ELSE 'Y'
-             |END AS DQ_NAME_IND,
-             |CASE
-             |WHEN IDM.PHONE_1_OC = '100001'
-             |THEN 'N'
-             |ELSE
-             |CASE
-             |WHEN IDM.PHONE_1_OC IS NULL
-             |AND (IDM.IDM_PHONE_1_CC IS NOT NULL
-             |AND IDM.IDM_PHONE_1_CC NOT IN (999999, 999999999))
-             |THEN 'N'
-             |ELSE 'Y'
-             |END
-             |END AS DQ_PHONE_IND,
-             |IMI.CREATE_TS AS CREATE_TS,
-             |IDM.IDM_FEDGOV_FLAG AS IDM_FEDGOV_IND,
-             |RSP.COMP_EMAIL_SP AS COMPANY_EMAIL_SUPR_CODE,
-             |RSP.COMP_PHONE_SP AS COMPANY_PHONE_SUPR_CODE,
-             |PRF.PREF_CODE_IBM,
-             |PRF.PREF_CODE_10A00,
-             |PRF.PREF_CODE_10G00,
-             |PRF.PREF_CODE_10L00,
-             |PRF.PREF_CODE_10M00,
-             |PRF.PREF_CODE_10N00,
-             |PRF.PREF_CODE_153QH,
-             |PRF.PREF_CODE_15CLV,
-             |PRF.PREF_CODE_15IGO,
-             |PRF.PREF_CODE_15ITT,
-             |PRF.PREF_CODE_15MFT,
-             |PRF.PREF_CODE_15STT,
-             |PRF.PREF_CODE_15WCP,
-             |PRF.PREF_CODE_15WSC,
-             |PRF.PREF_CODE_17AAL,
-             |PRF.PREF_CODE_17BCH,
-             |PRF.PREF_CODE_17CPH,
-             |PRF.PREF_CODE_17DSR,
-             |PRF.PREF_CODE_17ENL,
-             |PRF.PREF_CODE_17YNI,
-             |PRF.PREF_CODE_15S8X,
-             |CASE
-             |WHEN UPPER(RRG.JOBTITLE) = 'STUDENT'
-             |OR UPPER(IDM.person_title) LIKE '%STUDENT%'
-             |OR UPPER(Q_STUDENT) = 'YES'
-             |OR UPPER(RRG.ATTENDEETYPE) = 'STUDENT'
-             |THEN '1'
-             |ELSE '0'
-             |END AS STUDENT_FLG,
-             |CASE
-             |WHEN RRG.IBMUSER = 1
-             |OR IDM.IDM_PERSON_IBM_FLAG = 'Y'
-             |THEN '1'
-             |ELSE '0'
-             |END AS IBMer_FLG,
-             |CASE
-             |WHEN IMI.STATE_CD = ''
-             |THEN NULL
-             |ELSE IMI.STATE_CD
-             |END AS STATE_CD,
-             |RP_PHONE1.sp_type AS WORK_PHONE_PERM,
-             |COP.SAP_CUST_NUM,
-             |COP.MAIN_DOM_CLIENT_ID,
-             |COP.DOM_BUY_GRP,
-             |COP.LANDING_CTRY,
-             |CASE WHEN COP.DOM_BUY_GRP IS NOT NULL
-             |    THEN TRIM(COP.DOM_BUY_GRP)||
-             |        CASE WHEN COP.LANDING_CTRY IS NOT NULL THEN '-'||COP.LANDING_CTRY ELSE '' END
-             |    ELSE NULL
-             |    END AS DOM_BUY_GRP_CTRY,
-             |'P' AS STATUS_CODE,
-             |CAST (NULL AS VARCHAR) AS ERROR_CODE,
-             |CAST (NULL AS VARCHAR) AS ERROR_DESC,
-             |IMI.DATA_SRC_DESC AS MIP_TRANS_SRC,
-             |IMI.REGISTRATION_ID AS MIP_TRANS_ID,
-             |CAST (NULL AS VARCHAR) AS MKTO_PARTITION_ID,
-             |IMI.READY_FOR_MKTO_FLG,
-             |CASE
-             |WHEN IMI.MARKETING_INTERACTION_TYPE_CD IN ('MAIL')
-             |THEN ACT_ID.CONTACT_INTERACTION_TYPE_ID
-             |END AS ACTIVITY_TYPE_ID,
-             |IMI.CONTENT_CMPN_CD AS CAMPAIGN_CODE,
-             |IMI.USER_TRANSACTION_TS AS ACTIVITY_TS,
-             |IMI.CONTENT_CMPN_NAME AS CAMPAIGN_NAME,
-             |IMI.ASSET_CTRY_CODE AS COUNTRY_CODE,
-             |IMI.ASSET_LANG_CODE AS LANG_CODE,
-             |IMI.ASSET_DEFAULT_TITLE AS ACTIVITY_NAME,
-             |IMI.ASSET_CONTENT_TYPE AS ASSET_TYPE,
-             |IMI.ASSET_DLVRY_URL AS ACTIVITY_URL,
-             |IMI.UUC_ID AS UUC_ID,
-             |IMI.DRIVER_CMPN_CD AS DRIVER_CAMPAIGN_CODE,
-             |IMI.SUB_SRC_DESC AS FORM_NAME,
-             |IMI.INBOUND_MKTG_ID AS INTERACTION_ID,
-             |IMI.MKTO_QUEUED_TS AS INTERACTION_TS,
-             |IMI.SUB_SRC_DESC,
-             |IMI.LEAD_DESC,
-             |CASE WHEN IMI.MARKETING_INTERACTION_TYPE_CD = ('MAIL') THEN SUBSTRING(TRIM(IMI.LEAD_NOTE) || ' ' ||
-             |CASE WHEN (Q_HELP = '' or Q_HELP IS NULL) THEN '' ELSE NVL(Q_HELP||' ','') END ||
-             |CASE WHEN (Ans_Q_QRADAR_BP = '' or Ans_Q_QRADAR_BP IS NULL) THEN '' ELSE NVL('| Business Partner='||Ans_Q_QRADAR_BP||' ','') END ||
-             |CASE WHEN (Ans_Q_MAIL_CONSENT = '' or Ans_Q_MAIL_CONSENT IS NULL) THEN '' ELSE NVL('| Mail Consent='||Ans_Q_MAIL_CONSENT||' ','') END ||
-             |CASE WHEN (Ans_Q_QRDATA = '' or Ans_Q_QRDATA IS NULL) THEN '' ELSE NVL('| QRadar Estimator values='||Ans_Q_QRDATA||' ','') END,1,3072)
-             |END AS LEAD_NOTE,
-             |IMI.LEAD_SRC AS LEAD_SRC_NAME,
-             |IMI.MARKETING_INTERACTION_TYPE_CD AS INTERACTION_TYPE_CODE,
-             |IMI.PHONE AS CONTACT_PHONE,
-             |IMI.SALES_CHANNEL_CD AS SALES_CHANNEL_NAME,
-             |IMI.SCORE_TS,
-             |IMI.IND_STRENGTH_NUM AS STRENGTH,
-             |CASE
-             |WHEN IMI.MARKETING_INTERACTION_TYPE_CD IN ('MAIL')
-             |THEN IMI.CONTENT_CMPN_UT10_CD
-             |WHEN IMI.SCORE_UT10_CD IS NOT NULL
-             |THEN IMI.SCORE_UT10_CD
-             |WHEN IMI.ACTIVITY_CMPN_UT10_CD IS NOT NULL
-             |THEN IMI.ACTIVITY_CMPN_UT10_CD
-             |ELSE IMI.CONTENT_CMPN_UT10_CD
-             |END AS UT10_CODE,
-             |CASE
-             |WHEN IMI.MARKETING_INTERACTION_TYPE_CD IN ('MAIL')
-             |THEN IMI.CONTENT_CMPN_UT15_CD
-             |WHEN IMI.SCORE_UT10_CD IS NOT NULL
-             |THEN IMI.SCORE_UT15_CD
-             |WHEN IMI.ACTIVITY_CMPN_UT10_CD IS NOT NULL
-             |THEN IMI.ACTIVITY_CMPN_UT15_CD
-             |ELSE IMI.CONTENT_CMPN_UT15_CD
-             |END AS UT15_CODE,
-             |CAST ('NULL' AS VARCHAR(5)) AS UT17_CODE,
-             |CASE
-             |WHEN IMI.MARKETING_INTERACTION_TYPE_CD IN ('MAIL')
-             |THEN IMI.CONTENT_CMPN_UT20_CD
-             |WHEN IMI.SCORE_UT10_CD IS NOT NULL
-             |THEN IMI.SCORE_UT20_CD
-             |WHEN IMI.ACTIVITY_CMPN_UT10_CD IS NOT NULL
-             |THEN IMI.ACTIVITY_CMPN_UT20_CD
-             |ELSE IMI.CONTENT_CMPN_UT20_CD
-             |END AS UT20_CODE,
-             |IMI.SCORE_UT30_CD AS UT30_CODE,
-             |CAST (NULL AS VARCHAR(255)) AS NEXT_COMM_METHOD_NAME,
-             |CAST (NULL AS TIMESTAMP) AS NEXT_COMM_TS,
-             |CAST (NULL AS VARCHAR(255)) AS NEXT_KEYWORDS,
-             |CAST (NULL AS VARCHAR(50)) AS NEXT_UUC_ID,
-             |CAST (NULL AS VARCHAR(256)) AS WEB_PAGE_SRC,
-             |CAST (NULL AS BIGINT) AS MKTO_ACTIVITY_ID,
-             |IMI.EVENT_REF_ID,
-             |CASE
-             |WHEN IMI.ASSET_DLVRY_URL = ''
-             |THEN IMI.REFERRER_URL
-             |ELSE IMI.ASSET_DLVRY_URL
-             |END AS REFERRER_URL,
-             |IMI.ACTIVITY_CMPN_CD AS ACTIVITY_CMPN_CD,
-             |MC.IBM_GBL_IOT_CODE,
-             |MC.SUB_REGION_CODE,
-             |MC.REGION
-             |FROM
-             |MAP_CORE.MCT_INBOUND_MARKETING_INTERACTION_MIP IMI
-             |LEFT JOIN
-             |MAP_IDM.IDM_MAINTAIN_PERSON IDM ON
-             |IMI.REGISTRATION_ID = IDM.MAT_TRANSACTIONID
-             |AND IMI.data_src_desc = IDM.data_source
-             |LEFT JOIN
-             |MAP_STG.STG_RAW_REGISTRATION RRG ON
-             |IDM.MAT_TRANSACTIONID = RRG.TRANSACTIONID
-             |AND IMI.data_src_desc = RRG.DATASOURCE
-             |LEFT JOIN
-             |MAP_IDM.IDM_MAINTAIN_PERSON_RESP_DTL RSP ON
-             |RSP.REQUEST_ID = IDM.REQUEST_ID
-             |LEFT JOIN (
-             |SELECT
-             |REQUEST_ID,
-             |MEDIA_ID,
-             |MAX(CASE WHEN SP_PREF_CD = 'IBM' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_IBM,
-             |MAX(CASE WHEN SP_PREF_CD = '10A00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10A00,
-             |MAX(CASE WHEN SP_PREF_CD = '10G00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10G00,
-             |MAX(CASE WHEN SP_PREF_CD = '10L00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10L00,
-             |MAX(CASE WHEN SP_PREF_CD = '10M00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10M00,
-             |MAX(CASE WHEN SP_PREF_CD = '10N00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10N00,
-             |MAX(CASE WHEN SP_PREF_CD = '153QH' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_153QH,
-             |MAX(CASE WHEN SP_PREF_CD = '15CLV' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15CLV,
-             |MAX(CASE WHEN SP_PREF_CD = '15IGO' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15IGO,
-             |MAX(CASE WHEN SP_PREF_CD = '15ITT' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15ITT,
-             |MAX(CASE WHEN SP_PREF_CD = '15MFT' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15MFT,
-             |MAX(CASE WHEN SP_PREF_CD = '15STT' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15STT,
-             |MAX(CASE WHEN SP_PREF_CD = '15WCP' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15WCP,
-             |MAX(CASE WHEN SP_PREF_CD = '15WSC' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15WSC,
-             |MAX(CASE WHEN SP_PREF_CD = '17AAL' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17AAL,
-             |MAX(CASE WHEN SP_PREF_CD = '17BCH' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17BCH,
-             |MAX(CASE WHEN SP_PREF_CD = '17CPH' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17CPH,
-             |MAX(CASE WHEN SP_PREF_CD = '17DSR' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17DSR,
-             |MAX(CASE WHEN SP_PREF_CD = '17ENL' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17ENL,
-             |MAX(CASE WHEN SP_PREF_CD = '17YNI' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17YNI,
-             |MAX(CASE WHEN SP_PREF_CD = '15S8X' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15S8X
-             |FROM
-             |MAP_IDM.IDM_MAINTAIN_PERSON_RESP_PREF
-             |WHERE
-             |REQUEST_ID IN (
-             |SELECT
-             |REQUEST_ID
-             |FROM
-             |MAP_IDM.IDM_MAINTAIN_PERSON)
-             |GROUP BY
-             |REQUEST_ID,
-             |MEDIA_ID) AS PRF ON
-             |PRF.REQUEST_ID = RSP.REQUEST_ID
-             |AND PRF.MEDIA_ID = IMI.EMAIL_MEDIA_ID
-             |INNER JOIN (
-             |SELECT
-             |MAX(CASE WHEN ACTIVITY_NAME = 'Event Interaction' THEN ACTIVITY_TYPE_ID ELSE -1 END ) EVENT_INTERACTION_TYPE_ID,
-             |MAX(CASE WHEN ACTIVITY_NAME = 'Contact Interaction' THEN ACTIVITY_TYPE_ID ELSE -1 END ) CONTACT_INTERACTION_TYPE_ID,
-             |MAX(CASE WHEN ACTIVITY_NAME = 'Client Interest' THEN ACTIVITY_TYPE_ID ELSE -1 END ) CLIENT_INTEREST_TYPE_ID,
-             |MAX(CASE WHEN ACTIVITY_NAME = 'Digital Interaction' THEN ACTIVITY_TYPE_ID ELSE -1 END ) DIGITAL_INTERACTION_TYPE_ID
-             |FROM
-             |MAP_MKTO.MCT_MKTO_ACTIVITY_TYPE
-             |WHERE
-             |ACTIVITY_NAME IN ('Event Interaction', 'Contact Interaction', 'Client Interest', 'Digital Interaction')) ACT_ID
-             |ON 1 = 1
-             |LEFT OUTER JOIN MAP_CORE.MCT_COUNTRY MC ON IMI.PERSON_CTRY_CD = MC.COUNTRY_CODE
-             |LEFT OUTER JOIN MAP_IDM.IDM_MAINTAIN_PERSON_RESP_PREF RP_PHONE1 ON
-             |RSP.REQUEST_ID = RP_PHONE1.REQUEST_ID
-             |AND RSP.PHONE_1_PCMIDPK = RP_PHONE1.MEDIA_ID
-             |AND RP_PHONE1.SP_PREF_CD = 'IBM'
-             |LEFT OUTER JOIN (
-             |SELECT
-             |mqap.INBOUND_MKTG_ID,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_HELP' THEN mqap.ANSWER ELSE NULL END) AS Q_HELP,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_STUDENT' THEN mqap.ANSWER ELSE NULL END) AS Q_STUDENT,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_QRADAR_BP' THEN mqap.ANSWER ELSE NULL END) AS Ans_Q_QRADAR_BP,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_MAIL_CONSENT' THEN mqap.ANSWER ELSE NULL END) AS Ans_Q_MAIL_CONSENT,
-             |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_QRDATA' THEN mqap.ANSWER ELSE NULL END) AS Ans_Q_QRDATA
-             |FROM MAP_CORE.MCT_QUESTION_ANSWER_PAIRS mqap GROUP BY INBOUND_MKTG_ID ORDER BY 1) QA_PAIRS
-             |ON imi.INBOUND_MKTG_ID = QA_PAIRS.INBOUND_MKTG_ID
-             |LEFT OUTER JOIN MAP_CORE.MCT_COP_XREF COP
-             |ON COP.IDM_COMPANY_ID = IMI.IDM_COMPANY_ID AND IMI.IDM_COMPANY_ID  > 0
-             |WHERE
-             |IMI.READY_FOR_MKTO_FLG = 'R'
-             |AND IMI.MARKETING_INTERACTION_TYPE_CD = 'MAIL'
-             |AND IMI.EMAIL_MEDIA_ID != -1
-             |AND MC.SUB_REGION_CODE NOT IN ('4B','4G','4I','4L','4P','4X','4A','4O','4J')
-             |),
-             |CTE2 AS (
-             |SELECT
-             |CTE1.INBOUND_MKTG_ID,
-             |CTE1.IDM_ID,
-             |RANK() OVER(ORDER BY CTE1.CREATE_TS ASC) ranking,
-             |CTE1.EMAIL_MEDIA_ID AS EMAIL_MEDIA_ID,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.NEW_TO_IDM_IND
-             |ELSE NULL
-             |END AS NEW_TO_IDM_IND,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.FIRST_NAME
-             |ELSE NULL
-             |END AS FIRST_NAME,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.LAST_NAME
-             |ELSE NULL
-             |END AS LAST_NAME,
-             |CTE1.EMAIL_ADDR,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.COMPANY_NAME
-             |ELSE NULL
-             |END AS COMPANY_NAME,
-             |CTE1.CTRY_CODE,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.IDM_COMPANY_ID
-             |ELSE NULL
-             |END AS IDM_COMPANY_ID,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.DQ_EMAIL_IND
-             |ELSE NULL
-             |END AS DQ_EMAIL_IND,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.DQ_NAME_IND
-             |ELSE NULL
-             |END AS DQ_NAME_IND,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.DQ_PHONE_IND
-             |ELSE NULL
-             |END AS DQ_PHONE_IND,
-             |CTE1.CREATE_TS,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.IDM_FEDGOV_IND
-             |ELSE NULL
-             |END AS IDM_FEDGOV_IND,
-             |CTE1.PREF_CODE_IBM,
-             |CTE1.COMPANY_PHONE_SUPR_CODE,
-             |CTE1.COMPANY_EMAIL_SUPR_CODE,
-             |CTE1.PREF_CODE_17YNI,
-             |CTE1.PREF_CODE_17ENL,
-             |CTE1.PREF_CODE_17DSR,
-             |CTE1.PREF_CODE_17CPH,
-             |CTE1.PREF_CODE_17BCH,
-             |CTE1.PREF_CODE_17AAL,
-             |CTE1.PREF_CODE_15WSC,
-             |CTE1.PREF_CODE_15WCP,
-             |CTE1.PREF_CODE_15STT,
-             |CTE1.PREF_CODE_15MFT,
-             |CTE1.PREF_CODE_15ITT,
-             |CTE1.PREF_CODE_15IGO,
-             |CTE1.PREF_CODE_15CLV,
-             |CTE1.PREF_CODE_153QH,
-             |CTE1.PREF_CODE_10N00,
-             |CTE1.PREF_CODE_10M00,
-             |CTE1.PREF_CODE_10L00,
-             |CTE1.PREF_CODE_10G00,
-             |CTE1.PREF_CODE_10A00,
-             |CTE1.PREF_CODE_15S8X,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.STUDENT_FLG
-             |ELSE NULL
-             |END AS STUDENT_FLG,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.IBMER_FLG
-             |ELSE NULL
-             |END AS IBMER_FLG,
-             |CASE
-             |WHEN XREF.EMAIL_MEDIA_ID IS NULL
-             |THEN CTE1.STATE_CD
-             |ELSE NULL
-             |END AS STATE_CD,
-             |CTE1.WORK_PHONE_PERM,
-             |CTE1.SAP_CUST_NUM,
-             |CTE1.STATUS_CODE,
-             |CTE1.ERROR_CODE,
-             |CTE1.ERROR_DESC,
-             |CTE1.MIP_TRANS_SRC,
-             |CTE1.MIP_TRANS_ID,
-             |CTE1.MKTO_PARTITION_ID,
-             |CTE1.CAMPAIGN_CODE,
-             |CTE1.MKTO_ACTIVITY_ID,
-             |CTE1.COUNTRY_CODE,
-             |CTE1.ACTIVITY_TYPE_ID,
-             |CTE1.LANG_CODE,
-             |CTE1.ACTIVITY_NAME,
-             |CTE1.ASSET_TYPE,
-             |CTE1.ACTIVITY_URL,
-             |CTE1.UUC_ID,
-             |CTE1.DRIVER_CAMPAIGN_CODE,
-             |CTE1.FORM_NAME,
-             |CTE1.INTERACTION_ID,
-             |CTE1.INTERACTION_TS,
-             |CTE1.INTERACTION_TYPE_CODE,
-             |CTE1.SCORE_TS,
-             |CTE1.STRENGTH,
-             |CTE1.UT10_CODE,
-             |CTE1.UT15_CODE,
-             |CTE1.UT17_CODE,
-             |CTE1.UT20_CODE,
-             |CTE1.UT30_CODE,
-             |CTE1.NEXT_COMM_METHOD_NAME,
-             |CTE1.NEXT_COMM_TS,
-             |CTE1.NEXT_KEYWORDS,
-             |CTE1.NEXT_UUC_ID,
-             |CTE1.WEB_PAGE_SRC,
-             |CTE1.ACTIVITY_TS,
-             |CTE1.IBM_GBL_IOT_CODE,
-             |CTE1.SUB_REGION_CODE,
-             |CTE1.CAMPAIGN_NAME,
-             |CTE1.LEAD_DESC,
-             |CTE1.LEAD_NOTE,
-             |CTE1.LEAD_SRC_NAME,
-             |CTE1.SALES_CHANNEL_NAME,
-             |CTE1.CONTACT_PHONE,
-             |CTE1.REGION,
-             |CTE1.SUB_SRC_DESC,
-             |CTE1.EVENT_REF_ID,
-             |CTE1.REFERRER_URL,
-             |CTE1.ACTIVITY_CMPN_CD,
-             |CTE1.MAIN_DOM_CLIENT_ID,
-             |CTE1.DOM_BUY_GRP,
-             |CTE1.LANDING_CTRY,
-             |CTE1.DOM_BUY_GRP_CTRY,
-             |MAXSEQID.MAXSEQID AS MAXSEQID,
-             |ACTSEQ.MAXACTSEQID AS MAXACTSEQID
-             |FROM CTE1
-             |LEFT JOIN (SELECT NVL(MAX(MIP_SEQ_ID), $hrmSequenceNumber) AS MAXSEQID FROM MAP_MKTO.MCT_MKTO_PERSON
-             |WHERE MIP_SEQ_ID > '$hrmSequenceNumber') AS MAXSEQID ON 1 = 1
-             |LEFT JOIN (SELECT EMAIL_MEDIA_ID FROM MAP_MKTO.MCT_MKTO_LEAD_XREF GROUP BY EMAIL_MEDIA_ID) AS XREF
-             |ON XREF.EMAIL_MEDIA_ID = CTE1.EMAIL_MEDIA_ID
-             |LEFT JOIN (SELECT NVL(MAX(MIP_ACTIVITY_SEQ_ID), $hrmSequenceNumber) AS MAXACTSEQID FROM MAP_MKTO.MCT_MKTO_CUSTOM_ACTIVITY
-             |WHERE MIP_ACTIVITY_SEQ_ID > '$hrmSequenceNumber') AS ACTSEQ ON 1 = 1
-             |)
-             |SELECT *,
-             |MAXSEQID + ROW_NUMBER () OVER (ORDER BY CTE2.CREATE_TS ASC) AS MIP_SEQ_ID,
-             |MAXACTSEQID + ROW_NUMBER () OVER (ORDER BY CTE2.CREATE_TS ASC) AS MIP_ACTIVITY_SEQ_ID
-             |FROM CTE2
-             |FETCH FIRST $maxThreshold ROWS ONLY)""".stripMargin
-             println(combinedSqlQuery)
+    // Logging Job Status in ETLJobHistory Table
+    DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobStarted, "GOOD LUCK", null, null)
+    log.info("ETL logic goes here...")
 
-        // MIP Database (IMI & PERSON Table) Connection Details from ETLDataSources Table
-        val conProp1: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbSource)
-        val dbConnectionInfo = conProp1.getProperty(PropertyNames.EndPoint)
-        dbCon = DriverManager.getConnection(dbConnectionInfo, conProp1)
+    // Reading the Required Data from the Source Table (IMI)
+    try {
+      val combinedSqlQuery =
+        s"""(WITH CTE1 AS(SELECT
+           |IMI.INBOUND_MKTG_ID AS INBOUND_MKTG_ID,
+           |IMI.IDM_ID,
+           |IMI.EMAIL_MEDIA_ID,
+           |CASE
+           |WHEN COALESCE(IDM.IDM_PERSON_CREATED_TS, IDM.CREATE_TS) > (CURRENT_TIMESTAMP - 24 HOURS)
+           |THEN 'T'
+           |ELSE 'F'
+           |END AS NEW_TO_IDM_IND,
+           |RRG.FIRSTNAME AS FIRST_NAME,
+           |RRG.LASTNAME AS LAST_NAME,
+           |IMI.EMAIL_ADDR,
+           |IMI.COMPANY_NAME,
+           |IMI.PERSON_CTRY_CD AS CTRY_CODE,
+           |IMI.IDM_COMPANY_ID,
+           |CASE
+           |WHEN IDM.EMAIL_OC = '100001'
+           |THEN 'N'
+           |ELSE
+           |CASE
+           |WHEN IDM.EMAIL_OC IS NULL
+           |AND ( IDM.IDM_EMAIL_ADDRESS_CC IS NOT NULL
+           |AND IDM.IDM_EMAIL_ADDRESS_CC NOT IN (999999, 999999999))
+           |THEN 'N'
+           |ELSE 'Y'
+           |END
+           |END AS DQ_EMAIL_IND,
+           |CASE
+           |WHEN IDM.PERSON_NAME_OC IS NULL
+           |AND ( IDM.IDM_PERSON_NAME_CC IS NOT NULL
+           |AND IDM.IDM_PERSON_NAME_CC NOT IN (999999, 999999999))
+           |THEN 'N'
+           |ELSE 'Y'
+           |END AS DQ_NAME_IND,
+           |CASE
+           |WHEN IDM.PHONE_1_OC = '100001'
+           |THEN 'N'
+           |ELSE
+           |CASE
+           |WHEN IDM.PHONE_1_OC IS NULL
+           |AND (IDM.IDM_PHONE_1_CC IS NOT NULL
+           |AND IDM.IDM_PHONE_1_CC NOT IN (999999, 999999999))
+           |THEN 'N'
+           |ELSE 'Y'
+           |END
+           |END AS DQ_PHONE_IND,
+           |IMI.CREATE_TS AS CREATE_TS,
+           |IDM.IDM_FEDGOV_FLAG AS IDM_FEDGOV_IND,
+           |RSP.COMP_EMAIL_SP AS COMPANY_EMAIL_SUPR_CODE,
+           |RSP.COMP_PHONE_SP AS COMPANY_PHONE_SUPR_CODE,
+           |PRF.PREF_CODE_IBM,
+           |PRF.PREF_CODE_10A00,
+           |PRF.PREF_CODE_10G00,
+           |PRF.PREF_CODE_10L00,
+           |PRF.PREF_CODE_10M00,
+           |PRF.PREF_CODE_10N00,
+           |PRF.PREF_CODE_153QH,
+           |PRF.PREF_CODE_15CLV,
+           |PRF.PREF_CODE_15IGO,
+           |PRF.PREF_CODE_15ITT,
+           |PRF.PREF_CODE_15MFT,
+           |PRF.PREF_CODE_15STT,
+           |PRF.PREF_CODE_15WCP,
+           |PRF.PREF_CODE_15WSC,
+           |PRF.PREF_CODE_17AAL,
+           |PRF.PREF_CODE_17BCH,
+           |PRF.PREF_CODE_17CPH,
+           |PRF.PREF_CODE_17DSR,
+           |PRF.PREF_CODE_17ENL,
+           |PRF.PREF_CODE_17YNI,
+           |PRF.PREF_CODE_15S8X,
+           |CASE
+           |WHEN UPPER(RRG.JOBTITLE) = 'STUDENT'
+           |OR UPPER(IDM.person_title) LIKE '%STUDENT%'
+           |OR UPPER(Q_STUDENT) = 'YES'
+           |OR UPPER(RRG.ATTENDEETYPE) = 'STUDENT'
+           |THEN '1'
+           |ELSE '0'
+           |END AS STUDENT_FLG,
+           |CASE
+           |WHEN RRG.IBMUSER = 1
+           |OR IDM.IDM_PERSON_IBM_FLAG = 'Y'
+           |THEN '1'
+           |ELSE '0'
+           |END AS IBMer_FLG,
+           |CASE
+           |WHEN IMI.STATE_CD = ''
+           |THEN NULL
+           |ELSE IMI.STATE_CD
+           |END AS STATE_CD,
+           |RP_PHONE1.sp_type AS WORK_PHONE_PERM,
+           |COP.SAP_CUST_NUM,
+           |COP.MAIN_DOM_CLIENT_ID,
+           |COP.DOM_BUY_GRP,
+           |COP.LANDING_CTRY,
+           |CASE WHEN COP.DOM_BUY_GRP IS NOT NULL
+           |THEN TRIM(COP.DOM_BUY_GRP)||
+           |CASE WHEN COP.LANDING_CTRY IS NOT NULL THEN '-'||COP.LANDING_CTRY ELSE '' END
+           |ELSE NULL
+           |END AS DOM_BUY_GRP_CTRY,
+           |'P' AS STATUS_CODE,
+           |CAST (NULL AS VARCHAR) AS ERROR_CODE,
+           |CAST (NULL AS VARCHAR) AS ERROR_DESC,
+           |IMI.DATA_SRC_DESC AS MIP_TRANS_SRC,
+           |IMI.REGISTRATION_ID AS MIP_TRANS_ID,
+           |CAST (NULL AS VARCHAR) AS MKTO_PARTITION_ID,
+           |IMI.READY_FOR_MKTO_FLG,
+           |CASE
+           |WHEN IMI.MARKETING_INTERACTION_TYPE_CD IN ('MAIL')
+           |THEN ACT_ID.CONTACT_INTERACTION_TYPE_ID
+           |END AS ACTIVITY_TYPE_ID,
+           |IMI.CONTENT_CMPN_CD AS CAMPAIGN_CODE,
+           |IMI.USER_TRANSACTION_TS AS ACTIVITY_TS,
+           |IMI.CONTENT_CMPN_NAME AS CAMPAIGN_NAME,
+           |IMI.ASSET_CTRY_CODE AS COUNTRY_CODE,
+           |IMI.ASSET_LANG_CODE AS LANG_CODE,
+           |IMI.ASSET_DEFAULT_TITLE AS ACTIVITY_NAME,
+           |IMI.ASSET_CONTENT_TYPE AS ASSET_TYPE,
+           |IMI.ASSET_DLVRY_URL AS ACTIVITY_URL,
+           |IMI.UUC_ID AS UUC_ID,
+           |IMI.DRIVER_CMPN_CD AS DRIVER_CAMPAIGN_CODE,
+           |IMI.SUB_SRC_DESC AS FORM_NAME,
+           |IMI.INBOUND_MKTG_ID AS INTERACTION_ID,
+           |IMI.MKTO_QUEUED_TS AS INTERACTION_TS,
+           |IMI.SUB_SRC_DESC,
+           |IMI.LEAD_DESC,
+           |CASE WHEN IMI.MARKETING_INTERACTION_TYPE_CD = ('MAIL') THEN SUBSTRING(TRIM(IMI.LEAD_NOTE) || ' ' ||
+           |CASE WHEN (Q_HELP = '' or Q_HELP IS NULL) THEN '' ELSE NVL(Q_HELP||' ','') END ||
+           |CASE WHEN (Ans_Q_QRADAR_BP = '' or Ans_Q_QRADAR_BP IS NULL) THEN '' ELSE NVL('| Business Partner='||Ans_Q_QRADAR_BP||' ','') END ||
+           |CASE WHEN (Ans_Q_MAIL_CONSENT = '' or Ans_Q_MAIL_CONSENT IS NULL) THEN '' ELSE NVL('| Mail Consent='||Ans_Q_MAIL_CONSENT||' ','') END ||
+           |CASE WHEN (Ans_Q_QRDATA = '' or Ans_Q_QRDATA IS NULL) THEN '' ELSE NVL('| QRadar Estimator values='||Ans_Q_QRDATA||' ','') END,1,3072)
+           |END AS LEAD_NOTE,
+           |IMI.LEAD_SRC AS LEAD_SRC_NAME,
+           |IMI.MARKETING_INTERACTION_TYPE_CD AS INTERACTION_TYPE_CODE,
+           |IMI.PHONE AS CONTACT_PHONE,
+           |IMI.SALES_CHANNEL_CD AS SALES_CHANNEL_NAME,
+           |IMI.SCORE_TS,
+           |IMI.IND_STRENGTH_NUM AS STRENGTH,
+           |CASE
+           |WHEN IMI.MARKETING_INTERACTION_TYPE_CD IN ('MAIL')
+           |THEN IMI.CONTENT_CMPN_UT10_CD
+           |WHEN IMI.SCORE_UT10_CD IS NOT NULL
+           |THEN IMI.SCORE_UT10_CD
+           |WHEN IMI.ACTIVITY_CMPN_UT10_CD IS NOT NULL
+           |THEN IMI.ACTIVITY_CMPN_UT10_CD
+           |ELSE IMI.CONTENT_CMPN_UT10_CD
+           |END AS UT10_CODE,
+           |CASE
+           |WHEN IMI.MARKETING_INTERACTION_TYPE_CD IN ('MAIL')
+           |THEN IMI.CONTENT_CMPN_UT15_CD
+           |WHEN IMI.SCORE_UT10_CD IS NOT NULL
+           |THEN IMI.SCORE_UT15_CD
+           |WHEN IMI.ACTIVITY_CMPN_UT10_CD IS NOT NULL
+           |THEN IMI.ACTIVITY_CMPN_UT15_CD
+           |ELSE IMI.CONTENT_CMPN_UT15_CD
+           |END AS UT15_CODE,
+           |CAST ('NULL' AS VARCHAR(5)) AS UT17_CODE,
+           |CASE
+           |WHEN IMI.MARKETING_INTERACTION_TYPE_CD IN ('MAIL')
+           |THEN IMI.CONTENT_CMPN_UT20_CD
+           |WHEN IMI.SCORE_UT10_CD IS NOT NULL
+           |THEN IMI.SCORE_UT20_CD
+           |WHEN IMI.ACTIVITY_CMPN_UT10_CD IS NOT NULL
+           |THEN IMI.ACTIVITY_CMPN_UT20_CD
+           |ELSE IMI.CONTENT_CMPN_UT20_CD
+           |END AS UT20_CODE,
+           |IMI.SCORE_UT30_CD AS UT30_CODE,
+           |CAST (NULL AS VARCHAR(255)) AS NEXT_COMM_METHOD_NAME,
+           |CAST (NULL AS TIMESTAMP) AS NEXT_COMM_TS,
+           |CAST (NULL AS VARCHAR(255)) AS NEXT_KEYWORDS,
+           |CAST (NULL AS VARCHAR(50)) AS NEXT_UUC_ID,
+           |CAST (NULL AS VARCHAR(256)) AS WEB_PAGE_SRC,
+           |CAST (NULL AS BIGINT) AS MKTO_ACTIVITY_ID,
+           |IMI.EVENT_REF_ID,
+           |CASE
+           |WHEN IMI.ASSET_DLVRY_URL IS NULL
+           |THEN IMI.REFERRER_URL
+           |ELSE IMI.ASSET_DLVRY_URL
+           |END AS REFERRER_URL,
+           |IMI.ACTIVITY_CMPN_CD AS ACTIVITY_CMPN_CD,
+           |MC.IBM_GBL_IOT_CODE,
+           |MC.SUB_REGION_CODE,
+           |MC.REGION
+           |FROM
+           |MAP_CORE.MCT_INBOUND_MARKETING_INTERACTION_MIP IMI
+           |LEFT JOIN
+           |MAP_IDM.IDM_MAINTAIN_PERSON IDM ON
+           |IMI.REGISTRATION_ID = IDM.MAT_TRANSACTIONID
+           |AND IMI.data_src_desc = IDM.data_source
+           |LEFT JOIN
+           |MAP_STG.STG_RAW_REGISTRATION RRG ON
+           |IDM.MAT_TRANSACTIONID = RRG.TRANSACTIONID
+           |AND IMI.data_src_desc = RRG.DATASOURCE
+           |LEFT JOIN
+           |MAP_IDM.IDM_MAINTAIN_PERSON_RESP_DTL RSP ON
+           |RSP.REQUEST_ID = IDM.REQUEST_ID
+           |LEFT JOIN (
+           |SELECT
+           |REQUEST_ID,
+           |MEDIA_ID,
+           |MAX(CASE WHEN SP_PREF_CD = 'IBM' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_IBM,
+           |MAX(CASE WHEN SP_PREF_CD = '10A00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10A00,
+           |MAX(CASE WHEN SP_PREF_CD = '10G00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10G00,
+           |MAX(CASE WHEN SP_PREF_CD = '10L00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10L00,
+           |MAX(CASE WHEN SP_PREF_CD = '10M00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10M00,
+           |MAX(CASE WHEN SP_PREF_CD = '10N00' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_10N00,
+           |MAX(CASE WHEN SP_PREF_CD = '153QH' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_153QH,
+           |MAX(CASE WHEN SP_PREF_CD = '15CLV' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15CLV,
+           |MAX(CASE WHEN SP_PREF_CD = '15IGO' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15IGO,
+           |MAX(CASE WHEN SP_PREF_CD = '15ITT' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15ITT,
+           |MAX(CASE WHEN SP_PREF_CD = '15MFT' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15MFT,
+           |MAX(CASE WHEN SP_PREF_CD = '15STT' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15STT,
+           |MAX(CASE WHEN SP_PREF_CD = '15WCP' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15WCP,
+           |MAX(CASE WHEN SP_PREF_CD = '15WSC' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15WSC,
+           |MAX(CASE WHEN SP_PREF_CD = '17AAL' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17AAL,
+           |MAX(CASE WHEN SP_PREF_CD = '17BCH' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17BCH,
+           |MAX(CASE WHEN SP_PREF_CD = '17CPH' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17CPH,
+           |MAX(CASE WHEN SP_PREF_CD = '17DSR' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17DSR,
+           |MAX(CASE WHEN SP_PREF_CD = '17ENL' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17ENL,
+           |MAX(CASE WHEN SP_PREF_CD = '17YNI' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_17YNI,
+           |MAX(CASE WHEN SP_PREF_CD = '15S8X' THEN SP_TYPE ELSE NULL END) AS PREF_CODE_15S8X
+           |FROM
+           |MAP_IDM.IDM_MAINTAIN_PERSON_RESP_PREF
+           |WHERE
+           |REQUEST_ID IN (
+           |SELECT
+           |REQUEST_ID
+           |FROM
+           |MAP_IDM.IDM_MAINTAIN_PERSON)
+           |GROUP BY
+           |REQUEST_ID,
+           |MEDIA_ID) AS PRF ON
+           |PRF.REQUEST_ID = RSP.REQUEST_ID
+           |AND PRF.MEDIA_ID = IMI.EMAIL_MEDIA_ID
+           |INNER JOIN (
+           |SELECT
+           |MAX(CASE WHEN ACTIVITY_NAME = 'Event Interaction' THEN ACTIVITY_TYPE_ID ELSE -1 END ) EVENT_INTERACTION_TYPE_ID,
+           |MAX(CASE WHEN ACTIVITY_NAME = 'Contact Interaction' THEN ACTIVITY_TYPE_ID ELSE -1 END ) CONTACT_INTERACTION_TYPE_ID,
+           |MAX(CASE WHEN ACTIVITY_NAME = 'Client Interest' THEN ACTIVITY_TYPE_ID ELSE -1 END ) CLIENT_INTEREST_TYPE_ID,
+           |MAX(CASE WHEN ACTIVITY_NAME = 'Digital Interaction' THEN ACTIVITY_TYPE_ID ELSE -1 END ) DIGITAL_INTERACTION_TYPE_ID
+           |FROM
+           |MAP_MKTO.MCT_MKTO_ACTIVITY_TYPE
+           |WHERE
+           |ACTIVITY_NAME IN ('Event Interaction', 'Contact Interaction', 'Client Interest', 'Digital Interaction')) ACT_ID
+           |ON 1 = 1
+           |LEFT OUTER JOIN MAP_CORE.MCT_COUNTRY MC ON IMI.PERSON_CTRY_CD = MC.COUNTRY_CODE
+           |LEFT OUTER JOIN MAP_IDM.IDM_MAINTAIN_PERSON_RESP_PREF RP_PHONE1 ON
+           |RSP.REQUEST_ID = RP_PHONE1.REQUEST_ID
+           |AND RSP.PHONE_1_PCMIDPK = RP_PHONE1.MEDIA_ID
+           |AND RP_PHONE1.SP_PREF_CD = 'IBM'
+           |LEFT OUTER JOIN (
+           |SELECT
+           |mqap.INBOUND_MKTG_ID,
+           |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_HELP' THEN mqap.ANSWER ELSE NULL END) AS Q_HELP,
+           |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_STUDENT' THEN mqap.ANSWER ELSE NULL END) AS Q_STUDENT,
+           |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_QRADAR_BP' THEN mqap.ANSWER ELSE NULL END) AS Ans_Q_QRADAR_BP,
+           |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_MAIL_CONSENT' THEN mqap.ANSWER ELSE NULL END) AS Ans_Q_MAIL_CONSENT,
+           |MAX(CASE WHEN mqap.QUESTION_CODE = 'Q_QRDATA' THEN mqap.ANSWER ELSE NULL END) AS Ans_Q_QRDATA
+           |FROM MAP_CORE.MCT_QUESTION_ANSWER_PAIRS mqap GROUP BY INBOUND_MKTG_ID ORDER BY 1) QA_PAIRS
+           |ON imi.INBOUND_MKTG_ID = QA_PAIRS.INBOUND_MKTG_ID
+           |LEFT OUTER JOIN MAP_CORE.MCT_COP_XREF COP
+           |ON COP.IDM_COMPANY_ID = IMI.IDM_COMPANY_ID AND IMI.IDM_COMPANY_ID  > 0
+           |WHERE
+           |IMI.READY_FOR_MKTO_FLG = 'R'
+           |AND IMI.MARKETING_INTERACTION_TYPE_CD = 'MAIL'
+           |AND IMI.EMAIL_MEDIA_ID != -1
+           |AND MC.SUB_REGION_CODE NOT IN ('4B','4G','4I','4L','4P','4X','4A','4O','4J')
+           |),
+           |CTE2 AS (
+           |SELECT
+           |CTE1.INBOUND_MKTG_ID,
+           |CTE1.IDM_ID,
+           |RANK() OVER(ORDER BY CTE1.CREATE_TS ASC) ranking,
+           |CTE1.EMAIL_MEDIA_ID AS EMAIL_MEDIA_ID,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.NEW_TO_IDM_IND
+           |ELSE NULL
+           |END AS NEW_TO_IDM_IND,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.FIRST_NAME
+           |ELSE NULL
+           |END AS FIRST_NAME,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.LAST_NAME
+           |ELSE NULL
+           |END AS LAST_NAME,
+           |CTE1.EMAIL_ADDR,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.COMPANY_NAME
+           |ELSE NULL
+           |END AS COMPANY_NAME,
+           |CTE1.CTRY_CODE,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.IDM_COMPANY_ID
+           |ELSE NULL
+           |END AS IDM_COMPANY_ID,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.DQ_EMAIL_IND
+           |ELSE NULL
+           |END AS DQ_EMAIL_IND,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.DQ_NAME_IND
+           |ELSE NULL
+           |END AS DQ_NAME_IND,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.DQ_PHONE_IND
+           |ELSE NULL
+           |END AS DQ_PHONE_IND,
+           |CTE1.CREATE_TS,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.IDM_FEDGOV_IND
+           |ELSE NULL
+           |END AS IDM_FEDGOV_IND,
+           |CTE1.PREF_CODE_IBM,
+           |CTE1.COMPANY_PHONE_SUPR_CODE,
+           |CTE1.COMPANY_EMAIL_SUPR_CODE,
+           |CTE1.PREF_CODE_17YNI,
+           |CTE1.PREF_CODE_17ENL,
+           |CTE1.PREF_CODE_17DSR,
+           |CTE1.PREF_CODE_17CPH,
+           |CTE1.PREF_CODE_17BCH,
+           |CTE1.PREF_CODE_17AAL,
+           |CTE1.PREF_CODE_15WSC,
+           |CTE1.PREF_CODE_15WCP,
+           |CTE1.PREF_CODE_15STT,
+           |CTE1.PREF_CODE_15MFT,
+           |CTE1.PREF_CODE_15ITT,
+           |CTE1.PREF_CODE_15IGO,
+           |CTE1.PREF_CODE_15CLV,
+           |CTE1.PREF_CODE_153QH,
+           |CTE1.PREF_CODE_10N00,
+           |CTE1.PREF_CODE_10M00,
+           |CTE1.PREF_CODE_10L00,
+           |CTE1.PREF_CODE_10G00,
+           |CTE1.PREF_CODE_10A00,
+           |CTE1.PREF_CODE_15S8X,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.STUDENT_FLG
+           |ELSE NULL
+           |END AS STUDENT_FLG,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.IBMER_FLG
+           |ELSE NULL
+           |END AS IBMER_FLG,
+           |CASE
+           |WHEN XREF.EMAIL_MEDIA_ID IS NULL
+           |THEN CTE1.STATE_CD
+           |ELSE NULL
+           |END AS STATE_CD,
+           |CTE1.WORK_PHONE_PERM,
+           |CTE1.SAP_CUST_NUM,
+           |CTE1.STATUS_CODE,
+           |CTE1.ERROR_CODE,
+           |CTE1.ERROR_DESC,
+           |CTE1.MIP_TRANS_SRC,
+           |CTE1.MIP_TRANS_ID,
+           |CTE1.MKTO_PARTITION_ID,
+           |CTE1.CAMPAIGN_CODE,
+           |CTE1.MKTO_ACTIVITY_ID,
+           |CTE1.COUNTRY_CODE,
+           |CTE1.ACTIVITY_TYPE_ID,
+           |CTE1.LANG_CODE,
+           |CTE1.ACTIVITY_NAME,
+           |CTE1.ASSET_TYPE,
+           |CTE1.ACTIVITY_URL,
+           |CTE1.UUC_ID,
+           |CTE1.DRIVER_CAMPAIGN_CODE,
+           |CTE1.FORM_NAME,
+           |CTE1.INTERACTION_ID,
+           |CTE1.INTERACTION_TS,
+           |CTE1.INTERACTION_TYPE_CODE,
+           |CTE1.SCORE_TS,
+           |CTE1.STRENGTH,
+           |CTE1.UT10_CODE,
+           |CTE1.UT15_CODE,
+           |CTE1.UT17_CODE,
+           |CTE1.UT20_CODE,
+           |CTE1.UT30_CODE,
+           |CTE1.NEXT_COMM_METHOD_NAME,
+           |CTE1.NEXT_COMM_TS,
+           |CTE1.NEXT_KEYWORDS,
+           |CTE1.NEXT_UUC_ID,
+           |CTE1.WEB_PAGE_SRC,
+           |CTE1.ACTIVITY_TS,
+           |CTE1.IBM_GBL_IOT_CODE,
+           |CTE1.SUB_REGION_CODE,
+           |CTE1.CAMPAIGN_NAME,
+           |CTE1.LEAD_DESC,
+           |CTE1.LEAD_NOTE,
+           |CTE1.LEAD_SRC_NAME,
+           |CTE1.SALES_CHANNEL_NAME,
+           |CTE1.CONTACT_PHONE,
+           |CTE1.REGION,
+           |CTE1.SUB_SRC_DESC,
+           |CTE1.EVENT_REF_ID,
+           |CTE1.REFERRER_URL,
+           |CTE1.ACTIVITY_CMPN_CD,
+           |CTE1.MAIN_DOM_CLIENT_ID,
+           |CTE1.DOM_BUY_GRP,
+           |CTE1.LANDING_CTRY,
+           |CTE1.DOM_BUY_GRP_CTRY,
+           |MAXSEQID.MAXSEQID AS MAXSEQID,
+           |ACTSEQ.MAXACTSEQID AS MAXACTSEQID
+           |FROM CTE1
+           |LEFT JOIN (SELECT NVL(MAX(MIP_SEQ_ID), $hrmSequenceNumber) AS MAXSEQID FROM MAP_MKTO.MCT_MKTO_PERSON
+           |WHERE MIP_SEQ_ID > '$hrmSequenceNumber') AS MAXSEQID ON 1 = 1
+           |LEFT JOIN (SELECT EMAIL_MEDIA_ID FROM MAP_MKTO.MCT_MKTO_LEAD_XREF GROUP BY EMAIL_MEDIA_ID) AS XREF
+           |ON XREF.EMAIL_MEDIA_ID = CTE1.EMAIL_MEDIA_ID
+           |LEFT JOIN (SELECT NVL(MAX(MIP_ACTIVITY_SEQ_ID), $hrmSequenceNumber) AS MAXACTSEQID FROM MAP_MKTO.MCT_MKTO_CUSTOM_ACTIVITY
+           |WHERE MIP_ACTIVITY_SEQ_ID > '$hrmSequenceNumber') AS ACTSEQ ON 1 = 1
+           |)
+           |SELECT *,
+           |MAXSEQID + ROW_NUMBER () OVER (ORDER BY CTE2.CREATE_TS ASC) AS MIP_SEQ_ID,
+           |MAXACTSEQID + ROW_NUMBER () OVER (ORDER BY CTE2.CREATE_TS ASC) AS MIP_ACTIVITY_SEQ_ID
+           |FROM CTE2
+           |FETCH FIRST $maxThreshold ROWS ONLY)""".stripMargin
+      println(combinedSqlQuery)
 
-        // Creating Combined DataFrame from the above Query
-        val combinedDF = AppProperties.SparkSession.read.jdbc(conProp1.getProperty(PropertyNames.EndPoint), combinedSqlQuery, conProp1)
-          .dropDuplicates("EMAIL_MEDIA_ID").persist()
-        combinedDF.show(false)
+      // MIP Database (IMI & PERSON Table) Connection Details from ETLDataSources Table
+      val conProp1: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbSource)
+      val dbConnectionInfo = conProp1.getProperty(PropertyNames.EndPoint)
+      dbCon = DriverManager.getConnection(dbConnectionInfo, conProp1)
 
-        // Creating PersonDF from CombinedDF
-        val personTableRawDF = combinedDF.select(
-          col("MIP_SEQ_ID"),
-          col("IDM_ID"),
-          col("EMAIL_MEDIA_ID"),
-          col("NEW_TO_IDM_IND"),
-          col("FIRST_NAME"),
-          col("LAST_NAME"),
-          col("EMAIL_ADDR"),
-          col("COMPANY_NAME"),
-          col("CTRY_CODE"),
-          col("IDM_COMPANY_ID"),
-          col("DQ_EMAIL_IND"),
-          col("DQ_NAME_IND"),
-          col("DQ_PHONE_IND"),
-          col("IDM_FEDGOV_IND"),
-          col("STATUS_CODE"),
-          col("ERROR_CODE"),
-          col("ERROR_DESC"),
-          col("MIP_TRANS_SRC"),
-          col("MIP_TRANS_ID"),
-          col("MKTO_PARTITION_ID"),
-          col("CREATE_TS"),
-          col("COMPANY_EMAIL_SUPR_CODE"),
-          col("COMPANY_PHONE_SUPR_CODE"),
-          col("PREF_CODE_IBM"),
-          col("PREF_CODE_10A00"),
-          col("PREF_CODE_10G00"),
-          col("PREF_CODE_10L00"),
-          col("PREF_CODE_10M00"),
-          col("PREF_CODE_10N00"),
-          col("PREF_CODE_153QH"),
-          col("PREF_CODE_15CLV"),
-          col("PREF_CODE_15IGO"),
-          col("PREF_CODE_15ITT"),
-          col("PREF_CODE_15MFT"),
-          col("PREF_CODE_15STT"),
-          col("PREF_CODE_15WCP"),
-          col("PREF_CODE_15WSC"),
-          col("PREF_CODE_17AAL"),
-          col("PREF_CODE_17BCH"),
-          col("PREF_CODE_17CPH"),
-          col("PREF_CODE_17DSR"),
-          col("PREF_CODE_17ENL"),
-          col("PREF_CODE_17YNI"),
-          col("PREF_CODE_15S8X"),
-          col("STUDENT_FLG"),
-          col("IBMer_FLG"),
-          col("STATE_CD"),
-          col("WORK_PHONE_PERM"),
-          col("SAP_CUST_NUM"),
-          col("MAIN_DOM_CLIENT_ID"),
-          col("DOM_BUY_GRP_CTRY")
-        ).where("IDM_ID IS NOT NULL AND EMAIL_MEDIA_ID IS NOT NULL AND EMAIL_ADDR IS NOT NULL").dropDuplicates()
+      // Creating Combined DataFrame from the above Query
+      val combinedDF = AppProperties.SparkSession.read.jdbc(conProp1.getProperty(PropertyNames.EndPoint), combinedSqlQuery, conProp1)
+        .dropDuplicates("EMAIL_MEDIA_ID").persist()
+      combinedDF.show(false)
 
-        val personTableDF = personTableRawDF
-          .withColumnRenamed("MAIN_DOM_CLIENT_ID", "DOM_CLIENT_ID")
+      // Creating PersonDF from CombinedDF
+      val personTableRawDF = combinedDF.select(
+        col("MIP_SEQ_ID"),
+        col("IDM_ID"),
+        col("EMAIL_MEDIA_ID"),
+        col("NEW_TO_IDM_IND"),
+        col("FIRST_NAME"),
+        col("LAST_NAME"),
+        col("EMAIL_ADDR"),
+        col("COMPANY_NAME"),
+        col("CTRY_CODE"),
+        col("IDM_COMPANY_ID"),
+        col("DQ_EMAIL_IND"),
+        col("DQ_NAME_IND"),
+        col("DQ_PHONE_IND"),
+        col("IDM_FEDGOV_IND"),
+        col("STATUS_CODE"),
+        col("ERROR_CODE"),
+        col("ERROR_DESC"),
+        col("MIP_TRANS_SRC"),
+        col("MIP_TRANS_ID"),
+        col("MKTO_PARTITION_ID"),
+        col("CREATE_TS"),
+        col("COMPANY_EMAIL_SUPR_CODE"),
+        col("COMPANY_PHONE_SUPR_CODE"),
+        col("PREF_CODE_IBM"),
+        col("PREF_CODE_10A00"),
+        col("PREF_CODE_10G00"),
+        col("PREF_CODE_10L00"),
+        col("PREF_CODE_10M00"),
+        col("PREF_CODE_10N00"),
+        col("PREF_CODE_153QH"),
+        col("PREF_CODE_15CLV"),
+        col("PREF_CODE_15IGO"),
+        col("PREF_CODE_15ITT"),
+        col("PREF_CODE_15MFT"),
+        col("PREF_CODE_15STT"),
+        col("PREF_CODE_15WCP"),
+        col("PREF_CODE_15WSC"),
+        col("PREF_CODE_17AAL"),
+        col("PREF_CODE_17BCH"),
+        col("PREF_CODE_17CPH"),
+        col("PREF_CODE_17DSR"),
+        col("PREF_CODE_17ENL"),
+        col("PREF_CODE_17YNI"),
+        col("PREF_CODE_15S8X"),
+        col("STUDENT_FLG"),
+        col("IBMer_FLG"),
+        col("STATE_CD"),
+        col("WORK_PHONE_PERM"),
+        col("SAP_CUST_NUM"),
+        col("MAIN_DOM_CLIENT_ID"),
+        col("DOM_BUY_GRP_CTRY")
+      ).where("IDM_ID IS NOT NULL AND EMAIL_MEDIA_ID IS NOT NULL AND EMAIL_ADDR IS NOT NULL").dropDuplicates()
 
-        // Creating Custom Activity Table Dataset from Combined DF
-        val customActivityTableDF = combinedDF.select("MIP_ACTIVITY_SEQ_ID",
-          "MIP_SEQ_ID",
-          "ACTIVITY_TYPE_ID",
-          "CAMPAIGN_CODE",
-          "ACTIVITY_TS",
-          "CAMPAIGN_NAME",
-          "COUNTRY_CODE",
-          "LANG_CODE",
-          "ACTIVITY_NAME",
-          "ASSET_TYPE",
-          "ACTIVITY_URL",
-          "UUC_ID",
-          "DRIVER_CAMPAIGN_CODE",
-          "FORM_NAME",
-          "INTERACTION_ID",
-          "INTERACTION_TS",
-          "SUB_SRC_DESC",
-          "LEAD_DESC",
-          "LEAD_NOTE",
-          "LEAD_SRC_NAME",
-          "INTERACTION_TYPE_CODE",
-          "CONTACT_PHONE",
-          "SALES_CHANNEL_NAME",
-          "SCORE_TS",
-          "STRENGTH",
-          "UT10_CODE",
-          "UT15_CODE",
-          "UT17_CODE",
-          "UT20_CODE",
-          "UT30_CODE",
-          "NEXT_COMM_METHOD_NAME",
-          "NEXT_COMM_TS",
-          "NEXT_KEYWORDS",
-          "NEXT_UUC_ID",
-          "WEB_PAGE_SRC",
-          "STATUS_CODE",
-          "ERROR_CODE",
-          "ERROR_DESC",
-          "EVENT_REF_ID",
-          "MKTO_ACTIVITY_ID",
-          "CREATE_TS",
-          "REFERRER_URL",
-          "ACTIVITY_CMPN_CD",
-          "IBM_GBL_IOT_CODE",
-          "SUB_REGION_CODE",
-          "REGION",
-          "CTRY_CODE",
-          "WORK_PHONE_PERM").where("STRENGTH IS NOT NULL AND CAMPAIGN_CODE !='' AND CAMPAIGN_CODE IS NOT NULL")
-        customActivityTableDF.show(false)
+      val personTableDF = personTableRawDF
+        .withColumnRenamed("MAIN_DOM_CLIENT_ID", "DOM_CLIENT_ID")
 
-        // Checking if any Data is Returned
-        count = personTableDF.count()
-        var counter = count
-        if (count > 0) {
-          log.info("Reading unprocessed data")
-          personTableDF.show(false)
+      // Creating Custom Activity Table Dataset from Combined DF
+      val customActivityTableDF = combinedDF.select("MIP_ACTIVITY_SEQ_ID",
+        "MIP_SEQ_ID",
+        "ACTIVITY_TYPE_ID",
+        "CAMPAIGN_CODE",
+        "ACTIVITY_TS",
+        "CAMPAIGN_NAME",
+        "COUNTRY_CODE",
+        "LANG_CODE",
+        "ACTIVITY_NAME",
+        "ASSET_TYPE",
+        "ACTIVITY_URL",
+        "UUC_ID",
+        "DRIVER_CAMPAIGN_CODE",
+        "FORM_NAME",
+        "INTERACTION_ID",
+        "INTERACTION_TS",
+        "SUB_SRC_DESC",
+        "LEAD_DESC",
+        "LEAD_NOTE",
+        "LEAD_SRC_NAME",
+        "INTERACTION_TYPE_CODE",
+        "CONTACT_PHONE",
+        "SALES_CHANNEL_NAME",
+        "SCORE_TS",
+        "STRENGTH",
+        "UT10_CODE",
+        "UT15_CODE",
+        "UT17_CODE",
+        "UT20_CODE",
+        "UT30_CODE",
+        "NEXT_COMM_METHOD_NAME",
+        "NEXT_COMM_TS",
+        "NEXT_KEYWORDS",
+        "NEXT_UUC_ID",
+        "WEB_PAGE_SRC",
+        "STATUS_CODE",
+        "ERROR_CODE",
+        "ERROR_DESC",
+        "EVENT_REF_ID",
+        "MKTO_ACTIVITY_ID",
+        "CREATE_TS",
+        "REFERRER_URL",
+        "ACTIVITY_CMPN_CD",
+        "IBM_GBL_IOT_CODE",
+        "SUB_REGION_CODE",
+        "REGION",
+        "CTRY_CODE",
+        "WORK_PHONE_PERM").where("STRENGTH IS NOT NULL AND CAMPAIGN_CODE !='' AND CAMPAIGN_CODE IS NOT NULL")
+      customActivityTableDF.show(false)
 
-          //Get Column Mapping configuration from ETL_DATA_SOURCE
-          val appProp: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, configSourcePerson)
+      // Checking if any Data is Returned
+      count = personTableDF.count()
+      var counter = count
+      if (count > 0) {
+        log.info("Reading unprocessed data")
+        personTableDF.show(false)
 
-          //Mapping which will be used to map MIP to MARKETO
-          val personColumnMapping = appProp.getProperty(PropertyNames.ResourceSpecific_2).stripMargin.replaceAll("\\s+", "")
-          log.info("Creating the column mapping")
+        //Get Column Mapping configuration from ETL_DATA_SOURCE
+        val appProp: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, configSourcePerson)
 
-          //IMI to MARKETO Mapping
-          val personMapDfToMarketoColumns: mutable.Map[String, String] = mutable.Map[String, String]()
+        //Mapping which will be used to map MIP to MARKETO
+        val personColumnMapping = appProp.getProperty(PropertyNames.ResourceSpecific_2).stripMargin.replaceAll("\\s+", "")
+        log.info("Creating the column mapping")
 
-          //MARKETO to PERSON Table Mapping
-          val personMapDfToDbColumns: mutable.Map[String, String] = mutable.Map[String, String]()
+        //IMI to MARKETO Mapping
+        val personMapDfToMarketoColumns: mutable.Map[String, String] = mutable.Map[String, String]()
 
-          for (curVal <- personColumnMapping.split(",")) {
-            val arrVal = curVal.split("=")
-            personMapDfToMarketoColumns += arrVal(0) -> arrVal(1)
-            personMapDfToDbColumns += arrVal(1) -> arrVal(0)
+        //MARKETO to PERSON Table Mapping
+        val personMapDfToDbColumns: mutable.Map[String, String] = mutable.Map[String, String]()
+
+        for (curVal <- personColumnMapping.split(",")) {
+          val arrVal = curVal.split("=")
+          personMapDfToMarketoColumns += arrVal(0) -> arrVal(1)
+          personMapDfToDbColumns += arrVal(1) -> arrVal(0)
+        }
+        println(personMapDfToMarketoColumns)
+
+        //Creating a List of Target Columns
+        var newPersonDF = personTableDF
+        val newCollist = personMapDfToMarketoColumns.keys.toList
+
+        //Renaming the Columns to match the Source (IMI) to Target (Marketo)
+        for (i <- newCollist) {
+          newPersonDF = newPersonDF.withColumnRenamed(i, personMapDfToMarketoColumns(i))
+        }
+
+        log.info("Trimming the columns")
+        val trimColumns = newPersonDF.schema.fields.filter(_.dataType.isInstanceOf[StringType])
+        trimColumns.foreach(f => {
+          newPersonDF = newPersonDF.withColumn(f.name, trim(col(f.name)))
+          newPersonDF = newPersonDF.withColumn(f.name, regexp_replace(col(f.name), "\\\\", ""))
+          newPersonDF = newPersonDF.withColumn(f.name, regexp_replace(col(f.name), "[\\,]", ""))
+          newPersonDF = newPersonDF.withColumn(f.name, regexp_replace(col(f.name), "[\\p{C}]", ""))
+        })
+        log.info("newPersonDF")
+        newPersonDF.show(false)
+
+        val spark = AppProperties.SparkSession
+        import spark.implicits._
+
+        log.info("Preparing for POST")
+        //personMarketoDF is DataFrame used to Update IMI Table
+        var personMarketoDF = newPersonDF.persist()
+
+        //personMarketoDF is DataFrame used to Insert into MARKETO
+        log.info("Creating the dataframes for the payload")
+        personMarketoDF = personMarketoDF
+          .select(personMapDfToMarketoColumns.values.toList.distinct.head, personMapDfToMarketoColumns.values.toList.distinct.tail: _*)
+        personMarketoDF = personMarketoDF.drop("STATUS_CODE", "ERROR_CODE", "ERROR_DESC", "MKTO_LEAD_ID",
+          "MIP_TRANS_SRC", "MIP_TRANS_ID", "MKTO_PARTITION_ID", "CREATE_TS", "CI_Phone_Permission")
+        personMarketoDF = personMarketoDF.dropDuplicates(lookupFieldPerson)
+        personMarketoDF.show(false)
+
+        //Collecting the MIP_SEQ_ID's posting to Marketo
+        mip_seq_id = personMarketoDF.select("MIP_Person_Seq_ID").as[mipSeqId].collect()
+
+        log.info("Creating JSON Payload to be sent to marketo")
+        val payload = buildPayloadPerson(personMarketoDF, action, lookupFieldPerson)
+        val jsValue = Json.parse(payload)
+        println("Payload:" + jsValue)
+        Json.prettyPrint(jsValue)
+
+        //Sends post to marketo
+        val response = sendPostPerson(payload)
+
+        //Parsing the response to a Dataframe
+        log.info("Parsing the response from Marketo")
+        val parsedPersonJson = AppProperties.SparkSession.read
+          .json(AppProperties.SparkSession.sparkContext.parallelize(Seq(response)).toDS())
+        parsedPersonJson.show(false)
+
+        //Create a DataFrame for the Response and Extract LEAD_ID
+        val personResponseDF = parsedPersonJson.select(explode(col("result")).as("result")).select("result.*")
+        personResponseDF.show(false)
+
+        def hasColumnPerson(df: DataFrame, path: String) = Try(df(path)).isSuccess
+
+        if (hasColumnPerson(personResponseDF, "id")) {
+          personFlag = 2
+          //Generate the dataframe to update to the source table
+          lead_id = personResponseDF.select("id").as[leadId].collect()
+
+          //Capture Error Code & Description for failed records
+          if (hasColumnPerson(personResponseDF, "reasons")) {
+            val errorDetailsPerson = personResponseDF.where("reasons is not null")
+              .select(explode(col("reasons")).as("reasons")).select("reasons.*")
+            errorCodePerson = errorDetailsPerson.head().getString(0)
+            errorDescPerson = errorDetailsPerson.head().getString(1).replace("'", "")
           }
-          println(personMapDfToMarketoColumns)
 
-          //Creating a List of Target Columns
-          var newPersonDF = personTableDF
-          val newCollist = personMapDfToMarketoColumns.keys.toList
-
-          //Renaming the Columns to match the Source (IMI) to Target (Marketo)
-          for (i <- newCollist) {
-            newPersonDF = newPersonDF.withColumnRenamed(i, personMapDfToMarketoColumns(i))
+          log.info("Creating the mapping for Lead ID and MIP_Seq_ID")
+          for (i <- mip_seq_id.indices) {
+            val leadId: Long = if (lead_id(i).id == null) {
+              counter = counter - 1
+              errorCounter = "-" + counter.toString
+              errorCounter.toLong
+            } else {
+              lead_id(i).id.toLong
+            }
+            val mipSeqIdList = mip_seq_id(i).MIP_Person_Seq_ID
+            mapPersonIds += leadId -> mipSeqIdList
           }
+          println(mapPersonIds)
 
-          log.info("Trimming the columns")
-          val trimColumns = newPersonDF.schema.fields.filter(_.dataType.isInstanceOf[StringType])
-          trimColumns.foreach(f => {
-            newPersonDF = newPersonDF.withColumn(f.name, trim(col(f.name)))
-            newPersonDF = newPersonDF.withColumn(f.name, regexp_replace(col(f.name), "\\\\", ""))
-            newPersonDF = newPersonDF.withColumn(f.name, regexp_replace(col(f.name), "[\\,]", ""))
-            newPersonDF = newPersonDF.withColumn(f.name, regexp_replace(col(f.name), "[\\p{C}]", ""))
-          })
-          log.info("newPersonDF")
-          newPersonDF.show(false)
+          val mipSeqIDList = mapPersonIds.values.toString().substring(7, mapPersonIds.values.toString().length)
+          val mipSeqIDLeadIdPersonDF = mapPersonIds.toSeq.toDF("leadId", "mipSeqID")
+          mipSeqIDLeadIdPersonDF.show(false)
 
-          val spark = AppProperties.SparkSession
-          import spark.implicits._
+          // Creating Custom Activity Dataframe containing only successful Mip_Seq_Id records that are sent to Marketo-Person.
+          val marketoSuccessMipSeqIDList = mipSeqIDLeadIdPersonDF
+            .select("mipSeqID", "leadId").where("leadId not like '-%'").distinct()
+          personSuccessCount = marketoSuccessMipSeqIDList.count()
 
-          log.info("Preparing for POST")
-          //personMarketoDF is DataFrame used to Update IMI Table
-          var personMarketoDF = newPersonDF.persist()
+          val mipSeqIdSuccessDF = customActivityTableDF
+            .join(marketoSuccessMipSeqIDList, customActivityTableDF("MIP_SEQ_ID") === marketoSuccessMipSeqIDList("mipSeqID"), "inner")
+            .withColumnRenamed("leadId", "MKTO_LEAD_ID")
+          log.info("Successful mipSeqIDs Sent to Marketo")
+          mipSeqIdSuccessDF.show(false)
 
-          //personMarketoDF is DataFrame used to Insert into MARKETO
-          log.info("Creating the dataframes for the payload")
-          personMarketoDF = personMarketoDF
-            .select(personMapDfToMarketoColumns.values.toList.distinct.head, personMapDfToMarketoColumns.values.toList.distinct.tail: _*)
-          personMarketoDF = personMarketoDF.drop("STATUS_CODE", "ERROR_CODE", "ERROR_DESC", "MKTO_LEAD_ID",
-            "MIP_TRANS_SRC", "MIP_TRANS_ID", "MKTO_PARTITION_ID", "CREATE_TS", "CI_Phone_Permission")
-          personMarketoDF = personMarketoDF.dropDuplicates(lookupFieldPerson)
-          personMarketoDF.show(false)
+          customCount = mipSeqIdSuccessDF.count()
+          if (customCount > 0) {
+            log.info("Reading unprocessed data and removing unwanted characters")
+            //Get configuration from ETL_DATA_SOURCE
+            val appProp: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, configSourceInteraction)
 
-          //Collecting the MIP_SEQ_ID's posting to Marketo
-          mip_seq_id = personMarketoDF.select("MIP_Person_Seq_ID").as[mipSeqId].collect()
-
-          log.info("Creating JSON Payload to be sent to marketo")
-          val payload = buildPayloadPerson(personMarketoDF, action, lookupFieldPerson)
-          val jsValue = Json.parse(payload)
-          println("Payload:" + jsValue)
-          Json.prettyPrint(jsValue)
-
-          //Sends post to marketo
-          val response = sendPostPerson(payload)
-
-          //Parsing the response to a Dataframe
-          log.info("Parsing the response from Marketo")
-          val parsedPersonJson = AppProperties.SparkSession.read
-            .json(AppProperties.SparkSession.sparkContext.parallelize(Seq(response)).toDS())
-          parsedPersonJson.show(false)
-
-          //Create a DataFrame for the Response and Extract LEAD_ID
-          val personResponseDF = parsedPersonJson.select(explode(col("result")).as("result")).select("result.*")
-          personResponseDF.show(false)
-
-          def hasColumnPerson(df: DataFrame, path: String) = Try(df(path)).isSuccess
-
-          if (hasColumnPerson(personResponseDF, "id")) {
-            personFlag = 2
-            //Generate the dataframe to update to the source table
-            lead_id = personResponseDF.select("id").as[leadId].collect()
-
-            //Capture Error Code & Description for failed records
-            if (hasColumnPerson(personResponseDF, "reasons")) {
-              val errorDetailsPerson = personResponseDF.where("reasons is not null")
-                .select(explode(col("reasons")).as("reasons")).select("reasons.*")
-              errorCodePerson = errorDetailsPerson.head().getString(0)
-              errorDescPerson = errorDetailsPerson.head().getString(1).replace("'", "")
+            //Mapping which will be used to map marketo to DB
+            val customActivityColumnMapping = appProp.getProperty(PropertyNames.ResourceSpecific_2).stripMargin.replaceAll("\\s+", "")
+            log.info("Creating the column mapping")
+            val mapInteractionDfToMarketoColumns: mutable.Map[String, String] = mutable.Map[String, String]()
+            val mapInteractionMarketoToDbColumns: mutable.Map[String, String] = mutable.Map[String, String]()
+            for (curVal <- customActivityColumnMapping.split(",")) {
+              val arrVal = curVal.split("=")
+              mapInteractionDfToMarketoColumns += arrVal(0) -> arrVal(1)
+              mapInteractionMarketoToDbColumns += arrVal(1) -> arrVal(0)
             }
 
-            log.info("Creating the mapping for Lead ID and MIP_Seq_ID")
-            for (i <- mip_seq_id.indices) {
-              val leadId: Long = if (lead_id(i).id == null) {
-                counter = counter - 1
-                errorCounter = "-" + counter.toString
-                errorCounter.toLong
-              } else {
-                lead_id(i).id.toLong
-              }
-              val mipSeqIdList = mip_seq_id(i).MIP_Person_Seq_ID
-              mapPersonIds += leadId -> mipSeqIdList
+            var customActivityMarketoDF = mipSeqIdSuccessDF.drop("MIP_SEQ_ID", "SCORE_TS", "NEXT_COMM_METHOD_NAME",
+              "NEXT_COMM_TS", "NEXT_KEYWORDS", "NEXT_UUC_ID", "STATUS_CODE", "ERROR_CODE", "ERROR_DESC", "MKTO_ACTIVITY_ID")
+            log.info("Dropping Columns Before sending the DF to Marketo")
+            customActivityMarketoDF.show(false)
+
+            customActivityMarketoDF = mipSeqIdSuccessDF
+              .select(mapInteractionDfToMarketoColumns.keys.toList.distinct.head, mapInteractionDfToMarketoColumns.keys.toList.distinct.tail: _*)
+            val marketoInteractionCollist = mapInteractionDfToMarketoColumns.keys.toList
+
+            for (i <- marketoInteractionCollist) {
+              customActivityMarketoDF = customActivityMarketoDF.withColumnRenamed(i, mapInteractionDfToMarketoColumns(i))
             }
-            println(mapPersonIds)
 
-            val mipSeqIDList = mapPersonIds.values.toString().substring(7, mapPersonIds.values.toString().length)
-            val mipSeqIDLeadIdPersonDF = mapPersonIds.toSeq.toDF("leadId", "mipSeqID")
-            mipSeqIDLeadIdPersonDF.show(false)
+            log.info("Trimming the columns")
+            val trimColumns = customActivityMarketoDF.schema.fields.filter(_.dataType.isInstanceOf[StringType])
+            trimColumns.foreach(f => {
+              println(f.name)
+              customActivityMarketoDF = customActivityMarketoDF.withColumn(f.name, trim(col(f.name)))
+              customActivityMarketoDF = customActivityMarketoDF.withColumn(f.name, regexp_replace(col(f.name), "\\\\", ""))
+              customActivityMarketoDF = customActivityMarketoDF.withColumn(f.name, regexp_replace(col(f.name), "[\\,]", ""))
+              customActivityMarketoDF = customActivityMarketoDF.withColumn(f.name, regexp_replace(col(f.name), "[\\p{C}]", ""))
+            })
+            customActivityMarketoDF.show(false)
 
-            // Creating Custom Activity Dataframe containing only successful Mip_Seq_Id records that are sent to Marketo-Person.
-            val marketoSuccessMipSeqIDList = mipSeqIDLeadIdPersonDF
-              .select("mipSeqID", "leadId").where("leadId not like '-%'").distinct()
-            personSuccessCount = marketoSuccessMipSeqIDList.count()
+            mip_act_seq_id = customActivityMarketoDF.select("MIP_ACTIVITY_SEQ_ID").as[mipActSeqId].collect()
+            println(mip_act_seq_id.mkString("Array(", ", ", ")"))
+            log.info("Data to be sent to Marketo")
 
-            val mipSeqIdSuccessDF = customActivityTableDF
-              .join(marketoSuccessMipSeqIDList, customActivityTableDF("MIP_SEQ_ID") === marketoSuccessMipSeqIDList("mipSeqID"), "inner")
-              .withColumnRenamed("leadId", "MKTO_LEAD_ID")
-            log.info("Successful mipSeqIDs Sent to Marketo")
-            mipSeqIdSuccessDF.show(false)
+            log.info("Building payload to be sent to Marketo")
+            val interactionPayloadDF = buildPayloadInteraction(customActivityMarketoDF)
+            val interactionData = interactionPayloadDF.rdd.map(row => row.getString(0)).collect
+            val inputData: String = interactionData.mkString(",")
 
-            customCount = mipSeqIdSuccessDF.count()
-            if (customCount > 0) {
-              log.info("Reading unprocessed data and removing unwanted characters")
-              //Get configuration from ETL_DATA_SOURCE
-              val appProp: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, configSourceInteraction)
-
-              //Mapping which will be used to map marketo to DB
-              val customActivityColumnMapping = appProp.getProperty(PropertyNames.ResourceSpecific_2).stripMargin.replaceAll("\\s+", "")
-              log.info("Creating the column mapping")
-              val mapInteractionDfToMarketoColumns: mutable.Map[String, String] = mutable.Map[String, String]()
-              val mapInteractionMarketoToDbColumns: mutable.Map[String, String] = mutable.Map[String, String]()
-              for (curVal <- customActivityColumnMapping.split(",")) {
-                val arrVal = curVal.split("=")
-                mapInteractionDfToMarketoColumns += arrVal(0) -> arrVal(1)
-                mapInteractionMarketoToDbColumns += arrVal(1) -> arrVal(0)
-              }
-
-              var customActivityMarketoDF = mipSeqIdSuccessDF.drop("MIP_SEQ_ID", "SCORE_TS", "NEXT_COMM_METHOD_NAME",
-                "NEXT_COMM_TS", "NEXT_KEYWORDS", "NEXT_UUC_ID", "STATUS_CODE", "ERROR_CODE", "ERROR_DESC", "MKTO_ACTIVITY_ID")
-              log.info("Dropping Columns Before sending the DF to Marketo")
-              customActivityMarketoDF.show(false)
-
-              customActivityMarketoDF = mipSeqIdSuccessDF
-                .select(mapInteractionDfToMarketoColumns.keys.toList.distinct.head, mapInteractionDfToMarketoColumns.keys.toList.distinct.tail: _*)
-              val marketoInteractionCollist = mapInteractionDfToMarketoColumns.keys.toList
-
-              for (i <- marketoInteractionCollist) {
-                customActivityMarketoDF = customActivityMarketoDF.withColumnRenamed(i, mapInteractionDfToMarketoColumns(i))
-              }
-
-              log.info("Trimming the columns")
-              val trimColumns = customActivityMarketoDF.schema.fields.filter(_.dataType.isInstanceOf[StringType])
-              trimColumns.foreach(f => {
-                println(f.name)
-                customActivityMarketoDF = customActivityMarketoDF.withColumn(f.name, trim(col(f.name)))
-                customActivityMarketoDF = customActivityMarketoDF.withColumn(f.name, regexp_replace(col(f.name), "\\\\", ""))
-                customActivityMarketoDF = customActivityMarketoDF.withColumn(f.name, regexp_replace(col(f.name), "[\\,]", ""))
-                customActivityMarketoDF = customActivityMarketoDF.withColumn(f.name, regexp_replace(col(f.name), "[\\p{C}]", ""))
-              })
-              customActivityMarketoDF.show(false)
-
-              mip_act_seq_id = customActivityMarketoDF.select("MIP_ACTIVITY_SEQ_ID").as[mipActSeqId].collect()
-              println(mip_act_seq_id.mkString("Array(", ", ", ")"))
-              log.info("Data to be sent to Marketo")
-
-              log.info("Building payload to be sent to Marketo")
-              val interactionPayloadDF = buildPayloadInteraction(customActivityMarketoDF)
-              val interactionData = interactionPayloadDF.rdd.map(row => row.getString(0)).collect
-              val inputData: String = interactionData.mkString(",")
-
-              val finalInteractionPayload =
-                s"""{
+            val finalInteractionPayload =
+              s"""{
                "input": [ $inputData ]
                }""".stripMargin
 
-              log.info("Payload to be sent to Marketo")
-              log.info(finalInteractionPayload)
+            log.info("Payload to be sent to Marketo")
+            log.info(finalInteractionPayload)
 
-              for (i <- mip_act_seq_id.indices) {
-                val interactionMipActSeqIds = mip_act_seq_id(i).MIP_ACTIVITY_SEQ_ID
-                interIds += inputData.indexOf("\"" + interactionMipActSeqIds + "\"") -> interactionMipActSeqIds
-              }
-
-              val sortedValues = interIds.keys.toArray.sorted
-              for (i <- sortedValues) {
-                sortedmipActSeqId += interIds.get(i)
-              }
-
-              var response = sendPostInteraction(finalInteractionPayload)
-              if (response.contains("Access token expired") || response.contains("Access token invalid")) {
-                val newToken = getMarketoTokenInteraction
-                response = sendPostWithTokenInteraction(finalInteractionPayload, newToken)
-              }
-
-              //Parsing the response to a Dataframe to extract Marketo guids
-              log.info("Parsing the response from Marketo")
-              val parsedInteractionJson = AppProperties.SparkSession.read.json(AppProperties.SparkSession.sparkContext.parallelize(Seq(response)).toDS())
-              parsedInteractionJson.show(false)
-
-              val interactionMarketoResponseDF = parsedInteractionJson.select(explode(col("result"))
-                .as("result")).select("result.*")
-              interactionMarketoResponseDF.show(false)
-
-              //CHECK IF ANY COLUMN IN RESPONSE DATAFRAME HAS AN ERROR
-              def hasColumn(df: DataFrame, path: String) = Try(df(path)).isSuccess
-
-              if (hasColumn(interactionMarketoResponseDF, "errors")) {
-                val errorDetailsCA = interactionMarketoResponseDF.select(explode(col("errors")).as("errors")).select("errors.*")
-                errorCodeCA = errorDetailsCA.head().getString(0)
-                errorDescCA = errorDetailsCA.head().getString(1).replace("'", "")
-                interactionFlag = 1
-              }
-              else {
-                interactionFlag = 2
-              }
-
-              if (interactionFlag == 2) {
-                //Generate the dataframe to update to the source table
-                marketoID = interactionMarketoResponseDF.select("id").as[guID].collect()
-                customSuccessCount = interactionMarketoResponseDF.select("id").count()
-
-                log.info("Creating the mapping for MipActivitySeqId and MarketoGuid")
-                for (i <- sortedmipActSeqId.indices) {
-                  val mktId = marketoID(i).id
-                  val mipActSeqIDFinal = sortedmipActSeqId(i).get
-                  mapInteractionIds += mktId -> mipActSeqIDFinal
-                }
-              }
-              else {
-                log.info("No HRM's Present To Process for Custom Activity")
-              }
+            for (i <- mip_act_seq_id.indices) {
+              val interactionMipActSeqIds = mip_act_seq_id(i).MIP_ACTIVITY_SEQ_ID
+              interIds += inputData.indexOf("\"" + interactionMipActSeqIds + "\"") -> interactionMipActSeqIds
             }
 
-            //INSERT INTO PERSON QUEUEING TABLE INCLUDING LEAD_IDs
-            insertPerson(personTableDF, mipSeqIDLeadIdPersonDF, dbCon, tgtTableNameP, personMapDfToDbColumns)
-
-            //UPDATING STATUS_CODE IN PERSON TABLE
-            log.info("Updating the Status Codes")
-            updatePersonTableStatus(personTableDF, dbCon, tgtTableNameP, errorCodePerson, errorDescPerson)
-
-            //INSERT INTO XREF TABLE
-            log.info("Inserting into MAP_MKTO.MCT_MKTO_LEAD_XREF")
-            val sqlXref =
-              s"""(SELECT MIP_SEQ_ID, MKTO_LEAD_ID, EMAIL_ADDR, IDM_ID, EMAIL_MEDIA_ID, 'N' AS PROCESSED_FLG, CAST(NULL as timestamp) AS PROCESSED_TS,
-                 |CURRENT_TIMESTAMP AS TRANSACTION_TS, CURRENT_TIMESTAMP AS CREATE_TS, CURRENT_TIMESTAMP AS UPDATE_TS, CREATE_USER
-                 |FROM MAP_MKTO.MCT_MKTO_PERSON
-                 |WHERE MIP_SEQ_ID IN $mipSeqIDList AND STATUS_CODE = 'P')""".stripMargin
-            val conProp2: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbSource)
-            val xrefDf = AppProperties.SparkSession.read.jdbc(conProp1.getProperty(PropertyNames.EndPoint), sqlXref, conProp2)
-            xrefDf.show(false)
-
-            insertIntoXref(xrefDf, dbCon, tgtXrefTableName)
-
-            // INSERT INTO CUSTOM ACTIVITY QUEUEING TABLE
-            val customActivityDbDf = customActivityTableDF.drop("RANKING", "CREATE_TS", "REGION", "IBM_GBL_IOT_CODE",
-              "SUB_REGION_CODE", "CTRY_CODE", "MKTO_LEAD_ID","WORK_PHONE_PERM").persist()
-            log.info("Records to be inserted")
-            customActivityDbDf.show(false)
-            insertCustomActivity(customActivityDbDf, mipSeqIDLeadIdPersonDF, dbCon, tgtTableNameCA)
-
-            //UPDATE CUSTOM ACTIVITY QUEUEING TABLE WITH ERROR STATUS CODES
-            if (interactionFlag == 1) {
-              log.info("Custom Activity Response From Marketo Has ERRORS")
-              log.info("Updating the error status in Custom Activity Queueing Table")
-              updateCustomActivityErrorStatusCode(customActivityDbDf, dbCon, tgtTableNameCA, 'E', errorCodeCA, errorDescCA)
-              errorStatusCA = "Failed to Insert Custom Activity HRM's Into Marketo. Check Payload for Errors"
-              bException = true
+            val sortedValues = interIds.keys.toArray.sorted
+            for (i <- sortedValues) {
+              sortedmipActSeqId += interIds.get(i)
             }
-            //UPDATE CUSTOM ACTIVITY QUEUEING TABLE WITH SUCCESS STATUS CODES
-            else if (interactionFlag == 2) {
-              log.info("Updating the MarketoGuid's")
-              val mipActSeqIdSuccessDF = mapInteractionIds.toSeq.toDF("marketoID", "mipActivitySeqID")
-              updateCustomActivitySuccessCodes(mipActSeqIdSuccessDF, dbCon, tgtTableNameCA)
-              successStatus = "Inserted & Updated Custom Activity HRM's to Marketo & MIP Queueing Table"
+
+            var response = sendPostInteraction(finalInteractionPayload)
+            if (response.contains("Access token expired") || response.contains("Access token invalid")) {
+              val newToken = getMarketoTokenInteraction
+              response = sendPostWithTokenInteraction(finalInteractionPayload, newToken)
             }
-            //UPDATE THE STATUS_CODE IN CUSTOM ACTIVITY TABLE WHEN ALL PERSON RECORDS FAILED
+
+            //Parsing the response to a Dataframe to extract Marketo guids
+            log.info("Parsing the response from Marketo")
+            val parsedInteractionJson = AppProperties.SparkSession.read.json(AppProperties.SparkSession.sparkContext.parallelize(Seq(response)).toDS())
+            parsedInteractionJson.show(false)
+
+            val interactionMarketoResponseDF = parsedInteractionJson.select(explode(col("result"))
+              .as("result")).select("result.*")
+            interactionMarketoResponseDF.show(false)
+
+            //CHECK IF ANY COLUMN IN RESPONSE DATAFRAME HAS AN ERROR
+            def hasColumn(df: DataFrame, path: String) = Try(df(path)).isSuccess
+
+            if (hasColumn(interactionMarketoResponseDF, "errors")) {
+              val errorDetailsCA = interactionMarketoResponseDF.select(explode(col("errors")).as("errors")).select("errors.*")
+              errorCodeCA = errorDetailsCA.head().getString(0)
+              errorDescCA = errorDetailsCA.head().getString(1).replace("'", "")
+              interactionFlag = 1
+            }
             else {
-              log.info("Updating the STATUS_CODE for Unprocessed Records")
-              updateCustomActivityErrorStatusCode(customActivityDbDf, dbCon, tgtTableNameCA, 'U', null, null)
+              interactionFlag = 2
             }
 
-            //UPDATE MIP_SEQ_ID, PROCESSED_CODE TO 'P', CURRENT TIMESTAMP AS MKTO_QUEUED_TS & READY_FOR_MKTO_FLG TO 'S' INTO IMI TABLE
-            updateImiStatus(combinedDF, dbCon, tgtImiTableName)
+            if (interactionFlag == 2) {
+              //Generate the dataframe to update to the source table
+              marketoID = interactionMarketoResponseDF.select("id").as[guID].collect()
+              customSuccessCount = interactionMarketoResponseDF.select("id").count()
+
+              log.info("Creating the mapping for MipActivitySeqId and MarketoGuid")
+              for (i <- sortedmipActSeqId.indices) {
+                val mktId = marketoID(i).id
+                val mipActSeqIDFinal = sortedmipActSeqId(i).get
+                mapInteractionIds += mktId -> mipActSeqIDFinal
+              }
+            }
+            else {
+              log.info("No HRM's Present To Process for Custom Activity")
+            }
           }
-          else if (hasColumnPerson(personResponseDF, "reasons")) {
-            val errorDetailsPerson = personResponseDF.select(explode(col("reasons")).as("reasons")).select("reasons.*")
-            errorCodePerson = errorDetailsPerson.head().getString(0)
-            errorDescPerson = errorDetailsPerson.head().getString(1).replace("'", "")
-            personFlag = 1
 
-            //PERSON INSERT AND UPDATE STATUS_CODE AS 'E'
-            insertPersonErrorStatusCode(personTableDF, dbCon, tgtTableNameP, personMapDfToDbColumns, errorCodePerson, errorDescPerson)
+          //INSERT INTO PERSON QUEUEING TABLE INCLUDING LEAD_IDs
+          insertPerson(personTableDF, mipSeqIDLeadIdPersonDF, dbCon, tgtTableNameP, personMapDfToDbColumns)
 
-            //CUSTOM ACTIVITY INSERT AND UPDATE STATUS_CODE AS 'U'
-            insertCustomActivityErrorStatusCode(customActivityTableDF, dbCon, tgtTableNameCA)
+          //UPDATING STATUS_CODE IN PERSON TABLE
+          log.info("Updating the Status Codes")
+          updatePersonTableStatus(personTableDF, dbCon, tgtTableNameP, errorCodePerson, errorDescPerson)
 
-            //UPDATE MIP_SEQ_ID, PROCESSED_CODE TO 'P', CURRENT TIMESTAMP AS MKTO_QUEUED_TS & READY_FOR_MKTO_FLG TO 'S' INTO IMI TABLE
-            updateImiStatus(combinedDF, dbCon, tgtImiTableName)
-          }
-        }
-        else {
-          log.info("No HRM's To Process For Person & Custom Activity ")
-        }
-      }
-        catch
-        {
-          case e: Throwable =>
-            e.printStackTrace()
-            e.getMessage
-            e.getCause
-            log.error(e.getMessage + " - " + e.getCause)
-            exceptionMessage = e.getMessage + " - " + e.getCause
+          //INSERT INTO XREF TABLE
+          log.info("Inserting into MAP_MKTO.MCT_MKTO_LEAD_XREF")
+          val sqlXref =
+            s"""(SELECT MIP_SEQ_ID, MKTO_LEAD_ID, EMAIL_ADDR, IDM_ID, EMAIL_MEDIA_ID, 'N' AS PROCESSED_FLG, CAST(NULL as timestamp) AS PROCESSED_TS,
+               |CURRENT_TIMESTAMP AS TRANSACTION_TS, CURRENT_TIMESTAMP AS CREATE_TS, CURRENT_TIMESTAMP AS UPDATE_TS, CREATE_USER
+               |FROM MAP_MKTO.MCT_MKTO_PERSON
+               |WHERE MIP_SEQ_ID IN $mipSeqIDList AND STATUS_CODE = 'P')""".stripMargin
+          val conProp2: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbSource)
+          val xrefDf = AppProperties.SparkSession.read.jdbc(conProp1.getProperty(PropertyNames.EndPoint), sqlXref, conProp2)
+          xrefDf.show(false)
+
+          insertIntoXref(xrefDf, dbCon, tgtXrefTableName)
+
+          // INSERT INTO CUSTOM ACTIVITY QUEUEING TABLE
+          val customActivityDbDf = customActivityTableDF.drop("RANKING", "CREATE_TS", "REGION", "IBM_GBL_IOT_CODE",
+            "SUB_REGION_CODE", "CTRY_CODE", "MKTO_LEAD_ID","WORK_PHONE_PERM").persist()
+          log.info("Records to be inserted")
+          customActivityDbDf.show(false)
+          insertCustomActivity(customActivityDbDf, mipSeqIDLeadIdPersonDF, dbCon, tgtTableNameCA)
+
+          //UPDATE CUSTOM ACTIVITY QUEUEING TABLE WITH ERROR STATUS CODES
+          if (interactionFlag == 1) {
+            log.info("Custom Activity Response From Marketo Has ERRORS")
+            log.info("Updating the error status in Custom Activity Queueing Table")
+            updateCustomActivityErrorStatusCode(customActivityDbDf, dbCon, tgtTableNameCA, 'E', errorCodeCA, errorDescCA)
+            errorStatusCA = "Failed to Insert Custom Activity HRM's Into Marketo. Check Payload for Errors"
             bException = true
-        }
-      finally
-        {
-          personCountFailed = count - personSuccessCount
-
-          errString = "Person HRM's Success Count = " + personSuccessCount + ". Person HRM's Failure Count = " + personCountFailed +
-            ". " + errorStatusPerson + ". API Error Code = " + errorCodePerson + ". API Error Desc = " + errorDescPerson +
-            ". Custom Activity HRM's Failure Count = " + customCount +  ". " + errorStatusCA + ". API Error Code = " + errorCodeCA +
-            ". API Error Desc = " + errorDescCA + ". Exception Message = " + exceptionMessage
-
-          successString = "Total Person Success Count = " + personSuccessCount + ". Person HRM's Failure Count = " + personCountFailed + ". " +
-            successStatus + ". Total Custom Activity Success Count = " + customSuccessCount
-
-          if (bException) { // Job failed
-            DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobFailed, errString, null, null)
-            System.exit(1)
-          } else {
-            DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobSucceeded, successString, null, null)
-            System.exit(0)
           }
-          log.info("Closing db connections")
-          dbCon.close()
-          this.cleanUpFramework(AppProperties.SparkSession)
-          log.info(s"Exiting Job => $jobClassName...")
+          //UPDATE CUSTOM ACTIVITY QUEUEING TABLE WITH SUCCESS STATUS CODES
+          else if (interactionFlag == 2) {
+            log.info("Updating the MarketoGuid's")
+            val mipActSeqIdSuccessDF = mapInteractionIds.toSeq.toDF("marketoID", "mipActivitySeqID")
+            updateCustomActivitySuccessCodes(mipActSeqIdSuccessDF, dbCon, tgtTableNameCA)
+            successStatus = "Inserted & Updated Custom Activity HRM's to Marketo & MIP Queueing Table"
+          }
+          //UPDATE THE STATUS_CODE IN CUSTOM ACTIVITY TABLE WHEN ALL PERSON RECORDS FAILED
+          else {
+            log.info("Updating the STATUS_CODE for Unprocessed Records")
+            updateCustomActivityErrorStatusCode(customActivityDbDf, dbCon, tgtTableNameCA, 'U', null, null)
+          }
+
+          //UPDATE MIP_SEQ_ID, PROCESSED_CODE TO 'P', CURRENT TIMESTAMP AS MKTO_QUEUED_TS & READY_FOR_MKTO_FLG TO 'S' INTO IMI TABLE
+          updateImiStatus(combinedDF, dbCon, tgtImiTableName)
+        }
+        else if (hasColumnPerson(personResponseDF, "reasons")) {
+          val errorDetailsPerson = personResponseDF.select(explode(col("reasons")).as("reasons")).select("reasons.*")
+          errorCodePerson = errorDetailsPerson.head().getString(0)
+          errorDescPerson = errorDetailsPerson.head().getString(1).replace("'", "")
+          personFlag = 1
+
+          //PERSON INSERT AND UPDATE STATUS_CODE AS 'E'
+          insertPersonErrorStatusCode(personTableDF, dbCon, tgtTableNameP, personMapDfToDbColumns, errorCodePerson, errorDescPerson)
+
+          //CUSTOM ACTIVITY INSERT AND UPDATE STATUS_CODE AS 'U'
+          insertCustomActivityErrorStatusCode(customActivityTableDF, dbCon, tgtTableNameCA)
+
+          //UPDATE MIP_SEQ_ID, PROCESSED_CODE TO 'P', CURRENT TIMESTAMP AS MKTO_QUEUED_TS & READY_FOR_MKTO_FLG TO 'S' INTO IMI TABLE
+          updateImiStatus(combinedDF, dbCon, tgtImiTableName)
         }
       }
+      else {
+        log.info("No HRM's To Process For Person & Custom Activity ")
+      }
+    }
+    catch
+    {
+      case e: Throwable =>
+        e.printStackTrace()
+        e.getMessage
+        e.getCause
+        log.error(e.getMessage + " - " + e.getCause)
+        exceptionMessage = e.getMessage + " - " + e.getCause
+        bException = true
+    }
+    finally
+    {
+      personCountFailed = count - personSuccessCount
+
+      errString = "Person HRM's Success Count = " + personSuccessCount + ". Person HRM's Failure Count = " + personCountFailed +
+        ". " + errorStatusPerson + ". API Error Code = " + errorCodePerson + ". API Error Desc = " + errorDescPerson +
+        ". Custom Activity HRM's Failure Count = " + customCount +  ". " + errorStatusCA + ". API Error Code = " + errorCodeCA +
+        ". API Error Desc = " + errorDescCA + ". Exception Message = " + exceptionMessage
+
+      successString = "Total Person Success Count = " + personSuccessCount + ". Person HRM's Failure Count = " + personCountFailed + ". " +
+        successStatus + ". Total Custom Activity Success Count = " + customSuccessCount
+
+      if (bException) { // Job failed
+        DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobFailed, errString, null, null)
+        System.exit(1)
+      } else {
+        DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobSucceeded, successString, null, null)
+        System.exit(0)
+      }
+      log.info("Closing db connections")
+      dbCon.close()
+      this.cleanUpFramework(AppProperties.SparkSession)
+      log.info(s"Exiting Job => $jobClassName...")
+    }
+  }
 
   @throws(classOf[Exception])
   def getMaxRecordTimestampTest(jobSeqCode: String): Timestamp = {
