@@ -14,7 +14,6 @@ object ISC_ClientInterest extends ETLFrameWork {
   // Env variables for runtime
   private var iscPullSql = ""
   private var iscMergeSql = ""
-  private var dFtoColumnMapping = ""
   private var TIMESTAMP_OFFSET = ""
   private var dataframeCount = 0.0
 
@@ -60,7 +59,7 @@ object ISC_ClientInterest extends ETLFrameWork {
       iscMergeSql,
       iscData.columns,
       null,
-      dFtoColumnMapping,
+      null,
       null)
 
     log.info("runJobSequence ended.")
@@ -75,7 +74,6 @@ object ISC_ClientInterest extends ETLFrameWork {
       iscPullSql = args(args.indexOf("--iscPullSql") + 1)
       TIMESTAMP_OFFSET = args(args.indexOf("--offset") + 1)
       iscMergeSql = args(args.indexOf("--iscMergeSql") + 1)
-      dFtoColumnMapping = args(args.indexOf("--dFtoColumnMapping") + 1)
     } else {
       throw new IllegalArgumentException(
         "Uneven amount of argument key-value pairs provided."
