@@ -1,5 +1,4 @@
 select integer(ci.SOURCEID) as MIP_ACTV_SEQ_ID
-, ci.SOURCEID
 , ci.id , ci.LEAD_SCORE
 , case when ci.LEADSOURCE = 'LSCTUS' then 1
        else  0  end as HRM
