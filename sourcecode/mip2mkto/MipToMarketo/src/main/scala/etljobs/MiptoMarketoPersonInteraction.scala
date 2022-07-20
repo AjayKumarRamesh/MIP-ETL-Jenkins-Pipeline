@@ -69,20 +69,20 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
   // CASE CLASSES FOR PERSON
   //Case class definition to extract from JSON response
   //case class resultPost(id: String, status: String)
-  case class resultPost(no: String, status: String, reasons: String)
-  case class resultResponse(requestId: String, result: resultPost, success: String)
-  case class mipSeqId(MIP_Person_Seq_ID: Long)
-  case class inboundMktgId(INBOUND_MKTG_ID: Long)
-  case class leadId(id: String)
+  case class ResultPost(no: String, status: String, reasons: String)
+  case class ResultResponse(requestId: String, result: ResultPost, success: String)
+  case class mipSeqId(MIP_Person_Seq_ID: Long)//NOSONOR
+  case class inboundMktgId(INBOUND_MKTG_ID: Long)//NOSONOR
+  case class leadId(id: String)//NOSONOR
 
   // CASE CLASSES FOR CUSTOM ACTIVITY
   //Case class definition to extract from JSON response
   //case class resultPost(id: String, status: String)
-  case class mipActSeqId(MIP_ACTIVITY_SEQ_ID: Long)
-  case class guID(id: Option[Long] = null)
-  case class emailID(interactionID: JArray)
-  case class resultErrorPost(code: String, message: String)
-  case class resultErrorResponse(requestId: String, result: resultErrorPost, success: String)
+  case class mipActSeqId(MIP_ACTIVITY_SEQ_ID: Long)//NOSONOR
+  case class guID(id: Option[Long] = null)//NOSONOR
+  case class emailID(interactionID: JArray)//NOSONOR
+  case class ResultErrorPost(code: String, message: String)
+  case class ResultErrorResponse(requestId: String, result: ResultErrorPost, success: String)
 
   //Gets marketo token to perform post to PERSON
   def getMarketoTokenPerson: String = {
@@ -102,8 +102,8 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
 
   //Code to build payload to POST to Marketo
   def buildPayloadPerson(transformedDF: DataFrame, action: String, lookUpField: String): String = {
-    val output_df = transformedDF.select(to_json(struct(col("*"))).alias("content"))
-    val testData = output_df.rdd.map(row => row.getString(0)).collect
+    val outputDf = transformedDF.select(to_json(struct(col("*"))).alias("content"))
+    val testData = outputDf.rdd.map(row => row.getString(0)).collect
     val inputData: String = testData.mkString(",")
     val strNew1 = inputData.replaceAll("[\"][a-zA-Z0-9_]*[\"]:\"\"[,]?", "")
     val finalStr = strNew1.replaceAll("[,]?}", "}")
@@ -185,8 +185,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
 
     val spark = AppProperties.SparkSession
     var activityDF1: DataFrame = null
-    //${convert({row.getTimestamp(25).toString})}
-
+    
     import spark.implicits._
 
     activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
@@ -418,7 +417,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
 
     //Variables From Custom Activity Code
     var interIds = scala.collection.mutable.Map[Int, Long]()
-    var mip_act_seq_id = Array[MiptoMarketoPersonInteraction.mipActSeqId]()
+    var mip_act_seq_id = Array[MiptoMarketoPersonInteraction.mipActSeqId]()//NOSONOR
     var marketoID = Array[guID]()
     val sortedmipActSeqId = ArrayBuffer[Option[Long]]()
     var interactionFlag = 0

@@ -68,8 +68,8 @@ object MipToMarketoPersonMulti extends ETLFrameWork {
 
   //Code to build payload to POST to Marketo
   def buildPayload(transformedDF: DataFrame, action: String, lookUpField: String): String = {
-    val output_df = transformedDF.select(to_json(struct(col("*"))).alias("content"))
-    val testData = output_df.rdd.map(row => row.getString(0)).collect
+    val outputDf = transformedDF.select(to_json(struct(col("*"))).alias("content"))
+    val testData = outputDf.rdd.map(row => row.getString(0)).collect
     val inputData: String = testData.mkString(",")
     val strNew1  = inputData.replaceAll("[\"][a-zA-Z0-9_]*[\"]:\"\"[,]?", "")
     val finalStr  = strNew1.replaceAll("[,]?}", "}")
@@ -161,11 +161,10 @@ object MipToMarketoPersonMulti extends ETLFrameWork {
     log.info(s"Starting ETL Job => $jobClassName....")
 
     val jobSequence = s"$jobClassName"
-    //val jobSequence = "testUTC"
-    val last_run_timestamp = getMaxRecordTimestampTest(jobSequence)
-    println(last_run_timestamp)
-    var mip_seq_id = Array[MipToMarketoPersonMulti.mipSeqId]()
-    var lead_id = Array[MipToMarketoPersonMulti.leadId]()
+    val lastRunTimestamp = getMaxRecordTimestampTest(jobSequence)
+    println(lastRunTimestamp)
+    var mip_seq_id = Array[MipToMarketoPersonMulti.mipSeqId]()//NOSONOR
+    var lead_id = Array[MipToMarketoPersonMulti.leadId]()//NOSONOR
     var dbCon:Connection = null
 
     var mapIds = scala.collection.mutable.Map[Long, Long]()
@@ -198,7 +197,7 @@ object MipToMarketoPersonMulti extends ETLFrameWork {
            |SELECT
            |$minBatchSize record_limit,
            |$elapsedTime elapsed_time_limit_in_mins ,
-           |'$last_run_timestamp' AS last_sync_timestamp
+           |'$lastRunTimestamp' AS last_sync_timestamp
            |FROM sysibm.sysdummy1)
            |SELECT *
            |FROM
@@ -336,9 +335,6 @@ object MipToMarketoPersonMulti extends ETLFrameWork {
         var testDF = parsedJson.select(explode(col("result")).as("result")).select("result.*")
         testDF.show(false)
 
-        //testDF = testDF.na.drop(Seq("id")).drop("reasons")
-        //testDF.show(false)
-
         lead_id = testDF.select("id").as[leadId].collect()
 
 
@@ -432,23 +428,23 @@ object MipToMarketoPersonMulti extends ETLFrameWork {
 
   //Case class definition to extract from JSON response
   //case class resultPost(id: String, status: String)
-  case class resultPost(no: String, status: String, reasons: String)
-  case class resultResponse(requestId: String, result: resultPost, success: String)
-  case class mipSeqId(MIP_Person_Seq_ID: Long)
-  case class leadId(id: String)
+  case class ResultPost(no: String, status: String, reasons: String)
+  case class ResultResponse(requestId: String, result: ResultPost, success: String)
+  case class mipSeqId(MIP_Person_Seq_ID: Long)//NOSONOR
+  case class leadId(id: String)//NOSONOR
 
 
-  implicit val readPost: Reads[resultPost] = (
+  implicit val readPost: Reads[ResultPost] = (
     (JsPath \ "no").read[String] and
       (JsPath \ "status").read[String] and
       (JsPath \ "reasons").read[String]
-    ) (resultPost.apply _)
+    ) (ResultPost.apply _)
 
-  implicit val cert: Reads[resultResponse] = (
+  implicit val cert: Reads[ResultResponse] = (
     (JsPath \ "requestId").read[String] and
-      (JsPath \ "result").read[resultPost] and
+      (JsPath \ "result").read[ResultPost] and
       (JsPath \ "success").read[String]
-    ) (resultResponse.apply _)
+    ) (ResultResponse.apply _)
 
   //Updating data status after posting it in marketo
   def updatePrePostStatus(dataFrame: DataFrame, properties: Properties, updateTableName: String): ArrayBuffer[Long] = {
@@ -458,9 +454,9 @@ object MipToMarketoPersonMulti extends ETLFrameWork {
     var name = ArrayBuffer[Long]()
 
     dataFrame.collect().foreach { row =>
-      val Email_Media_ID = row.getLong(row.fieldIndex("Email_Media_ID"))
-      name += Email_Media_ID
-      val updateSql2 = s"""UPDATE $updateTableName SET STATUS_CODE = 'I' WHERE EMAIL_MEDIA_ID=$Email_Media_ID""".stripMargin
+      val emailMediaID = row.getLong(row.fieldIndex("Email_Media_ID"))
+      name += emailMediaID
+      val updateSql2 = s"""UPDATE $updateTableName SET STATUS_CODE = 'I' WHERE EMAIL_MEDIA_ID=$emailMediaID""".stripMargin
       dbCon = DriverManager.getConnection(properties.getProperty(PropertyNames.EndPoint), properties)
       stmt = dbCon.createStatement
       stmt.executeUpdate(updateSql2)
