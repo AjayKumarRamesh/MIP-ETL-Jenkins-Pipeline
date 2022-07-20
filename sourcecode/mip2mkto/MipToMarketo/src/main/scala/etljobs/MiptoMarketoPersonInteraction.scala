@@ -71,16 +71,16 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
   //case class resultPost(id: String, status: String)
   case class ResultPost(no: String, status: String, reasons: String)
   case class ResultResponse(requestId: String, result: ResultPost, success: String)
-  case class mipSeqId(MIP_Person_Seq_ID: Long)//NOSONOR
-  case class inboundMktgId(INBOUND_MKTG_ID: Long)//NOSONOR
-  case class leadId(id: String)//NOSONOR
+  case class mipSeqId(MIP_Person_Seq_ID: Long) //NOSONAR
+  case class inboundMktgId(INBOUND_MKTG_ID: Long) //NOSONAR
+  case class leadId(id: String) //NOSONAR
 
   // CASE CLASSES FOR CUSTOM ACTIVITY
   //Case class definition to extract from JSON response
   //case class resultPost(id: String, status: String)
-  case class mipActSeqId(MIP_ACTIVITY_SEQ_ID: Long)//NOSONOR
-  case class guID(id: Option[Long] = null)//NOSONOR
-  case class emailID(interactionID: JArray)//NOSONOR
+  case class mipActSeqId(MIP_ACTIVITY_SEQ_ID: Long) //NOSONAR
+  case class guID(id: Option[Long] = null) //NOSONAR
+  case class emailID(interactionID: JArray) //NOSONAR
   case class ResultErrorPost(code: String, message: String)
   case class ResultErrorResponse(requestId: String, result: ResultErrorPost, success: String)
 
@@ -417,7 +417,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
 
     //Variables From Custom Activity Code
     var interIds = scala.collection.mutable.Map[Int, Long]()
-    var mip_act_seq_id = Array[MiptoMarketoPersonInteraction.mipActSeqId]()//NOSONOR
+    var mip_act_seq_id = Array[MiptoMarketoPersonInteraction.mipActSeqId]() //NOSONAR
     var marketoID = Array[guID]()
     val sortedmipActSeqId = ArrayBuffer[Option[Long]]()
     var interactionFlag = 0

@@ -404,8 +404,8 @@ object MipToMarketoPerson extends ETLFrameWork {
   //case class resultPost(id: String, status: String)
   case class ResultPost(no: String, status: String, reasons: String)
   case class ResultResponse(requestId: String, result: ResultPost, success: String)
-  case class mipSeqId(MIP_Person_Seq_ID: Long)//NOSONOR
-  case class leadId(id: String)//NOSONOR
+  case class mipSeqId(MIP_Person_Seq_ID: Long) //NOSONAR
+  case class leadId(id: String) //NOSONAR
 
 
   implicit val readPost: Reads[ResultPost] = (

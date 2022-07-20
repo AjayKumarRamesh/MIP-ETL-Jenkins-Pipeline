@@ -857,8 +857,8 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
   //case class resultPost(id: String, status: String)
   case class ResultPost(no: String, status: String)
   case class ResultResponse(requestId: String, result: ResultPost, success: String)
-  case class mipActSeqID(MIP_ACTIVITY_SEQ_ID: Long)//NOSONOR
-  case class guID(id: Option[Long] = null)//NOSONOR
+  case class mipActSeqID(MIP_ACTIVITY_SEQ_ID: Long) //NOSONAR
+  case class guID(id: Option[Long] = null) //NOSONAR
   case class EmailID(interactionID: JArray)
   case class ResultErrorPost(code: String, message: String)
   case class ResultErrorResponse(requestId: String, result: ResultErrorPost, success: String)

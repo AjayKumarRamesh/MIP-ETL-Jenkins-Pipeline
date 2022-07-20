@@ -163,8 +163,8 @@ object MipToMarketoPersonMulti extends ETLFrameWork {
     val jobSequence = s"$jobClassName"
     val lastRunTimestamp = getMaxRecordTimestampTest(jobSequence)
     println(lastRunTimestamp)
-    var mip_seq_id = Array[MipToMarketoPersonMulti.mipSeqId]()//NOSONOR
-    var lead_id = Array[MipToMarketoPersonMulti.leadId]()//NOSONOR
+    var mip_seq_id = Array[MipToMarketoPersonMulti.mipSeqId]() //NOSONAR
+    var lead_id = Array[MipToMarketoPersonMulti.leadId]() //NOSONAR
     var dbCon:Connection = null
 
     var mapIds = scala.collection.mutable.Map[Long, Long]()
@@ -430,8 +430,8 @@ object MipToMarketoPersonMulti extends ETLFrameWork {
   //case class resultPost(id: String, status: String)
   case class ResultPost(no: String, status: String, reasons: String)
   case class ResultResponse(requestId: String, result: ResultPost, success: String)
-  case class mipSeqId(MIP_Person_Seq_ID: Long)//NOSONOR
-  case class leadId(id: String)//NOSONOR
+  case class mipSeqId(MIP_Person_Seq_ID: Long) //NOSONAR
+  case class leadId(id: String) //NOSONAR
 
 
   implicit val readPost: Reads[ResultPost] = (
