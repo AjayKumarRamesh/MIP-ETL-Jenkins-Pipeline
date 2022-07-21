@@ -96,7 +96,7 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <!--Be sure this main class points to the package location of the jar file you are running. Example jobs.SampleJob1 -->
-                                        <Main-Class>jobs.ISC_ClientInterest</Main-Class>
+                                        <Main-Class>ISC_ClientInterest</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
