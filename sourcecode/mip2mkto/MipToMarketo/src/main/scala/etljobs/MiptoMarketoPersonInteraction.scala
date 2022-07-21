@@ -185,7 +185,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
 
     val spark = AppProperties.SparkSession
     var activityDF1: DataFrame = null
-    
+
     import spark.implicits._
 
     activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
@@ -607,8 +607,10 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
            |CAST (NULL AS BIGINT) AS MKTO_ACTIVITY_ID,
            |IMI.EVENT_REF_ID,
            |CASE
-           |WHEN IMI.ASSET_DLVRY_URL IS NULL
-           |THEN IMI.REFERRER_URL
+           |WHEN TRIM(IMI.ASSET_DLVRY_URL) = '' OR IMI.ASSET_DLVRY_URL IS NULL
+           |THEN CASE WHEN TRIM(IMI.REFERRER_URL) = ''
+           |THEN NULL
+           |ELSE IMI.REFERRER_URL END
            |ELSE IMI.ASSET_DLVRY_URL
            |END AS REFERRER_URL,
            |IMI.ACTIVITY_CMPN_CD AS ACTIVITY_CMPN_CD,
