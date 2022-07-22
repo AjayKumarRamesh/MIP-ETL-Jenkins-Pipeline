@@ -1,6 +1,7 @@
 import com.ibm.mkt.etlframework.audit.JobRunArgs
 import com.ibm.mkt.etlframework.data.DataUtilities
 import com.ibm.mkt.etlframework.{AppProperties, Constants, ETLFrameWork, PropertyNames}
+import org.apache.spark.storage.StorageLevel
 
 object GRP_Events_IDMIds extends ETLFrameWork {
   val jobClassName: String = this.getClass.getSimpleName.stripSuffix("$")
@@ -33,14 +34,17 @@ object GRP_Events_IDMIds extends ETLFrameWork {
         |WHEN NOT MATCHED THEN
         |	INSERT (IORDNUM, IDM_PERSON_EID, IDM_ORG_EID,EMAIL_MEDIA_ID) VALUES (v.IORDNUM, v.IDM_PERSON_EID, v.IDM_ORG_EID,v.EMAIL_MEDIA_ID)""".stripMargin
 
+    log.info("Extract SQL : {}", xtrSql)
+    log.info("Upload SQL : {}", uplSql)
+
     dbExtrSource = args(args.indexOf("--dbExtrSource") + 1)
     dbTgtSource = args(args.indexOf("--dbTgtSource") + 1)
     try {
-      log.info("Initialization started")
+      log.info("{} : Initialization started", jobClassName)
       this.initializeFramework(args)
-      log.info("Initialization completed.")
+      log.info("{} : Initialization completed.", jobClassName)
 
-      log.info(s"Starting ETL Job => $jobClassName....")
+      log.info("Starting ETL Job => {} ....", jobClassName)
       DataUtilities.recordJobHistory(AppProperties.SparkSession, AppProperties.CommonJobSeqCode, "", Constants.JobStarted)
 
       runJobSequence(xtrSql, uplSql)
@@ -71,8 +75,10 @@ object GRP_Events_IDMIds extends ETLFrameWork {
 
   @throws(classOf[Exception])
   def runJobSequence(xtrSql: String, uplSql: String) = {
-    log.info("runJobSequence started")
-    val sourceConn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbExtrSource) //connecting to source MIP database
+    log.info("{} : runJobSequence started", jobClassName)
+
+    //connecting to source MIP database
+    val sourceConn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbExtrSource)
     val extractDF = DataUtilities.readDataByPartitioningType( //creating dataframe for Source extract operation
       AppProperties.SparkSession,
       sourceConn,
@@ -81,12 +87,14 @@ object GRP_Events_IDMIds extends ETLFrameWork {
       null,
       "PARTCOL"
     )
-    sourceCount = extractDF.count()
-    log.info(s"$sourceCount row(s) extracted")
-    extractDF.show(numRows = 100, truncate = false) //logging purpose
-    log.info(s"Num Partitions: ${extractDF.rdd.getNumPartitions}")
+    val targetDF = extractDF.drop("PARTCOL").persist(StorageLevel.MEMORY_ONLY)
+    sourceCount = targetDF.count()
+    log.info("Row(s) extracted --> {}", sourceCount)
+    targetDF.show(numRows = 100, truncate = false) //logging purpose
+    log.info("Num Partitions: {}", targetDF.rdd.getNumPartitions)
+
     val targetConn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbTgtSource) //connecting to target GRP database
-    val targetDF = extractDF.drop("PARTCOL") //creating dataframe for merge operation
+     //creating dataframe for merge operation
     DataUtilities.runPreparedStatement(
       targetConn,
       targetDF,
@@ -103,15 +111,16 @@ object GRP_Events_IDMIds extends ETLFrameWork {
          |FROM GRP_MAP.IORDXREF
          |WHERE IORDNUM IN('$iordNums'))""".stripMargin
 
-    //println("updatedSql: " + updatedSql)
     //Reading target table
-    val targetCompareDF = AppProperties.SparkSession.read.jdbc(targetConn.getProperty(PropertyNames.EndPoint), updatedSql, targetConn)
+    val targetCompareDF = AppProperties.SparkSession
+      .read
+      .jdbc(targetConn.getProperty(PropertyNames.EndPoint), updatedSql, targetConn)
+      .persist(StorageLevel.MEMORY_ONLY)
 
     val diffDF = srcCompareDF.except(targetCompareDF)
-    //val updateTargetDF = srcCompareDF.except(diffDF)
     mergedCount = targetCompareDF.count()
     errorCount = diffDF.count()
-    //log.info(s"Source Count: $sourceCount, Merged Count: $mergedCount, Error Count: $errorCount")
+
     if (mergedCount > 0) {
       DataUtilities.runPreparedStatement(
         sourceConn,
