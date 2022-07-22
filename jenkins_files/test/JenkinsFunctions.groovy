@@ -16,7 +16,8 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             MIP_SPSS_SCORING:['spss', 'SpssScoring', 'digikeystore.jks', 'javacerts.jks','keystore.jks','spssconfigdev.properties','spssconfigprod.properties','spsswebrunjob.jar'],
             RUBY_API_TO_MIP:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             drupalMerchandising:['.', '.', 'digikeystore.jks', 'javacerts.jks', 'cedp_client.jks', 'MPW_CLIENT.jks'],
-            MIP_DSR_DAG:['.', '.', 'digikeystore.jks', 'javacerts.jks']]
+            MIP_DSR_DAG:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
+            ISC_ClientInterest:['.', 'ISC_ClientInterest', 'digikeystore.jks', 'javacerts.jks']]
 // image variable, jar variable, image value , jar value , sourcecode subfolder 
 airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.map-RubyToMIP-2.2.jar', 'ruby'],
            CDSExtract:['cds_image', 'cds_app_jar', 'cds_jobs', 'com.ibm.map-etl-framework-CDSJobs-3.2.jar', 'cds'],
@@ -34,7 +35,8 @@ airflow = [RUBY_TO_MIP:['ruby_image', 'ruby_app_jar', 'ruby_to_mip', 'com.ibm.ma
            MIP_SPSS_SCORING:['spss_scoring_image', 'spss_scoring_app_jar', 'spss_scoring', 'com.ibm.map-SpssScoring-2.2.jar', 'scoring'],
            RUBY_API_TO_MIP:['ruby_api_image','ruby_api_app_jar', 'rubyapitomip', 'MIP-Flare-Framework-2.1.jar', 'RubyApiToMip'],
            drupalMerchandising:['drupal_image', 'drupal_app_jar'], // drupal doesn't need extra info
-           MIP_DSR_DAG:['mkto_dsr_image','mkto_dsr_app_jar', 'mip-marketo-dsr', 'marketo-delete-1.2.jar', 'mkto_dsr']]
+           MIP_DSR_DAG:['mkto_dsr_image','mkto_dsr_app_jar', 'mip-marketo-dsr', 'marketo-delete-1.2.jar', 'mkto_dsr'],
+           ISC_ClientInterest:['isc_image', 'isc_app_jar', 'isc-ci-to-mip', 'com.ibm.map-ISC_ClientInterest-1.0.jar', 'isc']]
            
 envNum = [dev:1,test:2,prod:3]
 

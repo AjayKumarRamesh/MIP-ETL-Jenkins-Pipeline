@@ -363,7 +363,6 @@ object MipToMarketoPerson extends ETLFrameWork {
           log.info(errorDesc)
 
           updateErrorStatusV2(limitDF, dbCon, tgtTableName,errorCode,errorDesc)
-          //bException = true
         }
       }
       else{
@@ -403,23 +402,23 @@ object MipToMarketoPerson extends ETLFrameWork {
 
   //Case class definition to extract from JSON response
   //case class resultPost(id: String, status: String)
-  case class resultPost(no: String, status: String, reasons: String)
-  case class resultResponse(requestId: String, result: resultPost, success: String)
-  case class mipSeqId(MIP_Person_Seq_ID: Long)
-  case class leadId(id: String)
+  case class ResultPost(no: String, status: String, reasons: String)
+  case class ResultResponse(requestId: String, result: ResultPost, success: String)
+  case class mipSeqId(MIP_Person_Seq_ID: Long) //NOSONAR
+  case class leadId(id: String) //NOSONAR
 
 
-  implicit val readPost: Reads[resultPost] = (
+  implicit val readPost: Reads[ResultPost] = (
     (JsPath \ "no").read[String] and
       (JsPath \ "status").read[String] and
       (JsPath \ "reasons").read[String]
-    ) (resultPost.apply _)
+    ) (ResultPost.apply _)
 
-  implicit val cert: Reads[resultResponse] = (
+  implicit val cert: Reads[ResultResponse] = (
     (JsPath \ "requestId").read[String] and
-      (JsPath \ "result").read[resultPost] and
+      (JsPath \ "result").read[ResultPost] and
       (JsPath \ "success").read[String]
-    ) (resultResponse.apply _)
+    ) (ResultResponse.apply _)
 
   //Updating data status after posting it in marketo
   def updatePrePostStatusv2(dataFrame: DataFrame, properties: Properties, updateTableName: String): Array[mipSeqId] = {

@@ -81,8 +81,6 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
     var activityDF3: DataFrame = null
     var activityDF4: DataFrame = null
 
-    //${convert({row.getTimestamp(25).toString})}
-
     import spark.implicits._
 
     activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
@@ -466,7 +464,7 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
 
   }
 
-  def remove_string: String => String = _.replaceAll("[[\\p{C}]]", "")
+  def removeString: String => String = _.replaceAll("[[\\p{C}]]", "")
 
   //Function to perform POST to Marketo
   def sendPost(payload: String): String = {
@@ -564,13 +562,10 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
     log.info(s"Starting ETL Job => $jobClassName....")
 
     val jobSequence = s"$jobClassName"
-    //val jobSequence = "testUTCInt"
 
-    val fetchRows = 300
-    val last_run_timestamp = getMaxRecordTimestampTest(jobSequence)
+    val lastRunTimestamp = getMaxRecordTimestampTest(jobSequence)
     var mipActSeqId = Array[mipActSeqID]()
     var marketoID = Array[guID]()
-    var interID = ArrayBuffer[String]()
     val sortedmipActSeqId = ArrayBuffer[Option[Long]]()
     var flag = 0
     var errorCode:String = null
@@ -623,7 +618,7 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
            |SELECT
            |$minBatchSize record_limit,
            |$elapsedTime elapsed_time_limit_in_mins,
-           |'$last_run_timestamp' AS last_sync_timestamp
+           |'$lastRunTimestamp' AS last_sync_timestamp
            |FROM sysibm.sysdummy1)
            |SELECT * FROM
            |ranked_data,
@@ -778,8 +773,6 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
         //Parsing the response to a Dataframe to extract lead id
         val parsedJson = AppProperties.SparkSession.read.json(AppProperties.SparkSession.sparkContext.parallelize(Seq(response)).toDS())
         parsedJson.show(false)
-        //      val testDF1 = parsedJson.select(explode(col("result")).as("result")).select("result.*")
-        //      testDF1.show(false)
 
         def hasColumn(df: DataFrame, path: String) = Try(df(path)).isSuccess
 
@@ -862,25 +855,25 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
 
   //Case class definition to extract from JSON response
   //case class resultPost(id: String, status: String)
-  case class resultPost(no: String, status: String)
-  case class resultResponse(requestId: String, result: resultPost, success: String)
-  case class mipActSeqID(MIP_ACTIVITY_SEQ_ID: Long)
-  case class guID(id: Option[Long] = null)
-  case class emailID(interactionID: JArray)
-  case class resultErrorPost(code: String, message: String)
-  case class resultErrorResponse(requestId: String, result: resultErrorPost, success: String)
+  case class ResultPost(no: String, status: String)
+  case class ResultResponse(requestId: String, result: ResultPost, success: String)
+  case class mipActSeqID(MIP_ACTIVITY_SEQ_ID: Long) //NOSONAR
+  case class guID(id: Option[Long] = null) //NOSONAR
+  case class EmailID(interactionID: JArray)
+  case class ResultErrorPost(code: String, message: String)
+  case class ResultErrorResponse(requestId: String, result: ResultErrorPost, success: String)
 
 
-  implicit val readPost: Reads[resultPost] = (
+  implicit val readPost: Reads[ResultPost] = (
     (JsPath \ "no").read[String] and
       (JsPath \ "status").read[String]
-    ) (resultPost.apply _)
+    ) (ResultPost.apply _)
 
-  implicit val cert: Reads[resultResponse] = (
+  implicit val cert: Reads[ResultResponse] = (
     (JsPath \ "requestId").read[String] and
-      (JsPath \ "result").read[resultPost] and
+      (JsPath \ "result").read[ResultPost] and
       (JsPath \ "success").read[String]
-    ) (resultResponse.apply _)
+    ) (ResultResponse.apply _)
 
   //Updating data status after posting it in marketo
   def updatePostStatusId(dataFrame: DataFrame, dbConn: Connection, updateTableName: String): Unit = {

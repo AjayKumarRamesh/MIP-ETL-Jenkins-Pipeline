@@ -42,6 +42,8 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
   var emailActivityTempDF: DataFrame = null
   var mapDfToDBColumns: mutable.Map[String, String] = mutable.Map[String, String]()
   var bException: Boolean = false
+  var accessTokenExpired: String = "Access token expired"
+  var accessTokenInvalid: String = "Access token invalid"
   case class Attributes(name: String, value: String)
 
 
@@ -104,7 +106,6 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
   def runJobSequence(tgtTableName: String): Unit = {
     log.info("RUNJOBSEQUENCE STARTED")
     log.info("V2 Version.batchSize" + batchSize)
-    // TODO: ETL Logic goes here...
 
     // DEFINING TIMESTAMP TO STRING & BACK TO TIMESTAMP - START
     log.info("API TIMESTAMP STARTED")
@@ -150,8 +151,8 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
 
     // COLUMN MAPPING STARTS
     log.info("COLUMN MAPPING STARTED")
-    val MKTO_MIP_JSON_PROPS = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, configSource)
-    val columnMapping = MKTO_MIP_JSON_PROPS.getProperty(PropertyNames.ResourceSpecific_2)
+    val mktoMipJsonProps = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, configSource)
+    val columnMapping = mktoMipJsonProps.getProperty(PropertyNames.ResourceSpecific_2)
 
     for (curVal <- columnMapping.split(",")) {
       val arrVal = curVal.split("=")
@@ -167,7 +168,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
     log.info("API JSON TO DATAFRAME STARTED")
 
     // CHECKING THE 3rd API IF ACCESS TOKEN HAS EXPIRED OR NOT - STARTED
-    if (response.contains("Access token expired") || response.contains("Access token invalid")) {
+    if (response.contains(accessTokenExpired) || response.contains(accessTokenInvalid)) {
       val mktCreds2: ArrayBuffer[String] = getMarketoToken
       accessToken = mktCreds2(0)
       response = performGet(paginationToken, accessToken)
@@ -196,7 +197,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
           log.info("PAGE COUNT:" + i + " ,moreResults:" + moreResult)
           response = performGet(paginationToken, accessToken)
           jValue = parse(response)
-          if (response.contains("Access token expired") || response.contains("Access token invalid")) {
+          if (response.contains(accessTokenExpired) || response.contains(accessTokenInvalid)) {
             val mktCreds: ArrayBuffer[String] = getMarketoToken
             accessToken = mktCreds(0)
             response = performGet(paginationToken, accessToken)
@@ -301,7 +302,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
     val httpClient: CloseableHttpClient = HttpClients.custom().build()
     var httpPostToken = new HttpGet(s"$paginationEndpoint?access_token=$accessToken&sinceDatetime=$sinceDateTime")
     var response = httpClient.execute(httpPostToken, new BasicResponseHandler())
-    if (response.contains("Access token expired") || response.contains("Access token invalid")) {
+    if (response.contains(accessTokenExpired) || response.contains(accessTokenInvalid)) {
       val mktCreds1: ArrayBuffer[String] = getMarketoToken
       val accessToken1 = mktCreds1(0)
       httpPostToken = new HttpGet(s"$paginationEndpoint?access_token=$accessToken1&sinceDatetime=$sinceDateTime")
@@ -428,10 +429,10 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
     // HANDLING SOFT ERROR FOR NEW COLUMNS - END
 
     // MAPPING API COLUMN NAMES TO DB COLUMN NAMES - START
-    val newDf_Rename = mapDfToDBColumns.foldLeft(newDF){
+    val newDfRename = mapDfToDBColumns.foldLeft(newDF){
       case(data,(newname,oldname)) => data.withColumnRenamed(oldname,newname)
     }
-    emailActivityDF = newDf_Rename
+    emailActivityDF = newDfRename
 
     // APPLYING DATA TYPE CONVERSIONS - START
     log.info("DATA TYPE CONVERSION STARTED")
@@ -558,7 +559,6 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
                        AS RESULT_TABLE""",
           conProp)
       if (log.isDebugEnabled || log.isInfoEnabled())
-      //        dfResult.show()
         if (dfResult.count() > 0) {
           val firstRow = dfResult.collect().head
           try {

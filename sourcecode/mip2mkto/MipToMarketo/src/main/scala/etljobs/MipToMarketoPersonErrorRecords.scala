@@ -83,8 +83,8 @@ object MipToMarketoPersonErrorRecords extends ETLFrameWork {
     log.info(s"Starting ETL Job => $jobClassName....")
 
     val jobSequence = s"$jobClassName"
-    val last_run_timestamp = getMaxRecordTimestampTest(jobSequence)
-    println(last_run_timestamp)
+    val lastRunTimestamp = getMaxRecordTimestampTest(jobSequence)
+    println(lastRunTimestamp)
     var dbCon:Connection = null
 
     DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants.JobStarted, "GOOD LUCK", null, null)
@@ -159,7 +159,6 @@ object MipToMarketoPersonErrorRecords extends ETLFrameWork {
 
             var newDFAgg = newDF.groupBy("MIP_SEQ_ID").agg(collect_list("id").alias("Lead_ID"), count("id").alias("Id_Count"))
             newDFAgg = newDFAgg.withColumn("Status_Code",expr("CASE WHEN Id_Count = 0 THEN 'U' WHEN Id_Count = 1 THEN 'P' ELSE 'E' END"))
-              //.withColumn("Lead_ID",concat_ws(",",col("Lead_ID")))
             newDFAgg.show()
 
             updateErrorRecordsStatus(newDFAgg,dbCon,tgtTableName)
