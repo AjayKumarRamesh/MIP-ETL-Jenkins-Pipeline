@@ -150,7 +150,7 @@ object MarketoLeadDeletion extends ETLFrameWork {
     case None => ""
   }
 
-  def getRequestKey(x: Option[Int]): Int = x match {
+  def getRequestId(x: Option[Long]): Long = x match {
     case Some(s) => s
     case None => 0
   }
@@ -206,7 +206,7 @@ object MarketoLeadDeletion extends ETLFrameWork {
     }
   }
 
-  def logDeleteResponse(postDeleteResponse: DeleteResponse, leadRequests: Map[String, Int]): Unit = {
+  def logDeleteResponse(postDeleteResponse: DeleteResponse, leadRequests: Map[String, Long]): Unit = {
     val dbConnectionInfo: String = AppProperties.CommonDBConProperties.getProperty(PropertyNames.EndPoint)
     var dbCon: Connection = null
     var stmt: Statement = null
@@ -217,7 +217,7 @@ object MarketoLeadDeletion extends ETLFrameWork {
       stmt = dbCon.createStatement
       for (result <- results) {
         //get Result key based on lead id
-        val requestKey = getRequestKey(leadRequests.get(result.id.toString))
+        val requestKey = getRequestId(leadRequests.get(result.id.toString))
         if (result.status.equals("deleted")) {
           sql =
             s""" INSERT INTO $logTableName (REQUEST_ID, CONFIG_ID, SCHEMA_NAME, TABLE_NAME, KEY_NAME, KEY_VALUE, DELETED_ROWS)
@@ -227,7 +227,6 @@ object MarketoLeadDeletion extends ETLFrameWork {
             s""" INSERT INTO $logTableName (REQUEST_ID, CONFIG_ID, SCHEMA_NAME, TABLE_NAME, KEY_NAME, KEY_VALUE, DELETED_ROWS)
                |VALUES ($requestKey,0,'Marketo','DELETE_API','leadId',${result.id},0)""".stripMargin
         }
-        log.info(s"EXEC LOG SQL: $sql" )
         stmt.executeUpdate(sql)
       }
       dbCon.commit()
@@ -261,12 +260,12 @@ object MarketoLeadDeletion extends ETLFrameWork {
     try {
       DataUtilities.recordJobHistory(spark, jobClassName, Constants.JobStarted)
       val srcCon = DataUtilities.getDataSourceDetails(spark, dbSource)
-      val sql = s"(SELECT IDM_ID,REQUEST_KEY FROM $tgtTableName WHERE DB_PROCESSED_FLAG = 'Y' and MKTO_PROCESSED_FLAG = 'N' and MKTO_PURGE_ENABLE='Y' ) as result"
+      val sql = s"(SELECT IDM_ID, ID FROM $tgtTableName WHERE DB_PROCESSED_FLAG = 'Y' and MKTO_PROCESSED_FLAG = 'N' and MKTO_PURGE_ENABLE='Y' ) as result"
       val dfTgtData = spark.read
         .jdbc(srcCon.getProperty(PropertyNames.EndPoint), sql, srcCon)
       dfTgtData.show()
       val idmIds = dfTgtData.collect.map(row => row.getLong(0)).mkString(",")
-      val idmMap = dfTgtData.collect().map(row => row.getAs[Long](0) -> row.getAs[Int](1)).toMap
+      val idmMap = dfTgtData.collect().map(row => row.getAs[Long](0) -> row.getAs[Long](1)).toMap
       var flowComplete = true
       var leadIds = ""
       // get marketo api token
@@ -291,7 +290,7 @@ object MarketoLeadDeletion extends ETLFrameWork {
         var payloadInput = "["
         var leadIds = ""
         var idmLeads: Map[String, String] = Map[String, String]()
-        var leadRequests: Map[String, Int] = Map[String, Int]()
+        var leadRequests: Map[String, Long] = Map[String, Long]()
         for (lead <- leads) {
           if (idmLeads.contains(lead.IDM_ID)) {
             idmLeads += (lead.IDM_ID -> idmLeads(lead.IDM_ID).concat(lead.id.toString))
@@ -301,8 +300,8 @@ object MarketoLeadDeletion extends ETLFrameWork {
 
           if (!leadRequests.contains(lead.id.toString)) {
             //get request key based on idm id
-            val requestKey = getRequestKey(idmMap.get(lead.IDM_ID.toLong))
-            leadRequests += (lead.id.toString -> requestKey)
+            val requestId = getRequestId(idmMap.get(lead.IDM_ID.toLong))
+            leadRequests += (lead.id.toString -> requestId)
           }
 
           if (payloadInput.equals("[")) {
@@ -361,5 +360,3 @@ object MarketoLeadDeletion extends ETLFrameWork {
       log.info(s"Exiting Job => $jobClassName...")
     }
   }
-
-}
