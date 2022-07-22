@@ -360,3 +360,5 @@ object MarketoLeadDeletion extends ETLFrameWork {
       log.info(s"Exiting Job => $jobClassName...")
     }
   }
+
+}
