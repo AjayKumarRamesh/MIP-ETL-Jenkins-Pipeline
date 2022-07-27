@@ -4,6 +4,7 @@ pipeline {
        IMAGE_TAG = ''                               //can be used in whole pipeline
        APP_JAR = ''
        DAG_ID = "${DAG_NAME}"
+       AUTO_RUN = "${Auto Run DAG?}".toString().toBoolean()
        IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
     }
     stages {
@@ -67,9 +68,14 @@ pipeline {
                     def JENKINS_FUNC = load "./jenkins_files/test/JenkinsFunctions.groovy"
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", false)
                     AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
+                    if (AUTO_RUN) {
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${DAG_ID}"
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${DAG_ID}"
                     JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, false)
+                    } else {
+                        sh "echo 'Autorun not selected, skipping DAG Validation'"
+                        sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${DAG_ID}"
+                    }
                 }
             }
         }
