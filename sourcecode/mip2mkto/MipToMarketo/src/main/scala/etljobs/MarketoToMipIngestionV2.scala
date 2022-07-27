@@ -30,18 +30,21 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
   var maxRecordTimestamp: String = null
   var errstr: String = null
   var recordsProcessed: Long = 0
-  var dupCount: Long = 0
-  var batchSize = 1000
+  //var dupCount: Long = 0
+  //var batchSize = 1000
   var apiBatchRowCount : Long = 0
   var apiRowCount: Long =0
-  var jobSpecific2: String = null
-  var rejectMessage: String = ""
+  //var jobSpecific2: String = null
+  //var rejectMessage: String = ""
   var softErrorMessage: String = ""
   var newDFUnmappedColumn: DataFrame = null
   var emailActivityFinalDF: DataFrame = null
   var emailActivityTempDF: DataFrame = null
   var mapDfToDBColumns: mutable.Map[String, String] = mutable.Map[String, String]()
   var bException: Boolean = false
+  var maxActivityDateSql: String = null
+  var batchCount: Int = 1000
+  var retryInterval: Int = 60000
   var accessTokenExpired: String = "Access token expired"
   var accessTokenInvalid: String = "Access token invalid"
   case class Attributes(name: String, value: String)
@@ -54,6 +57,9 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
     dbTgtSource = args(args.indexOf("--dbTgtSource") + 1)
     configSource = args(args.indexOf("--configSource") + 1)
     firstRunTs = args(args.indexOf("--firstRunTs") + 1)
+    maxActivityDateSql = args(args.indexOf("--maxActivityDateSql") + 1)
+    batchCount = args(args.indexOf("--batchCount") + 1).toInt
+    retryInterval = args(args.indexOf("--retryInterval") + 1).toInt
 
     try {
       log.info("INITIALIZATION STARTED")
@@ -67,32 +73,56 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
       runJobSequence(tgtTableName)
       log.info(s"COMPLETED JOB => $jobClassName.")
     }
+
     catch {
       case e: Throwable =>
         e.printStackTrace()
         errstr = "Program Failed Due To: " + e.getMessage + " - " + e.getCause + "-" + e.printStackTrace() + ". " +
-          softErrorMessage + ". " + rejectMessage
-        jobSpecific2 = "Total Count of Records Processed = " + recordsProcessed.toString()
+          softErrorMessage + "."
+        //jobSpecific2 = "Total Count of Records Processed = " + recordsProcessed.toString()
         log.error(errstr)
-        bException = true
+
+        val jobSpecific1 = getMaxActivityDate
+        DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants
+          .JobFailed, errstr, jobSpecific1, null)
+
+        try {
+          Thread.sleep(retryInterval)
+          runJobSequence(tgtTableName)
+          bException = false
+        }
+        catch {
+          case e: Throwable =>
+            e.printStackTrace()
+            errstr = "Program Failed Due To: " + e.getMessage + " - " + e.getCause + "-" + e.printStackTrace() + ". " +
+              softErrorMessage + "."
+            //jobSpecific2 = "Total Count of Records Processed = " + recordsProcessed.toString()
+            log.error(errstr)
+
+            val jobSpecific1 = getMaxActivityDate
+            DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants
+              .JobFailed, errstr, jobSpecific1, null)
+            bException = true
+        }
     }
+
     finally {
       val jobSpecific1 = getMaxActivityDate
       if (bException) { // Job failed
         DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants
-          .JobFailed, errstr, jobSpecific1, jobSpecific2)
+          .JobFailed, errstr, jobSpecific1, null)
         System.exit(1)
       }
       else {
         var messageString: String = null
-        if(softErrorMessage != "" || dupCount > 0){
-          messageString = "Job Completed With Warnings. " + softErrorMessage + " " + rejectMessage
+        if(softErrorMessage != ""){
+          messageString = "Job Completed With Warnings. " + softErrorMessage + "."
         }
         else{
-          messageString = "Job Completed Successfully Without Any Errors. " + rejectMessage
+          messageString = "Job Completed Successfully Without Any Errors."
         }
         DataUtilities.recordJobHistory(AppProperties.SparkSession, jobClassName, 0, Constants
-          .JobSucceeded, messageString, jobSpecific1, jobSpecific2)
+          .JobSucceeded, messageString, jobSpecific1, null)
       }
       this.cleanUpFramework(AppProperties.SparkSession)
       log.info(s"EXITING JOB => $jobClassName...")
@@ -105,11 +135,14 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
   @throws(classOf[Exception])
   def runJobSequence(tgtTableName: String): Unit = {
     log.info("RUNJOBSEQUENCE STARTED")
-    log.info("V2 Version.batchSize" + batchSize)
+    log.info("V2 Version.batchSize" + batchCount)
+    // TODO: ETL Logic goes here...
 
     // DEFINING TIMESTAMP TO STRING & BACK TO TIMESTAMP - START
+
+
     log.info("API TIMESTAMP STARTED")
-    maxRecordTimestamp = getLastRecordTimeStamp(jobClassName)
+    maxRecordTimestamp = getMaxActivityDate
     if (maxRecordTimestamp == null || maxRecordTimestamp == "" || maxRecordTimestamp == "null") {
       maxRecordTimestamp = firstRunTs
     }
@@ -215,7 +248,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
               emailActivityFinalDF.cache()
               apiBatchRowCount = emailActivityFinalDF.count()
               log.info("BATCH ROW COUNT:" + apiBatchRowCount)
-              if (apiBatchRowCount >= batchSize) {
+              if (apiBatchRowCount >= batchCount) {
                 apiRowCount = apiRowCount + apiBatchRowCount
                 emailActivityInsert(emailActivityFinalDF, tgtTableName)
                 emailActivityFinalDF = AppProperties.SparkSession.createDataFrame(AppProperties.SparkSession
@@ -238,7 +271,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
               emailActivityFinalDF.cache()
               apiBatchRowCount = emailActivityFinalDF.count()
               log.info("BATCH ROW COUNT:" + apiBatchRowCount)
-              if (apiBatchRowCount >= batchSize) {
+              if (apiBatchRowCount >= batchCount) {
                 apiRowCount = apiRowCount + apiBatchRowCount
                 emailActivityInsert(emailActivityFinalDF, tgtTableName)
                 emailActivityFinalDF = AppProperties.SparkSession.createDataFrame(AppProperties.SparkSession
@@ -269,7 +302,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
       log.info("DB2 INSERT ENDED")
       //INGESTING DATAFRAME TO DB - ENDED
     }
-    jobSpecific2 = "Total Count of Records Processed = " + recordsProcessed.toString()
+    //jobSpecific2 = "Total Count of Records Processed = " + recordsProcessed.toString()
     log.info("RUNJOBSEQUENCE METHOD ENDED")
     log.info("MARKETO TO MIP LOGIC COMPLETED")
   }
@@ -516,7 +549,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
     // READING THE MIP DATABASE - END
 
     // LISTING THE DUPLICATE RECORDS FOUND IN THE API CALL - START
-    log.info("CHECKING FOR DUPLICATES")
+   /* log.info("CHECKING FOR DUPLICATES")
     val dupDF = newDF.join(mipEmailActivityDF,mipEmailActivityDF("ID")===newDF("id"),"inner")
       .select(newDF("*"))
     dupDF.select(dupDF("id")).collect.foreach(println)
@@ -527,14 +560,16 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
 
     // WRITING THE DISTINCT RECORDS TO MIP DATABASE - START
     val newDFFinal = newDF.join(mipEmailActivityDF,mipEmailActivityDF("ID")===newDF("id"),"left_anti")
-      .select(newDF("*"))
-    newDFFinal.write.mode("append")
-      .option("batchSize", 1000)
+      .select(newDF("*"))*/
+
+    // WRITING ALL THE RECORDS TO MIP DATABASE - START
+    newDF.write.mode("append")
+      .option("batchSize", batchCount)
       .jdbc(connectionProperties.getProperty(PropertyNames.EndPoint),tgtTableName,connectionProperties)
     // WRITING THE DISTINCT RECORDS TO MIP DATABASE - END
 
     //COUNTING TOTAL NUMBER OF RECORDS INSERTED - START
-    recordsProcessed = apiRowCount - dupCount
+    recordsProcessed = apiRowCount
     log.info("TOTAL RECORDS INSERTED, TOTAL NUMBER OF BATCH RECORDS :" + recordsProcessed.toString() + "," + apiBatchRowCount.toString())
     //COUNTING TOTAL NUMBER OF RECORDS INSERTED - END
     //DATABASE CONNECTION - END
@@ -549,16 +584,15 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
     val conProp: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbTgtSource)
     var dfResult: DataFrame = null
     var maxTs:String = null
+    log.info(maxActivityDateSql)
     try {
       dfResult = AppProperties.SparkSession.read
         .option("isolationLevel", Constants.DBIsolationUncommittedRead)
         .jdbc(conProp.getProperty(PropertyNames.EndPoint),
-          s""" (SELECT
-                      MAX(ACTIVITY_DATE) - 5 MINUTES as activity_date
-                       FROM $tgtTableName)
-                       AS RESULT_TABLE""",
+          s"""$maxActivityDateSql""",
           conProp)
       if (log.isDebugEnabled || log.isInfoEnabled())
+      //        dfResult.show()
         if (dfResult.count() > 0) {
           val firstRow = dfResult.collect().head
           try {
@@ -575,7 +609,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
   }
 
 
-  // METHOD TO EXTRACT MAX-TIMESTAMP FROM ETL_JOB_HISTORY TABLE USED FOR CALLING API PAGINATION TOKEN
+/*  // METHOD TO EXTRACT MAX-TIMESTAMP FROM ETL_JOB_HISTORY TABLE USED FOR CALLING API PAGINATION TOKEN
   @throws(classOf[Exception])
   def getLastRecordTimeStamp(jobSeqCode: String): String = {
     // "yyyy-MM-dd HH:mm:ss.SSS"
@@ -606,7 +640,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
       if (dfResult != null) dfResult.unpersist()
     }
     maxTs
-  }
+  }*/
 
 
   // METHOD TO ALTER TABLE TO ADD A NEW COLUMN FOUND IN API RESPONSES
