@@ -30,12 +30,8 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
   var maxRecordTimestamp: String = null
   var errstr: String = null
   var recordsProcessed: Long = 0
-  //var dupCount: Long = 0
-  //var batchSize = 1000
   var apiBatchRowCount : Long = 0
   var apiRowCount: Long =0
-  //var jobSpecific2: String = null
-  //var rejectMessage: String = ""
   var softErrorMessage: String = ""
   var newDFUnmappedColumn: DataFrame = null
   var emailActivityFinalDF: DataFrame = null
@@ -136,7 +132,6 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
   def runJobSequence(tgtTableName: String): Unit = {
     log.info("RUNJOBSEQUENCE STARTED")
     log.info("V2 Version.batchSize" + batchCount)
-    // TODO: ETL Logic goes here...
 
     // DEFINING TIMESTAMP TO STRING & BACK TO TIMESTAMP - START
 
