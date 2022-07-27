@@ -4,7 +4,7 @@ pipeline {
        IMAGE_TAG = ''                               //can be used in whole pipeline
        APP_JAR = ''
        DAG_ID = "${DAG_NAME}"
-       AUTO_RUN = "${Auto Run DAG?}".toString().toBoolean()
+       AUTO_RUN = env.AUTO_RUN_DAG.toBoolean()
        IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
     }
     stages {
