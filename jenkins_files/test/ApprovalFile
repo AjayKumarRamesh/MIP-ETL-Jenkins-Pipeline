@@ -4,6 +4,7 @@ pipeline {
         stage('Request Approval') {
             steps {
                 script {
+                    sh "echo 'autorun boolean: ${env.AUTO_RUN_DAG.toBoolean()}'"
                     timeout(time: 2, unit: "HOURS") {
                         emailext to: "${env.deploy_test_approvers}",
                             subject: "Approval for deploy required!",
