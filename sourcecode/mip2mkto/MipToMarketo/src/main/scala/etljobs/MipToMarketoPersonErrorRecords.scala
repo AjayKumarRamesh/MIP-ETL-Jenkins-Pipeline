@@ -157,7 +157,7 @@ object MipToMarketoPersonErrorRecords extends ETLFrameWork {
               .drop(newDF("Email_Media_ID"))
             newDF.show()
 
-            var newDFAgg = newDF.groupBy("MIP_SEQ_ID").agg(collect_list("id").alias("Lead_ID"), count("id").alias("Id_Count"))
+            var newDFAgg = newDF.groupBy("MIP_SEQ_ID").agg(max("id").alias("Lead_ID"), count("id").alias("Id_Count"))
             newDFAgg = newDFAgg.withColumn("Status_Code",expr("CASE WHEN Id_Count = 0 THEN 'U' WHEN Id_Count = 1 THEN 'P' ELSE 'E' END"))
             newDFAgg.show()
 

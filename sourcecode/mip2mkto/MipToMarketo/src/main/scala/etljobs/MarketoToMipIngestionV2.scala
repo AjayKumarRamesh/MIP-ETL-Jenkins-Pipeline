@@ -43,6 +43,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
   var retryInterval: Int = 60000
   var accessTokenExpired: String = "Access token expired"
   var accessTokenInvalid: String = "Access token invalid"
+  var regExpPattern: String = "[^\\x00-\\x7F]"
   case class Attributes(name: String, value: String)
 
 
@@ -75,7 +76,6 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
         e.printStackTrace()
         errstr = "Program Failed Due To: " + e.getMessage + " - " + e.getCause + "-" + e.printStackTrace() + ". " +
           softErrorMessage + "."
-        //jobSpecific2 = "Total Count of Records Processed = " + recordsProcessed.toString()
         log.error(errstr)
 
         val jobSpecific1 = getMaxActivityDate
@@ -92,7 +92,6 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
             e.printStackTrace()
             errstr = "Program Failed Due To: " + e.getMessage + " - " + e.getCause + "-" + e.printStackTrace() + ". " +
               softErrorMessage + "."
-            //jobSpecific2 = "Total Count of Records Processed = " + recordsProcessed.toString()
             log.error(errstr)
 
             val jobSpecific1 = getMaxActivityDate
@@ -129,7 +128,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
 
   //  RUNJOBSEQUENCE METHOD = API CALLING, DATAFRAME INGESTION & LOOPING, AND INGESTING DATAFRAME TO DB2 TABLE
   @throws(classOf[Exception])
-  def runJobSequence(tgtTableName: String): Unit = {
+  def runJobSequence(tgtTableName: String): Unit = { //NOSONAR
     log.info("RUNJOBSEQUENCE STARTED")
     log.info("V2 Version.batchSize" + batchCount)
 
@@ -297,7 +296,6 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
       log.info("DB2 INSERT ENDED")
       //INGESTING DATAFRAME TO DB - ENDED
     }
-    //jobSpecific2 = "Total Count of Records Processed = " + recordsProcessed.toString()
     log.info("RUNJOBSEQUENCE METHOD ENDED")
     log.info("MARKETO TO MIP LOGIC COMPLETED")
   }
@@ -473,17 +471,17 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
       .withColumn("campaign_id", col("campaign_id").cast(IntegerType))
       .withColumn("primary_attribute_value_id", col("primary_attribute_value_id").cast(IntegerType))
       .withColumn("primary_attribute_value", regexp_replace(col("primary_attribute_value"),
-        "[^\\x00-\\x7F]", "").substr(0,3000))
+        regExpPattern, "").substr(0,3000))
       .withColumn("client_ip_address", regexp_replace(col("client_ip_address")
-        ,"[^\\x00-\\x7F]", "").substr(0,25))
+        ,regExpPattern, "").substr(0,25))
       .withColumn("query_parameters", regexp_replace(col("query_parameters"),
-        "[^\\x00-\\x7F]", "").substr(0,500))
+        regExpPattern, "").substr(0,500))
       .withColumn("referrer_url", regexp_replace(col("referrer_url"),
-        "[^\\x00-\\x7F]", "").substr(0,255))
+        regExpPattern, "").substr(0,255))
       .withColumn("user_agent", regexp_replace(regexp_replace(col("user_agent"),
-        "[^\\x00-\\x7F]", ""),"\\\\", "").substr(0,300))
+        regExpPattern, ""),"\\\\", "").substr(0,300))
       .withColumn("campaign", regexp_replace(col("campaign"),
-        "[^\\x00-\\x7F]", "").substr(0,255))
+        regExpPattern, "").substr(0,255))
       .withColumn("webpage_id", col("webpage_id").cast(IntegerType))
       .withColumn("link_id", col("link_id").cast(IntegerType))
       .withColumn("campaign_run_id", col("campaign_run_id").cast(IntegerType))
@@ -492,32 +490,32 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
       .withColumn("step_id", col("step_id").cast(IntegerType))
       .withColumn("test_variant", col("test_variant").cast(IntegerType))
       .withColumn("mailing_id", regexp_replace(col("mailing_id"),
-        "[^\\x00-\\x7F]", "").substr(0,64))
+        regExpPattern, "").substr(0,64))
       .withColumn("category", regexp_replace(col("category"),
-        "[^\\x00-\\x7F]", "").substr(0,64))
+        regExpPattern, "").substr(0,64))
       .withColumn("details", regexp_replace(col("details"),
-        "[^\\x00-\\x7F]", "").substr(0,255))
+        regExpPattern, "").substr(0,255))
       .withColumn("email", regexp_replace(col("email"),
-        "[^\\x00-\\x7F]", "").substr(0,64))
+        regExpPattern, "").substr(0,64))
       .withColumn("sub_category", regexp_replace(col("sub_category"),
-        "[^\\x00-\\x7F]", "").substr(0,64))
+        regExpPattern, "").substr(0,64))
       .withColumn("form_fields", regexp_replace(col("form_fields"),
-        "[^\\x00-\\x7F]", "").substr(0,2000))
+        regExpPattern, "").substr(0,2000))
       .withColumn("web_form_id", col("web_form_id").cast(IntegerType))
       .withColumn("device", regexp_replace(col("device"),
-        "[^\\x00-\\x7F]", "").substr(0,100))
+        regExpPattern, "").substr(0,100))
       .withColumn("is_mobile_device", col("is_mobile_device").cast(BooleanType))
       .withColumn("platform", col("platform").substr(0,64))
       .withColumn("link", regexp_replace(col("link"),
-        "[^\\x00-\\x7F]", "").substr(0,3000))
+        regExpPattern, "").substr(0,3000))
       .withColumn("sent_to_list", regexp_replace(col("sent_to_list"),
-        "[^\\x00-\\x7F]", "").substr(0,3000))
+        regExpPattern, "").substr(0,3000))
       .withColumn("sent_to_owner", regexp_replace(col("sent_to_owner"),
-        "[^\\x00-\\x7F]", "").substr(0,25))
+        regExpPattern, "").substr(0,25))
       .withColumn("sent_to_smart_list", regexp_replace(col("sent_to_smart_list"),
-        "[^\\x00-\\x7F]", "").substr(0,300))
+        regExpPattern, "").substr(0,300))
       .withColumn("processed_flag", regexp_replace(col("processed_flag"),
-        "[^\\x00-\\x7F]", "").substr(0,1))
+        regExpPattern, "").substr(0,1))
       .withColumn("is_predictive", col("is_predictive").cast(BooleanType))
     log.info("DATA TYPE CONVERSION ENDED")
     emailActivityDF.show(false)

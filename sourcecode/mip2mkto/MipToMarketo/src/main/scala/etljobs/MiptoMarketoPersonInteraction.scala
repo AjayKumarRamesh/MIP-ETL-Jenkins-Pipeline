@@ -377,7 +377,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
   }
 
 
-  def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit = {//NOSONAR
     //Args to the job
     tgtTableNameP = args(args.indexOf("--tgtTablePerson") + 1)
     tgtTableNameCA = args(args.indexOf("--tgtTableInteraction") + 1)

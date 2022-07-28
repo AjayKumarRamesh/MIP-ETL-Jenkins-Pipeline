@@ -546,7 +546,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
 
   override def getDataSourceDetails(spark: SparkSession, dataSourceCode: String): Properties = super.getDataSourceDetails(spark, dataSourceCode)
 
-  def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit = { //NOSONAR
     //Args to the job
     tgtTableName = args(args.indexOf("--tgtTable") + 1)
     apiSource = args(args.indexOf("--apiSource") + 1)
