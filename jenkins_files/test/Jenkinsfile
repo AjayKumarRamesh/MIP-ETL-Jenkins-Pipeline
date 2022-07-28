@@ -68,7 +68,7 @@ pipeline {
                     JENKINS_FUNC.cloudLogin(IBMCLOUD_CREDS_PSW, "test", false)
                     AIRFLOW_POD = sh(script:'kubectl get pods -n airflow --no-headers -o custom-columns=":metadata.name" | grep airflow-scheduler', returnStdout: true).trim()
                     if (AUTO_RUN_DAG.toBoolean()) {
-                    sh "sh echo 'Autorun set to true, triggering DAG.'"
+                    sh "echo 'Autorun set to true, triggering DAG.'"
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags trigger ${DAG_ID}"
                     sh "kubectl exec -n airflow ${AIRFLOW_POD} -- airflow dags unpause ${DAG_ID}"
                     JENKINS_FUNC.checkDagStatus(AIRFLOW_POD, DAG_ID, false)
