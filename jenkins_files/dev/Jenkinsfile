@@ -7,12 +7,6 @@ pipeline {
        SOURCE_CODE_FOLDER = ''
     }
     stages {
-        stage('GitHub Checkout') {
-            steps {
-                git credentialsId: 'sangita_id_rsa' ,
-                url: 'ssh://git@github.ibm.com/CIO-MAP/Jenkins_Poc_mapetl.git', branch: 'master'  
-            }  //steps
-        } //stage
         stage('SonarQube Analysis') {
             agent { label 'taas_image' }
             environment{

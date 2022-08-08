@@ -13,6 +13,7 @@ object RubyToMIP extends ETLFrameWork {
   def runJobSequence(xtrSql: String, tgtSql: String, sourceDB: String, targetDB: String) = {
 
     log.info("runJobSequence started")
+    log.info("THIS IS A TEST RUN FOR THIS BRANCH.")
 
     // create connection to CMDP database
     val srcConn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, "CMDP_PROD")
