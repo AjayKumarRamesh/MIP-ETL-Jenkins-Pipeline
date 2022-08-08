@@ -13,9 +13,9 @@ pipeline {
             steps {
                 script {
                         timeout(time: 2, unit: "HOURS") {
-                            emailext to: "${env.deploy_test_approvers}",
-                                subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - Approval for deploy required!",
-                                body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${DAG_NAME} is going to be deployed. \n approval required: ${BUILD_URL}/input "
+                            emailext to: "${env.deploy_prod_approvers}",
+                                subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - Approval for deploy on Production is required!",
+                                body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${DAG_NAME} is going to be deployed on Production. \n\n Approval for deploy is required: ${BUILD_URL}/input "
 
                             input message: "${DAG_NAME} is going to be deployed. \n Approve Deploy?", ok: 'Yes',
                             submitter: "${env.deploy_test_approvers}"
@@ -90,7 +90,7 @@ pipeline {
     }
     post {
         always {
-        emailext to: "${env.deploy_test_approvers}", 
+        emailext to: "${env.deploy_prod_approvers}",
             subject: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}!",
             body: "${env.JOB_BASE_NAME} - Build # ${env.BUILD_NUMBER} - ${currentBuild.currentResult}: Check console output at ${env.BUILD_URL} to view the results."
 
