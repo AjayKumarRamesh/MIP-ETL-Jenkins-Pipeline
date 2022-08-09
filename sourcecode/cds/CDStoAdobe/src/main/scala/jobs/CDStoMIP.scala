@@ -3,7 +3,7 @@ package jobs
 import com.ibm.mkt.etlframework.data.DataUtilities
 import com.ibm.mkt.etlframework.{AppProperties, Constants, ETLFrameWork, PropertyNames}
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{col, udf}
+import org.apache.spark.sql.functions.{col, last, udf}
 import org.json.{JSONArray, JSONException, JSONObject}
 import java.io.{IOException, _}
 import java.net.URL
@@ -37,6 +37,7 @@ object CDStoMIP extends ETLFrameWork {
   private var lastRunTimestamp: String = null
   private var MINIMUM_TIMESTAMP_OFFSET = 0
   private var MAXIMUM_TIMESTAMP_OFFSET = 0
+  private var MINIMUM_TIMESTAMP_OFFSET_MINUTES = 0
   private var mergeSql = ""
 
 
@@ -90,22 +91,26 @@ object CDStoMIP extends ETLFrameWork {
     val MIPdbProperties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession,MIP_ENDPOINT)
     MIPdbProperties.setProperty("sslConnection", "true")
 
-    val lastRunSql = s" SELECT MAX(UPDATE_TS) AS LASTPROCESSTIME, 4 as PARTCOL " +
-      s"FROM $CORE_SCHEMA.$CDS_ASSET_TABLE"
-
-
-    val timeDF = DataUtilities.readDataByPartitioningType(AppProperties.SparkSession, MIPdbProperties, lastRunSql, Constants.PartitionTypeByColumn, null, "PARTCOL").drop("PARTCOL")
-    val timestamp = timeDF.first().get(0)
-    if (timestamp != null) {
-      lastRunTimestamp = timestamp.toString
+    log.info("Getting Last Successful Run Time")
+    val successfulTimestamp = DataUtilities.getLastSuccessfulRunTime(AppProperties.SparkSession, "CDStoMIP")
+    if (!successfulTimestamp.isEmpty) {
+      val char = successfulTimestamp("JOB_START_TIME").lastIndexOf("-")
+      lastRunTimestamp = successfulTimestamp("JOB_START_TIME")
+        .replaceAll("[.]", ":")
+      lastRunTimestamp = lastRunTimestamp.substring(0,char) + " " + lastRunTimestamp.substring(char+1)
     }
+    log.info(s"Last Successful Timestamp: $lastRunTimestamp")
+
+    log.info("Looking backwards " + MINIMUM_TIMESTAMP_OFFSET + " days.")
+    log.info("Looking backwards " + MINIMUM_TIMESTAMP_OFFSET_MINUTES + " minutes.")
+    log.info("Looking forwards " + MAXIMUM_TIMESTAMP_OFFSET + " days.")
 
     //lastRunTimestamp = null  // Only for testing default timestamp, leave commented out otherwise.
     val minTimeStamp = getFormattedTimeStamp("min")
     val maxTimeStamp = getFormattedTimeStamp("max")
 
-    println(minTimeStamp)
-    println(maxTimeStamp)
+    log.info("Minimum timestamp formatted: " + minTimeStamp)
+    log.info("Maximum timestamp formatted: " + maxTimeStamp)
 
     // Built api call
     var cdsURL = cdsEndPoint + "?apiKey=" + apiKey + "&page=" + page + "&size=" + size + "&minUpdateTs=" + minTimeStamp + "&topUpdateTs=" + maxTimeStamp
@@ -343,14 +348,14 @@ object CDStoMIP extends ETLFrameWork {
         timestamp = Timestamp.valueOf(lastRunTimestamp)
       }
       val instant = timestamp.toInstant
-      timestamp = Timestamp.from(instant.minus(MINIMUM_TIMESTAMP_OFFSET, ChronoUnit.DAYS))
+      timestamp = Timestamp.from(instant.minus(MINIMUM_TIMESTAMP_OFFSET, ChronoUnit.DAYS).minus(MINIMUM_TIMESTAMP_OFFSET_MINUTES, ChronoUnit.MINUTES))
       // Set timestamp to a 1 day offset in the past to accommadate CMDP difference if using full refresh.
       // timestamp = Timestamp.from(timestamp.toInstant.minus(1, ChronoUnit.DAYS))
     } else if (mode == "max") {
       // 1 day future in order to make sure time range goes all the way to current as leeway
       timestamp = Timestamp.from(Instant.now().plus(1, ChronoUnit.DAYS).minus(MAXIMUM_TIMESTAMP_OFFSET, ChronoUnit.DAYS))
     }
-    println(timestamp)
+    log.info(mode + " timestamp is: " + timestamp)
     val pattern = """[0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}""".r
     //val timestampString = null
     val find = pattern.findFirstIn(timestamp.toString)
@@ -376,6 +381,7 @@ object CDStoMIP extends ETLFrameWork {
       size = args(args.indexOf("--pageSize") + 1)
       MINIMUM_TIMESTAMP_OFFSET = args(args.indexOf("--minOffset") + 1).toInt
       MAXIMUM_TIMESTAMP_OFFSET = args(args.indexOf("--maxOffset") + 1).toInt
+      MINIMUM_TIMESTAMP_OFFSET_MINUTES = args(args.indexOf("--minMins") + 1).toInt
       mergeSql = args(args.indexOf("--mergeSql") +1)
       //cdsEndPoint = args(args.indexOf("--cdsEndpoint") +1)
       //apiKey = args(args.indexOf("--apiKey") +1)
