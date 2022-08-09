@@ -191,7 +191,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
       s"""{
          |      "leadId":${row.getLong(9)},
-         |      "activityDate":"${convert({row.getTimestamp(31).toString})}",
+         |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
          |      "activityTypeId":${row.getInt(19)},
          |      "primaryAttributeValue": "${row.getString(25)}",
          |      "attributes":
@@ -202,7 +202,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Form_Name",
-         |                    "value": "${removeControlChar(row.getString(35))}"
+         |                    "value": "${removeControlChar(row.getString(36))}"
          |                },
          |                {
          |                    "apiName": "GBL_IMT_CD",
@@ -219,7 +219,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Interaction_ID",
-         |                    "value": "${row.getLong(33)}"
+         |                    "value": "${row.getLong(34)}"
          |
          |                },
          |                {
@@ -234,7 +234,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Lead_Source",
-         |                    "value": "${removeControlChar(row.getString(37))}"
+         |                    "value": "${removeControlChar(row.getString(38))}"
          |
          |                },
          |                {
@@ -259,12 +259,12 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "UT10_Code",
-         |                    "value": "${removeControlChar(row.getString(30))}"
+         |                    "value": "${removeControlChar(row.getString(31))}"
          |
          |                },
          |                {
          |                    "apiName": "UT15_Code",
-         |                    "value": "${removeControlChar(row.getString(28))}"
+         |                    "value": "${removeControlChar(row.getString(29))}"
          |
          |                },
          |                {
@@ -616,7 +616,25 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
            |IMI.ACTIVITY_CMPN_CD AS ACTIVITY_CMPN_CD,
            |MC.IBM_GBL_IOT_CODE,
            |MC.SUB_REGION_CODE,
-           |MC.REGION
+           |MC.REGION,
+           |CASE
+           |WHEN COP.COVERAGE_CLIENT_TYPE_DSCR IS NOT NULL THEN '1'
+           |ELSE '0'
+           |END AS ACCNT_KNOWN_IND,
+           |COP.MAIN_IND_CD AS MAIN_IND_CD,
+           |COP.FIRMO_GBL_EMP_CNT,
+           |COP.FIRMO_GBL_TURN_OVER_USD,
+           |CCT.TYPE_DESC AS CONTENT_TYPE_NAME,
+           |CASE
+           |WHEN (RRG.RESPTYPE_CD = 'MAIL' OR RRG.INTERACTION_TYPE = 'MAIL') THEN 'Contact Us'
+           |WHEN (RRG.RESPTYPE_CD IN ('CONSULTOCCUR' ,'CONSULTCREATE') OR RRG.INTERACTION_TYPE IN ('CONSULTOCCUR','CONSULTCREATE'))
+           |THEN 'Scheduler'
+           |WHEN  CCT.TYPE_DESC  IN ('Demo','Trial', 'Research report') THEN CCT.TYPE_DESC
+           |WHEN (RRG.RESPTYPE_CD IN ('CONTSYND') OR RRG.INTERACTION_TYPE IN ('CONTSYND')) THEN 'Content Syndication'
+           |WHEN RRG.IS_VIRTUAL_EVENT = 'Y' THEN 'Digital Event'
+           |WHEN RRG.IS_VIRTUAL_EVENT = 'N' THEN  'F2F Event'
+           |ELSE 'Other'
+           |END AS INTRCTN_TYPE
            |FROM
            |MAP_CORE.MCT_INBOUND_MARKETING_INTERACTION_MIP IMI
            |LEFT JOIN
@@ -696,6 +714,10 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
            |ON imi.INBOUND_MKTG_ID = QA_PAIRS.INBOUND_MKTG_ID
            |LEFT OUTER JOIN MAP_CORE.MCT_COP_XREF COP
            |ON COP.IDM_COMPANY_ID = IMI.IDM_COMPANY_ID AND IMI.IDM_COMPANY_ID  > 0
+           |LEFT JOIN MAP_CORE.MCT_CDS_ASSET CDS
+           |ON IMI.UUC_ID = CDS.UUC_ID
+           |LEFT JOIN MAP_CORE.MCT_CDS_CONTENT_TYPE CCT
+           |ON CCT.CONTENT_TYPE_ID = CDS.CONTENT_TYPE_ID
            |WHERE
            |IMI.READY_FOR_MKTO_FLG = 'R'
            |AND IMI.MARKETING_INTERACTION_TYPE_CD = 'MAIL'
@@ -846,6 +868,12 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
            |CTE1.DOM_BUY_GRP,
            |CTE1.LANDING_CTRY,
            |CTE1.DOM_BUY_GRP_CTRY,
+           |CTE1.ACCNT_KNOWN_IND,
+           |CTE1.MAIN_IND_CD,
+           |CTE1.FIRMO_GBL_EMP_CNT,
+           |CTE1.FIRMO_GBL_TURN_OVER_USD,
+           |CTE1.CONTENT_TYPE_NAME,
+           |CTE1.INTRCTN_TYPE,
            |MAXSEQID.MAXSEQID AS MAXSEQID,
            |ACTSEQ.MAXACTSEQID AS MAXACTSEQID
            |FROM CTE1
@@ -925,7 +953,11 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
         col("WORK_PHONE_PERM"),
         col("SAP_CUST_NUM"),
         col("MAIN_DOM_CLIENT_ID"),
-        col("DOM_BUY_GRP_CTRY")
+        col("DOM_BUY_GRP_CTRY"),
+        col("ACCNT_KNOWN_IND"),
+        col("MAIN_IND_CD"),
+        col("FIRMO_GBL_EMP_CNT"),
+        col("FIRMO_GBL_TURN_OVER_USD")
       ).where("IDM_ID IS NOT NULL AND EMAIL_MEDIA_ID IS NOT NULL AND EMAIL_ADDR IS NOT NULL").dropDuplicates()
 
       val personTableDF = personTableRawDF
@@ -979,7 +1011,9 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
         "SUB_REGION_CODE",
         "REGION",
         "CTRY_CODE",
-        "WORK_PHONE_PERM").where("STRENGTH IS NOT NULL AND CAMPAIGN_CODE !='' AND CAMPAIGN_CODE IS NOT NULL")
+        "WORK_PHONE_PERM",
+        "CONTENT_TYPE_NAME",
+        "INTRCTN_TYPE").where("STRENGTH IS NOT NULL AND CAMPAIGN_CODE !='' AND CAMPAIGN_CODE IS NOT NULL")
       customActivityTableDF.show(false)
 
       // Checking if any Data is Returned
@@ -1129,7 +1163,8 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
             }
 
             var customActivityMarketoDF = mipSeqIdSuccessDF.drop("MIP_SEQ_ID", "SCORE_TS", "NEXT_COMM_METHOD_NAME",
-              "NEXT_COMM_TS", "NEXT_KEYWORDS", "NEXT_UUC_ID", "STATUS_CODE", "ERROR_CODE", "ERROR_DESC", "MKTO_ACTIVITY_ID")
+              "NEXT_COMM_TS", "NEXT_KEYWORDS", "NEXT_UUC_ID", "STATUS_CODE", "ERROR_CODE", "ERROR_DESC", "MKTO_ACTIVITY_ID",
+              "CONTENT_TYPE_NAME", "INTRCTN_TYPE")
             log.info("Dropping Columns Before sending the DF to Marketo")
             customActivityMarketoDF.show(false)
 
@@ -1377,7 +1412,8 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
       "PREF_CODE_10M00", "PREF_CODE_10N00", "PREF_CODE_153QH", "PREF_CODE_15CLV", "PREF_CODE_15IGO", "PREF_CODE_15ITT",
       "PREF_CODE_15MFT", "PREF_CODE_15STT", "PREF_CODE_15WCP", "PREF_CODE_15WSC", "PREF_CODE_17AAL", "PREF_CODE_17BCH",
       "PREF_CODE_17CPH", "PREF_CODE_17DSR", "PREF_CODE_17ENL", "PREF_CODE_17YNI", "PREF_CODE_15S8X","STUDENT_FLG", "IBMer_FLG",
-      "STATE_CD", "WORK_PHONE_PERM", "SAP_CUST_NUM", "DOM_CLIENT_ID", "DOM_BUY_GRP_CTRY")
+      "STATE_CD", "WORK_PHONE_PERM", "SAP_CUST_NUM", "DOM_CLIENT_ID", "DOM_BUY_GRP_CTRY", "ACCNT_KNOWN_IND", "MAIN_IND_CD",
+      "FIRMO_GBL_EMP_CNT", "FIRMO_GBL_TURN_OVER_USD")
     DataUtilities.runPreparedStatementUsingConnection(
       dbConn,
       personDF,
@@ -1387,10 +1423,10 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |PREF_CODE_10G00,PREF_CODE_10L00,PREF_CODE_10M00,PREF_CODE_10N00,PREF_CODE_153QH,PREF_CODE_15CLV,PREF_CODE_15IGO,PREF_CODE_15ITT,
          |PREF_CODE_15MFT,PREF_CODE_15STT,PREF_CODE_15WCP,PREF_CODE_15WSC,PREF_CODE_17AAL,PREF_CODE_17BCH,PREF_CODE_17CPH,PREF_CODE_17DSR,
          |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM,SAP_CUST_NUM,
-         |DOM_CLIENT_ID,DOM_BUY_GRP_CTRY)
-         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
+         |DOM_CLIENT_ID,DOM_BUY_GRP_CTRY,ACCNT_KNOWN_IND,MAIN_IND_CD,FIRMO_GBL_EMP_CNT,FIRMO_GBL_TURN_OVER_USD)
+         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
       personDF.columns,
-      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50),
+      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54),
       null,true,insertTableName,"INSERT")
   }
 
@@ -1425,7 +1461,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
       "PREF_CODE_10M00", "PREF_CODE_10N00", "PREF_CODE_153QH", "PREF_CODE_15CLV", "PREF_CODE_15IGO", "PREF_CODE_15ITT",
       "PREF_CODE_15MFT", "PREF_CODE_15STT", "PREF_CODE_15WCP", "PREF_CODE_15WSC", "PREF_CODE_17AAL", "PREF_CODE_17BCH",
       "PREF_CODE_17CPH", "PREF_CODE_17DSR", "PREF_CODE_17ENL", "PREF_CODE_17YNI", "PREF_CODE_15S8X","STUDENT_FLG", "IBMer_FLG", "STATE_CD",
-      "WORK_PHONE_PERM", "SAP_CUST_NUM", "DOM_CLIENT_ID", "DOM_BUY_GRP_CTRY")
+      "WORK_PHONE_PERM", "SAP_CUST_NUM", "DOM_CLIENT_ID", "DOM_BUY_GRP_CTRY", "ACCNT_KNOWN_IND", "MAIN_IND_CD", "FIRMO_GBL_EMP_CNT", "FIRMO_GBL_TURN_OVER_USD")
     DataUtilities.runPreparedStatementUsingConnection(
       dbConn,
       personDF,
@@ -1435,9 +1471,10 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |PREF_CODE_10G00,PREF_CODE_10L00,PREF_CODE_10M00,PREF_CODE_10N00,PREF_CODE_153QH,PREF_CODE_15CLV,PREF_CODE_15IGO,PREF_CODE_15ITT,
          |PREF_CODE_15MFT,PREF_CODE_15STT,PREF_CODE_15WCP,PREF_CODE_15WSC,PREF_CODE_17AAL,PREF_CODE_17BCH,PREF_CODE_17CPH,PREF_CODE_17DSR,
          |PREF_CODE_17ENL,PREF_CODE_17YNI,PREF_CODE_15S8X,STUDENT_FLG,IBMer_FLG,STATE_CD,WORK_PHONE_PERM,SAP_CUST_NUM,
-         |DOM_CLIENT_ID, DOM_BUY_GRP_CTRY)
-         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
-      personDF.columns,Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50),null,true,insertTableName,"INSERT")
+         |DOM_CLIENT_ID, DOM_BUY_GRP_CTRY,ACCNT_KNOWN_IND,MAIN_IND_CD,FIRMO_GBL_EMP_CNT,FIRMO_GBL_TURN_OVER_USD)
+         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
+      personDF.columns,Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54),
+      null,true,insertTableName,"INSERT")
   }
 
   def insertIntoXref(dataFrame: DataFrame, dbConn: Connection, insertTableName: String): Unit = {
@@ -1464,10 +1501,11 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |COUNTRY_CODE, LANG_CODE, ACTIVITY_NAME, ASSET_TYPE, ACTIVITY_URL, UUC_ID, DRIVER_CAMPAIGN_CODE, FORM_NAME, INTERACTION_ID,
          |INTERACTION_TS, SUB_SRC_DESC, LEAD_DESC, LEAD_NOTE, LEAD_SRC_NAME, INTERACTION_TYPE_CODE, CONTACT_PHONE, SALES_CHANNEL_NAME,
          |SCORE_TS, STRENGTH, UT10_CODE, UT15_CODE, UT17_CODE, UT20_CODE, UT30_CODE, NEXT_COMM_METHOD_NAME, NEXT_COMM_TS, NEXT_KEYWORDS,
-         |NEXT_UUC_ID, WEB_PAGE_SRC, STATUS_CODE, ERROR_CODE, ERROR_DESC, EVENT_REF_ID, MKTO_ACTIVITY_ID, REFERRER_URL, ACTIVITY_CMPN_CD)
-         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
+         |NEXT_UUC_ID, WEB_PAGE_SRC, STATUS_CODE, ERROR_CODE, ERROR_DESC, EVENT_REF_ID, MKTO_ACTIVITY_ID, REFERRER_URL, ACTIVITY_CMPN_CD,
+         |CONTENT_TYPE_NAME, INTRCTN_TYPE)
+         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
       dataFrameNew.columns,
-      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41),
+      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43),
       null,true,insertTableName,"INSERT")
   }
 
@@ -1482,10 +1520,11 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |COUNTRY_CODE, LANG_CODE, ACTIVITY_NAME, ASSET_TYPE, ACTIVITY_URL, UUC_ID, DRIVER_CAMPAIGN_CODE, FORM_NAME, INTERACTION_ID,
          |INTERACTION_TS, SUB_SRC_DESC, LEAD_DESC, LEAD_NOTE, LEAD_SRC_NAME, INTERACTION_TYPE_CODE, CONTACT_PHONE, SALES_CHANNEL_NAME,
          |SCORE_TS, STRENGTH, UT10_CODE, UT15_CODE, UT17_CODE, UT20_CODE, UT30_CODE, NEXT_COMM_METHOD_NAME, NEXT_COMM_TS, NEXT_KEYWORDS,
-         |NEXT_UUC_ID, WEB_PAGE_SRC, STATUS_CODE, ERROR_CODE, ERROR_DESC, EVENT_REF_ID, MKTO_ACTIVITY_ID, REFERRER_URL, ACTIVITY_CMPN_CD)
-         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
+         |NEXT_UUC_ID, WEB_PAGE_SRC, STATUS_CODE, ERROR_CODE, ERROR_DESC, EVENT_REF_ID, MKTO_ACTIVITY_ID, REFERRER_URL, ACTIVITY_CMPN_CD,
+         |CONTENT_TYPE_NAME, INTRCTN_TYPE)
+         |VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""".stripMargin,
       interactionDF.columns,
-      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41),
+      Array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43),
       null,true,insertTableName,"INSERT")
   }
 
