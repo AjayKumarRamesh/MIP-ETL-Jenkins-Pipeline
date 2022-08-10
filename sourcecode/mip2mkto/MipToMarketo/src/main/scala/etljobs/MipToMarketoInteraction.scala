@@ -361,9 +361,8 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                    "value": "${removeControlChar(row.getString(30))}"
          |                },
          |                {
-         |                    "apiName": "Lead_Description",
-         |                    "value": "${removeControlChar(row.getString(27))}"
-         |
+         |                    "apiName": "Content_Campaign_Name",
+         |                    "value": "${removeControlChar(row.getString(24))}"
          |                },
          |                {
          |                    "apiName": "Lead_Note",
@@ -386,11 +385,6 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |
          |                },
          |                {
-         |                    "apiName": "UT17_Code",
-         |                    "value": "${removeControlChar(row.getString(4))}"
-         |
-         |                },
-         |                {
          |                    "apiName": "UT20_Code",
          |                    "value": "${removeControlChar(row.getString(26))}"
          |
@@ -408,21 +402,6 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                {
          |                    "apiName": "CI_Phone_Permission",
          |                    "value": "${removeControlChar(row.getString(6))}"
-         |                },
-         |                {
-         |                    "apiName": "GBL_IMT_CD",
-         |                    "value": "${removeControlChar(row.getString(7))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "GBL_IOT_CD",
-         |                    "value": "${removeControlChar(row.getString(15))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "GBL_RGN_CD",
-         |                    "value": "${removeControlChar(row.getString(21))}"
-         |
          |                },
          |                {
          |                    "apiName": "Content_Type_Name",
@@ -532,9 +511,8 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                    "value": "${row.getLong(14)}"
          |                },
          |                {
-         |                    "apiName": "Lead_Description",
-         |                    "value": "${removeControlChar(row.getString(27))}"
-         |
+         |                    "apiName": "Content_Campaign_Name",
+         |                    "value": "${removeControlChar(row.getString(24))}"
          |                },
          |                {
          |                    "apiName": "Lead_Note",
@@ -549,21 +527,6 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                {
          |                    "apiName": "CI_Phone_Permission",
          |                    "value": "${removeControlChar(row.getString(6))}"
-         |                },
-         |                {
-         |                    "apiName": "GBL_IMT_CD",
-         |                    "value": "${removeControlChar(row.getString(7))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "GBL_IOT_CD",
-         |                    "value": "${removeControlChar(row.getString(15))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "GBL_RGN_CD",
-         |                    "value": "${removeControlChar(row.getString(21))}"
-         |
          |                },
          |                {
          |                    "apiName": "Content_Type_Name",
