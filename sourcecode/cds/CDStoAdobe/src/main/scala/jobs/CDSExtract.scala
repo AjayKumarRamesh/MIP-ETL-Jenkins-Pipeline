@@ -135,7 +135,7 @@ object CDSExtract extends ETLFrameWork {
       return
     }
 
-    var filtered_DF: DataFrame = null
+    var filtered_DF: DataFrame = null // NOSONAR
 
     if (pageCategoryCode == USProductCode) {
       log.info("Filtering urls for only products or us-en at www.ibm.com.")
@@ -191,20 +191,18 @@ object CDSExtract extends ETLFrameWork {
     createCSVHeader()
     // ## RECSentity.id,entity.name,entity.category,entity.message,entity.pageUrl,entity.thumbnailUrl,entity.value,entity.inventory,entity.margin,entity.common-type,entity.common-contentId,entity.common-source,entity.common-page-categoryCode,entity.common-language,entity.common-locale,entity.common-country,entity.common-geo,entity.common-topics,entity.ut-level10code,entity.ut-level10,entity.ut-level15code,entity.ut-level15,entity.ut-level17code,entity.ut-level17,entity.ut-level20code,entity.ut-level20,entity.ut-level30code,entity.ut-level30,entity.content-publishedTime,entity.content-modifiedTime,entity.content-authorName
 
-    // TODO can probably change this back to printing in a loop since all transformations is done above
     df2.foreach { row =>
       writeRow(row) // For some reason it didn't like me just appending the rows here, had to create a seperate function
     }
 
     log.info("csv created.")
     log.info("Uploading to COS Bucket....")
-    val COS_HOST = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, "COS_" + ENV)
+    val COS_HOST = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, "COS_" + ENV) // NOSONAR
     COSUpload(COS_HOST, COS_BUCKET, "CDS_Extract_US_" + pageCategoryCode + ".csv")
     val archiveTimestamp = Calendar.getInstance().getTime.toString.replace(" ", "_").replace(":", "-")
     COSUpload(COS_HOST, COS_BUCKET + "/archives", "CDS_Extract_US_" + pageCategoryCode + "_" + archiveTimestamp + ".csv")
 
     if (ENV == "PROD") {
-      //log.info("Uploading to FTP Server....")
       FTPUpload(FTP_HOST, FTP_BUCKET, "CDS_Extract_US_" + pageCategoryCode + ".csv")
       FTPUpload(FTP_HOST, FTP_ARCHIVE_BUCKET, "CDS_Extract_US_" + pageCategoryCode + "_" + archiveTimestamp + ".csv")
     }
@@ -432,7 +430,7 @@ object CDSExtract extends ETLFrameWork {
 
   }
 
-  private def COSUpload(connection: Properties, directory: String, filename: String): Int = {
+  private def COSUpload(connection: Properties, directory: String, filename: String): Int = { // NOSONAR
     val bucketURL = connection.getProperty(PropertyNames.EndPoint) + "/" +
       connection.getProperty(PropertyNames.ResourceSpecific_1) + "/" + directory + "/" + filename
     log.info("Uploading to COS url: " + bucketURL)
@@ -486,7 +484,7 @@ object CDSExtract extends ETLFrameWork {
     accessToken
   }
 
-  private def FTPUpload(host: String, directory: String, filename: String): Unit = {
+  private def FTPUpload(host: String, directory: String, filename: String): Unit = { // NOSONAR
 
     val user = System.getenv("MAP_FTP_USER_ID")
     val pass = System.getenv("MAP_FTP_PASSWORD")
@@ -496,7 +494,7 @@ object CDSExtract extends ETLFrameWork {
     var response = false
     try {
       val fclient = new SSLSessionReuseFTPSClient
-      log.info("Connecting....")
+      log.info("Connecting to FTP....")
       fclient.connect(host)
       log.info("Logging into FTP Server....")
       if (!fclient.login(user, pass)) {
@@ -654,8 +652,8 @@ object CDSExtract extends ETLFrameWork {
         )
       }
     }
-    val cds_details = args(args.indexOf("--cdsDetails") +1)
-    val cds_conn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, cds_details)
+    val cds_details = args(args.indexOf("--cdsDetails") +1) // NOSONAR
+    val cds_conn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, cds_details) // NOSONAR
     cdsEndPoint = cds_conn.getProperty(PropertyNames.EndPoint)
     apiKey = cds_conn.getProperty(PropertyNames.ClientSecret)
   }

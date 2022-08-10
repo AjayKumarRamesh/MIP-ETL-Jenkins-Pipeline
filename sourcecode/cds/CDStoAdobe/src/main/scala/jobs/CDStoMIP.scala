@@ -120,8 +120,6 @@ object CDStoMIP extends ETLFrameWork {
     cdsDF.cache()
 
 
-    //log.info("Perform dataframe transformations for formatting...")
-
     if (!cdsDF.isEmpty) {
       log.info("Dropping null UUC_ID's...")
       // Drop any columns with null UUC_ID values.
@@ -279,8 +277,6 @@ object CDStoMIP extends ETLFrameWork {
           .put("CONTENT_FORMAT_CD", contentFormat)
 
 
-        // TODO need entity.name (from title)
-
         cdsJSONFull.put(JsonValues)
 
         i += 1
@@ -359,9 +355,9 @@ object CDStoMIP extends ETLFrameWork {
       MAXIMUM_TIMESTAMP_OFFSET = args(args.indexOf("--maxOffset") + 1).toInt
       MINIMUM_TIMESTAMP_OFFSET_MINUTES = args(args.indexOf("--minMins") + 1).toInt
       mergeSql = args(args.indexOf("--mergeSql") +1)
-      val cds_details = args(args.indexOf("--cdsDetails") +1)
+      val cds_details = args(args.indexOf("--cdsDetails") +1) // NOSONAR
       // get information for CDS Endpoint
-      val cds_conn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, cds_details)
+      val cds_conn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, cds_details) // NOSONAR
       cdsEndPoint = cds_conn.getProperty(PropertyNames.EndPoint)
       apiKey = cds_conn.getProperty(PropertyNames.ClientSecret)
 
@@ -386,8 +382,6 @@ object CDStoMIP extends ETLFrameWork {
       getArgs(args)
 
       // Log job status START - DB
-      // log.info(s"CommonDBConnProperties => ${this.CommonDBConProperties}")
-      // log.info(s"Log to JobHistoryLogTable => ${AppProperties.JobHistoryLogTable}")
       DataUtilities.recordJobHistory(AppProperties.SparkSession,
         AppProperties.CommonJobSeqCode,
         0,

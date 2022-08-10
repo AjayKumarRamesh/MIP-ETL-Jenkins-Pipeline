@@ -13,7 +13,7 @@ object CDStoMIP_DBPULL extends ETLFrameWork {
 
   // Static values for creating api call
   var countSoFar: Long = 0
-  
+
 
   // Database Endpoint variables
   private var MIP_ENDPOINT = ""
@@ -37,7 +37,7 @@ object CDStoMIP_DBPULL extends ETLFrameWork {
   6) Write csv to FTP server ( FTPUpload )
    */
   @throws(classOf[Exception])
-  def runJobSequence_CDStoMIP(): Unit = {
+  def runJobSequence_CDStoMIP(): Unit = { // NOSONAR
     log.info("runJobSequence started")
     // ETL Logic goes here
     /* Note: You have access to the following instances:
@@ -53,7 +53,7 @@ object CDStoMIP_DBPULL extends ETLFrameWork {
         e.g: DataUtilities.readDataWithColumnPartitioning(...)
     */
 
-    
+
     // For tracking runtime of job
     val startTime = System.currentTimeMillis()
     val startDate = new Date(startTime * 1000L)
@@ -71,9 +71,6 @@ object CDStoMIP_DBPULL extends ETLFrameWork {
     val df_unord = DataUtilities.readDataByPartitioningType(AppProperties.SparkSession, cmdpProperties, cmdpPullSql, Constants.PartitionTypeByColumn, null, "PARTCOL").drop("PARTCOL")
     df_unord.cache()
 
-    val spark = AppProperties.SparkSession
-
-
 
       log.info("Perform dataframe transformations for formatting...")
     // Drop any columns with null UUC_ID values (before turning those values to "").
@@ -85,8 +82,6 @@ object CDStoMIP_DBPULL extends ETLFrameWork {
 
     countSoFar = df.count()
 
-    //log.info("Performing Truncate and Load of CDS data....")
-    //DataUtilities.saveDataframeToDB(AppProperties.SparkSession, MIPdbProperties, df, "MAP_CORE.MCT_CDS_ASSET",Constants.PersistUsingSourceColumns, Constants.SaveModeOverwrite)
     log.info("Performing Update/Insert of CDS data....")
 
     DataUtilities.runPreparedStatement(
@@ -97,7 +92,7 @@ object CDStoMIP_DBPULL extends ETLFrameWork {
       null,
       null,
       null)
-    
+
     val totalTime: Long = (System.currentTimeMillis()-startTime)/(1000*60)
 
     log.info("Total time: "  + totalTime + "  minutes.")
@@ -140,8 +135,6 @@ object CDStoMIP_DBPULL extends ETLFrameWork {
       log.info(s"Starting ETL Job => $jobClassName....")
 
       // Log job status START - DB
-      // log.info(s"CommonDBConnProperties => ${this.CommonDBConProperties}")
-      // log.info(s"Log to JobHistoryLogTable => ${AppProperties.JobHistoryLogTable}")
       DataUtilities.recordJobHistory(AppProperties.SparkSession,
         AppProperties.CommonJobSeqCode,
         0,

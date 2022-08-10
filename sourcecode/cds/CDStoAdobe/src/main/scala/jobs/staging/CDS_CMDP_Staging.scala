@@ -19,7 +19,7 @@ object CDS_CMDP_Staging extends ETLFrameWork {
   private var dimURLSQL = ""
 
   @throws(classOf[Exception])
-  def runJobSequence_updateStagingTables(): Unit = {
+  def runJobSequence_updateStagingTables(): Unit = { // NOSONAR
 
 
     // For tracking runtime of job
