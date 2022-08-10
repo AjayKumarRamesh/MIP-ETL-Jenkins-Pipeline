@@ -8,7 +8,6 @@ import com.ibm.mkt.etlframework.{AppProperties, Constants, ETLFrameWork}
 object CDS_CMDP_Staging extends ETLFrameWork {
   val jobClassName: String = this.getClass.getSimpleName.stripSuffix("$")
   var isJobFailed = false
-  //val spark = AppProperties.SparkSession
 
   // Database Endpoint variables
   private var MIP_ENDPOINT = ""
@@ -81,8 +80,6 @@ object CDS_CMDP_Staging extends ETLFrameWork {
       log.info(s"Starting ETL Job => $jobClassName....")
 
       // Log job status START - DB
-      // log.info(s"CommonDBConnProperties => ${this.CommonDBConProperties}")
-      // log.info(s"Log to JobHistoryLogTable => ${AppProperties.JobHistoryLogTable}")
       DataUtilities.recordJobHistory(AppProperties.SparkSession,
         AppProperties.CommonJobSeqCode,
         0,
