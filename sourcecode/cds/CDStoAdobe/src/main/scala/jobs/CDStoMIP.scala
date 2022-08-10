@@ -3,7 +3,6 @@ package jobs
 import com.ibm.mkt.etlframework.data.DataUtilities
 import com.ibm.mkt.etlframework.{AppProperties, Constants, ETLFrameWork, PropertyNames}
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{col, last, udf}
 import org.json.{JSONArray, JSONException, JSONObject}
 import java.io.{IOException, _}
 import java.net.URL
@@ -25,9 +24,6 @@ object CDStoMIP extends ETLFrameWork {
   private var apiKey: String = ""
   private val page: String = "1"
   private var size: String = ""
-  //private val source: String = "URX"
-  //private var pageCatCd: String = null
-  //private val ctryCd: String = "US"
   private var extractedPagesCount: Int = 0
   var countSoFar = 0
   var retryCount = 0
@@ -57,7 +53,7 @@ object CDStoMIP extends ETLFrameWork {
   3) Run prepared statement to update/insert CDS data in MIP Database ( rows in MAP_CORE.MCT_CDS_ASSET )
    */
   @throws(classOf[Exception])
-  def runJobSequence_CDStoMIP(): Unit = {
+  def runJobSequence_CDStoMIP(): Unit = { // NOSONAR
     log.info("runJobSequence started")
     // ETL Logic goes here
     /* Note: You have access to the following instances:
