@@ -202,7 +202,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Form_Name",
-         |                    "value": "${removeControlChar(row.getString(36))}"
+         |                    "value": "${removeControlChar(row.getString(35))}"
          |                },
          |                {
          |                    "apiName": "GBL_IMT_CD",
@@ -234,7 +234,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Lead_Source",
-         |                    "value": "${removeControlChar(row.getString(38))}"
+         |                    "value": "${removeControlChar(row.getString(37))}"
          |
          |                },
          |                {
@@ -259,12 +259,12 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "UT10_Code",
-         |                    "value": "${removeControlChar(row.getString(31))}"
+         |                    "value": "${removeControlChar(row.getString(30))}"
          |
          |                },
          |                {
          |                    "apiName": "UT15_Code",
-         |                    "value": "${removeControlChar(row.getString(29))}"
+         |                    "value": "${removeControlChar(row.getString(28))}"
          |
          |                },
          |                {
