@@ -12,6 +12,7 @@ dagstoCOS = [RUBY_TO_MIP:['Ruby', 'RubyToMIP', 'digikeystore.jks', 'javacerts.jk
             CMDP_COP_to_MIP:['.', 'AccountIngestion', 'digikeystore.jks', 'javacerts.jks'],
             'MIP-MARKETO-INTERACTION':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
             'MIP-MARKETO-PERSON':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
+            'MIP-PERSON-INTERACTION-MARKETO-HRM':['.', 'MipToMarketo', 'digikeystore.jks', 'javacerts.jks'],
             MKTO_UNSUB_EMAIL_ACTIVITY:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
             MIP_SPSS_SCORING:['spss', 'SpssScoring', 'digikeystore.jks', 'javacerts.jks','keystore.jks','spssconfigdev.properties','spssconfigprod.properties','spsswebrunjob.jar'],
             RUBY_API_TO_MIP:['.', '.', 'digikeystore.jks', 'javacerts.jks'],
