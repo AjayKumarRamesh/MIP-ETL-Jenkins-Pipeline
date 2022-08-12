@@ -537,7 +537,7 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
     // DATABASE CONNECTION PROPERTIES - END
 
     // READING THE MIP DATABASE - START
-    val mipEmailActivityDF = AppProperties.SparkSession.read
+    val newDF = AppProperties.SparkSession.read
       .jdbc(connectionProperties.getProperty(PropertyNames.EndPoint),tgtTableName,connectionProperties)
     // READING THE MIP DATABASE - END
 
@@ -600,40 +600,6 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
     }
     maxTs
   }
-
-
-/*  // METHOD TO EXTRACT MAX-TIMESTAMP FROM ETL_JOB_HISTORY TABLE USED FOR CALLING API PAGINATION TOKEN
-  @throws(classOf[Exception])
-  def getLastRecordTimeStamp(jobSeqCode: String): String = {
-    // "yyyy-MM-dd HH:mm:ss.SSS"
-    var dfResult: DataFrame = null
-    var maxTs:String = null
-    try {
-      val jobSeqHistTable: String = AppProperties.JobHistoryLogTable
-      dfResult = AppProperties.SparkSession.read
-        .option("isolationLevel", Constants.DBIsolationUncommittedRead)
-        .jdbc(AppProperties.CommonDBConProperties.getProperty(PropertyNames.EndPoint),
-          s""" (SELECT
-                      JOB_SK JOB_SK, JOB_SPECIFIC_1 AS MAX_TIMESTAMP
-                    FROM $jobSeqHistTable
-                    WHERE
-                      JOB_SEQUENCE = '$jobSeqCode'
-                     AND JOB_STATUS != 'Started'
-                    ORDER BY JOB_SK DESC
-                    FETCH FIRST ROW ONLY) AS RESULT_TABLE""",
-          AppProperties.CommonDBConProperties)
-      if (log.isDebugEnabled || log.isInfoEnabled())
-        dfResult.show()
-      if (dfResult.count() > 0) {
-        val firstRow = dfResult.collect().head
-        maxTs = firstRow.getString(1)
-      }
-      else maxTs = null
-    } finally {
-      if (dfResult != null) dfResult.unpersist()
-    }
-    maxTs
-  }*/
 
 
   // METHOD TO ALTER TABLE TO ADD A NEW COLUMN FOUND IN API RESPONSES
