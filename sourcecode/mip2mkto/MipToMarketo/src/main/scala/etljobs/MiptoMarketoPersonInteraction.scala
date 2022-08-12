@@ -128,7 +128,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     val httpClient: CloseableHttpClient = HttpClients.custom().build()
 
     //Exception handling for duplicates in Payload
-    try {
+    try { //NOSONAR
       val token = getMarketoTokenPerson
       val httpPostToken = new HttpPost(s"$externalEndpoint?access_token=$token")
       httpPostToken.addHeader("Content-type", "application/json;charset=UTF-8")
@@ -325,7 +325,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     val httpClient: CloseableHttpClient = HttpClients.custom().build()
 
     //Exception handling for duplicates in Payload
-    try {
+    try { //NOSONAR
       val token = getMarketoTokenInteraction
       val httpPostToken = new HttpPost(s"$externalEndpoint?access_token=$token")
       httpPostToken.addHeader("Content-type", "application/json;charset=UTF-8")
@@ -359,7 +359,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     val httpClient: CloseableHttpClient = HttpClients.custom().build()
 
     //Exception handling for duplicates in Payload
-    try {
+    try {  //NOSONAR
       val httpPostToken = new HttpPost(s"$externalEndpoint?access_token=$token")
       httpPostToken.addHeader("Content-type", "application/json;charset=UTF-8")
       httpPostToken.addHeader("Accept", "application/json")

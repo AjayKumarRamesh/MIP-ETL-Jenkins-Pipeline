@@ -541,20 +541,6 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
       .jdbc(connectionProperties.getProperty(PropertyNames.EndPoint),tgtTableName,connectionProperties)
     // READING THE MIP DATABASE - END
 
-    // LISTING THE DUPLICATE RECORDS FOUND IN THE API CALL - START
-   /* log.info("CHECKING FOR DUPLICATES")
-    val dupDF = newDF.join(mipEmailActivityDF,mipEmailActivityDF("ID")===newDF("id"),"inner")
-      .select(newDF("*"))
-    dupDF.select(dupDF("id")).collect.foreach(println)
-    dupCount = dupCount + dupDF.count()
-    rejectMessage = "Total Count of Duplicate Rows Found & Rejected = " + dupCount
-    log.info("TOTAL COUNT OF DUPLICATE ROWS FOUND & REJECTED = " + dupCount)
-    // LISTING THE DUPLICATE RECORDS FOUND IN THE API CALL - END
-
-    // WRITING THE DISTINCT RECORDS TO MIP DATABASE - START
-    val newDFFinal = newDF.join(mipEmailActivityDF,mipEmailActivityDF("ID")===newDF("id"),"left_anti")
-      .select(newDF("*"))*/
-
     // WRITING ALL THE RECORDS TO MIP DATABASE - START
     newDF.write.mode("append")
       .option("batchSize", batchCount)
@@ -585,7 +571,6 @@ object MarketoToMipIngestionV2 extends ETLFrameWork {
           s"""$maxActivityDateSql""",
           conProp)
       if (log.isDebugEnabled || log.isInfoEnabled())
-      //        dfResult.show()
         if (dfResult.count() > 0) {
           val firstRow = dfResult.collect().head
           try {

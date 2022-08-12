@@ -83,7 +83,7 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
 
     import spark.implicits._
 
-    activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
+    activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {  //NOSONAR
       s"""{
          |      "leadId":${row.getLong(8)},
          |      "activityDate":"${convert({row.getTimestamp(30).toString})}",
@@ -197,7 +197,7 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
 
     }).toDF().persist()
 
-    activityDF2 = transformedDF.filter(transformedDF("Activity_Type") === clientInterest).map(row => {
+    activityDF2 = transformedDF.filter(transformedDF("Activity_Type") === clientInterest).map(row => {  //NOSONAR
       s"""{
          |      "leadId":${row.getLong(8)},
          |      "activityDate":"${convert({row.getTimestamp(30).toString})}",
@@ -313,7 +313,7 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
          |}""".stripMargin
     }).toDF().persist()
 
-    activityDF3 = transformedDF.filter(transformedDF("Activity_Type") === eventInteraction).map(row => {
+    activityDF3 = transformedDF.filter(transformedDF("Activity_Type") === eventInteraction).map(row => {  //NOSONAR
       s"""{
          |      "leadId":${row.getLong(8)},
          |      "activityDate":"${convert({row.getTimestamp(30).toString})}",
@@ -354,7 +354,7 @@ object MipToMarketoInteractionMulti extends ETLFrameWork {
          |}""".stripMargin
     }).toDF().persist()
 
-    activityDF4 = transformedDF.filter(transformedDF("Activity_Type") === digitalInteraction).map(row => {
+    activityDF4 = transformedDF.filter(transformedDF("Activity_Type") === digitalInteraction).map(row => {  //NOSONAR
       s"""{
          |      "leadId":${row.getLong(8)},
          |      "activityDate":"${convert({row.getTimestamp(30).toString})}",
