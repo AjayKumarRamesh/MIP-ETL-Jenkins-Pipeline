@@ -191,7 +191,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
       s"""{
          |      "leadId":${row.getLong(9)},
-         |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
+         |      "activityDate":"${convert({row.getTimestamp(31).toString})}",
          |      "activityTypeId":${row.getInt(19)},
          |      "primaryAttributeValue": "${row.getString(25)}",
          |      "attributes":
@@ -219,7 +219,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Interaction_ID",
-         |                    "value": "${row.getLong(34)}"
+         |                    "value": "${row.getLong(33)}"
          |
          |                },
          |                {
