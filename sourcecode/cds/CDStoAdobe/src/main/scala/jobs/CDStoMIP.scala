@@ -3,7 +3,6 @@ package jobs
 import com.ibm.mkt.etlframework.data.DataUtilities
 import com.ibm.mkt.etlframework.{AppProperties, Constants, ETLFrameWork, PropertyNames}
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{col, udf}
 import org.json.{JSONArray, JSONException, JSONObject}
 import java.io.{IOException, _}
 import java.net.URL
@@ -25,9 +24,6 @@ object CDStoMIP extends ETLFrameWork {
   private var apiKey: String = ""
   private val page: String = "1"
   private var size: String = ""
-  //private val source: String = "URX"
-  //private var pageCatCd: String = null
-  //private val ctryCd: String = "US"
   private var extractedPagesCount: Int = 0
   var countSoFar = 0
   var retryCount = 0
@@ -37,6 +33,7 @@ object CDStoMIP extends ETLFrameWork {
   private var lastRunTimestamp: String = null
   private var MINIMUM_TIMESTAMP_OFFSET = 0
   private var MAXIMUM_TIMESTAMP_OFFSET = 0
+  private var MINIMUM_TIMESTAMP_OFFSET_MINUTES = 0
   private var mergeSql = ""
 
 
@@ -48,8 +45,6 @@ object CDStoMIP extends ETLFrameWork {
   private var MIP_ENDPOINT = ""
   private var CORE_SCHEMA = ""
   private var CDS_ASSET_TABLE = ""
-  // private val ETL_SCHEMA = "MAP_ETL"
-
 
   /*
   Steps for Job:
@@ -58,7 +53,7 @@ object CDStoMIP extends ETLFrameWork {
   3) Run prepared statement to update/insert CDS data in MIP Database ( rows in MAP_CORE.MCT_CDS_ASSET )
    */
   @throws(classOf[Exception])
-  def runJobSequence_CDStoMIP(): Unit = {
+  def runJobSequence_CDStoMIP(): Unit = { // NOSONAR
     log.info("runJobSequence started")
     // ETL Logic goes here
     /* Note: You have access to the following instances:
@@ -74,8 +69,6 @@ object CDStoMIP extends ETLFrameWork {
         e.g: DataUtilities.readDataWithColumnPartitioning(...)
     */
 
-    //pageCatCd = pageCategoryCode
-
 
     // For tracking runtime of job
     val startTime = System.currentTimeMillis()
@@ -90,22 +83,25 @@ object CDStoMIP extends ETLFrameWork {
     val MIPdbProperties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession,MIP_ENDPOINT)
     MIPdbProperties.setProperty("sslConnection", "true")
 
-    val lastRunSql = s" SELECT MAX(UPDATE_TS) AS LASTPROCESSTIME, 4 as PARTCOL " +
-      s"FROM $CORE_SCHEMA.$CDS_ASSET_TABLE"
-
-
-    val timeDF = DataUtilities.readDataByPartitioningType(AppProperties.SparkSession, MIPdbProperties, lastRunSql, Constants.PartitionTypeByColumn, null, "PARTCOL").drop("PARTCOL")
-    val timestamp = timeDF.first().get(0)
-    if (timestamp != null) {
-      lastRunTimestamp = timestamp.toString
+    log.info("Getting Last Successful Run Time")
+    val successfulTimestamp = DataUtilities.getLastSuccessfulRunTime(AppProperties.SparkSession, "CDStoMIP")
+    if (!successfulTimestamp.isEmpty) {
+      val char = successfulTimestamp("JOB_START_TIME").lastIndexOf("-")
+      lastRunTimestamp = successfulTimestamp("JOB_START_TIME")
+        .replaceAll("[.]", ":")
+      lastRunTimestamp = lastRunTimestamp.substring(0,char) + " " + lastRunTimestamp.substring(char+1)
     }
+    log.info(s"Last Successful Timestamp: $lastRunTimestamp")
 
-    //lastRunTimestamp = null  // Only for testing default timestamp, leave commented out otherwise.
+    log.info("Looking backwards " + MINIMUM_TIMESTAMP_OFFSET + " days.")
+    log.info("Looking backwards " + MINIMUM_TIMESTAMP_OFFSET_MINUTES + " minutes.")
+    log.info("Looking forwards " + MAXIMUM_TIMESTAMP_OFFSET + " days.")
+
     val minTimeStamp = getFormattedTimeStamp("min")
     val maxTimeStamp = getFormattedTimeStamp("max")
 
-    println(minTimeStamp)
-    println(maxTimeStamp)
+    log.info("Minimum timestamp formatted: " + minTimeStamp)
+    log.info("Maximum timestamp formatted: " + maxTimeStamp)
 
     // Built api call
     var cdsURL = cdsEndPoint + "?apiKey=" + apiKey + "&page=" + page + "&size=" + size + "&minUpdateTs=" + minTimeStamp + "&topUpdateTs=" + maxTimeStamp
@@ -117,7 +113,6 @@ object CDStoMIP extends ETLFrameWork {
       cdsURL != ""
     }) {
       cdsURL = callCDSAPI(cdsURL);
-      //println("LINK: " + cdsURL)
     }
     log.info("Creating CDS dataframe...")
     val cdsDF = jsonToDataFrame(cdsJSONFull.toString)
@@ -125,15 +120,10 @@ object CDStoMIP extends ETLFrameWork {
     cdsDF.cache()
 
 
-    //log.info("Perform dataframe transformations for formatting...")
-
     if (!cdsDF.isEmpty) {
-      log.info("Perform dataframe transformations for formatting...")
+      log.info("Dropping null UUC_ID's...")
       // Drop any columns with null UUC_ID values.
-      val df_unordered = cdsDF.na.drop(Seq("UUC_ID"))
-      df_unordered.cache()
-      // Reorder columns so that it matches expected order for prepared statement.
-      val df = df_unordered.select("UUC_ID","ASSET_DEFAULT_TITLE","CONTENT_URL","DLVRY_URL","DLVRY_URL_ID","UT10_CODE","UT15_CODE","UT17_CODE","UT20_CODE","UT30_CODE","COUNTRY_CODE","LANG_CODE","CONTENT_TYPE_ID","OV_CODE", "CONTENT_FORMAT_CD")
+      val df = cdsDF.na.drop(Seq("UUC_ID"))
       df.cache()
       df.show()
 
@@ -180,7 +170,7 @@ object CDStoMIP extends ETLFrameWork {
         log.info("No data withing provided date range")
         return ""
       }
-      if (responseCode == 500 || responseCode == 504) {
+      if (responseCode != 200) {
         log.info("Unexpected network error occurred...retrying")
         //returns the same urlString back to try again
         retryCount += 1
@@ -251,19 +241,15 @@ object CDStoMIP extends ETLFrameWork {
         val ovCodeCoreAttributes = jsonDataArray.getJSONObject(i).get("coreAttributes").asInstanceOf[JSONObject]
 
         val universalContentId = ovCodeCoreAttributes.get("universalContentId")
-        //ovCode = ovCodeCoreAttributes.get("ovCode")
         val contentTitle = ovCodeCoreAttributes.get("contentTitle")
         val contentUrl = ovCodeCoreAttributes.get("contentUrl")
         val dlvryUrl = ovCodeCoreAttributes.get("dlvryUrl")
         val dlvryUrlId = ovCodeCoreAttributes.get("dlvryUrlId")
-        //val contentSourceSystem = ovCodeCoreAttributes.get("contentSourceSystem");
-        //val pageCatCd = ovCodeCoreAttributes.get("pageCatCd");
         val langCd = ovCodeCoreAttributes.get("langCd");
         var ctryCd = ovCodeCoreAttributes.get("ctryCd")
         if (ctryCd.toString != "null") {
           ctryCd = ctryCd.toString.substring(0,2); // Have to cut country code down as sometimes you get length 3
         }
-        //val geoCd = ovCodeCoreAttributes.get("geoCd");
         val ut10Cd = ovCodeCoreAttributes.get("ut10Cd");
         val ut15Cd = ovCodeCoreAttributes.get("ut15Cd");
         val ut17Cd = ovCodeCoreAttributes.get("ut17Cd");
@@ -291,8 +277,6 @@ object CDStoMIP extends ETLFrameWork {
           .put("CONTENT_FORMAT_CD", contentFormat)
 
 
-        // TODO need entity.name (from title)
-
         cdsJSONFull.put(JsonValues)
 
         i += 1
@@ -304,12 +288,9 @@ object CDStoMIP extends ETLFrameWork {
         log.info("count so far : " + countSoFar + "+++++ nextPageLink: " + nextPageLink)
         val remaining = extractedPagesCount - countSoFar
         log.info("count remaining : " + remaining)
-        //callCDSAPI(nextPageLink)
         return nextPageLink
       }
       else {
-        //extractedPagesCount = Integer.parseInt(jsonObject.get("totalCount").toString)
-        //out.println("+++++ count so far : " + pageCount + "Total count : " + extractedPagesCount)
         log.info("count so far : " + countSoFar + "+++++ lastPage")
         log.info("Total count : " + extractedPagesCount)
         return ""
@@ -336,25 +317,21 @@ object CDStoMIP extends ETLFrameWork {
     var timestamp: Timestamp = null
     if (mode == "min") {
       // Uses defaultMinTimestmap or timestamp of job last ran
-      //timestamp = Timestamp.from(Instant.now().minus(24, ChronoUnit.HOURS))
       if (lastRunTimestamp == null) {
         timestamp = Timestamp.valueOf(defaultMinTimestamp)
       } else {
         timestamp = Timestamp.valueOf(lastRunTimestamp)
       }
       val instant = timestamp.toInstant
-      timestamp = Timestamp.from(instant.minus(MINIMUM_TIMESTAMP_OFFSET, ChronoUnit.DAYS))
+      timestamp = Timestamp.from(instant.minus(MINIMUM_TIMESTAMP_OFFSET, ChronoUnit.DAYS).minus(MINIMUM_TIMESTAMP_OFFSET_MINUTES, ChronoUnit.MINUTES))
       // Set timestamp to a 1 day offset in the past to accommadate CMDP difference if using full refresh.
-      // timestamp = Timestamp.from(timestamp.toInstant.minus(1, ChronoUnit.DAYS))
     } else if (mode == "max") {
       // 1 day future in order to make sure time range goes all the way to current as leeway
       timestamp = Timestamp.from(Instant.now().plus(1, ChronoUnit.DAYS).minus(MAXIMUM_TIMESTAMP_OFFSET, ChronoUnit.DAYS))
     }
-    println(timestamp)
+    log.info(mode + " timestamp is: " + timestamp)
     val pattern = """[0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}""".r
-    //val timestampString = null
     val find = pattern.findFirstIn(timestamp.toString)
-    //var timestampString = timestamp.toString.substring(0, timestamp.toString.length - 4)
     var timestampString = find.toString.replaceAll(" ", "%20").replaceAll(":", "%3A")
     timestampString = timestampString.substring(5, timestampString.length - 1)
     timestampString
@@ -376,12 +353,11 @@ object CDStoMIP extends ETLFrameWork {
       size = args(args.indexOf("--pageSize") + 1)
       MINIMUM_TIMESTAMP_OFFSET = args(args.indexOf("--minOffset") + 1).toInt
       MAXIMUM_TIMESTAMP_OFFSET = args(args.indexOf("--maxOffset") + 1).toInt
+      MINIMUM_TIMESTAMP_OFFSET_MINUTES = args(args.indexOf("--minMins") + 1).toInt
       mergeSql = args(args.indexOf("--mergeSql") +1)
-      //cdsEndPoint = args(args.indexOf("--cdsEndpoint") +1)
-      //apiKey = args(args.indexOf("--apiKey") +1)
-      val cds_details = args(args.indexOf("--cdsDetails") +1)
+      val cds_details = args(args.indexOf("--cdsDetails") +1) // NOSONAR
       // get information for CDS Endpoint
-      val cds_conn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, cds_details)
+      val cds_conn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, cds_details) // NOSONAR
       cdsEndPoint = cds_conn.getProperty(PropertyNames.EndPoint)
       apiKey = cds_conn.getProperty(PropertyNames.ClientSecret)
 
@@ -406,8 +382,6 @@ object CDStoMIP extends ETLFrameWork {
       getArgs(args)
 
       // Log job status START - DB
-      // log.info(s"CommonDBConnProperties => ${this.CommonDBConProperties}")
-      // log.info(s"Log to JobHistoryLogTable => ${AppProperties.JobHistoryLogTable}")
       DataUtilities.recordJobHistory(AppProperties.SparkSession,
         AppProperties.CommonJobSeqCode,
         0,

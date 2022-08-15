@@ -32,7 +32,6 @@ object CDSExtract extends ETLFrameWork {
   private val DEFAULT_IAM_ENDPOINT = "https://iam.cloud.ibm.com/identity/token?grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey="
 
   // Static values for creating api call
-  //private val cdsEndPoint: String = "https://www-api.ibm.com/cds-search/getCdsAttributes"
   private var cdsEndPoint: String = ""
   private var apiKey: String = ""
   private val page: String = "1"
@@ -79,7 +78,7 @@ object CDSExtract extends ETLFrameWork {
       6) Write csv to FTP server ( FTPUpload )
        */
   @throws(classOf[Exception])
-  def runJobSequence_getCDSAttributes(pageCategoryCode: String, MIPdbProperties: Properties): Unit = {
+  def runJobSequence_getCDSAttributes(pageCategoryCode: String, MIPdbProperties: Properties): Unit = { // NOSONAR
     log.info("runJobSequence started")
     // ETL Logic goes here
     /* Note: You have access to the following instances:
@@ -122,14 +121,13 @@ object CDSExtract extends ETLFrameWork {
       cdsURL != ""
     }) {
       cdsURL = callCDSAPI(cdsURL);
-      //println("LINK: " + cdsURL)
     }
 
     log.info("Creating CDS dataframe...")
     val cdsDF = jsonToDataFrame(cdsJSONFull.toString)
     cdsJSONFull = new JSONArray()
     cdsDF.cache()
-    //cdsDF.show()
+    cdsDF.show()
 
 
     if (cdsDF.isEmpty) {
@@ -137,7 +135,7 @@ object CDSExtract extends ETLFrameWork {
       return
     }
 
-    var filtered_DF: DataFrame = null
+    var filtered_DF: DataFrame = null // NOSONAR
 
     if (pageCategoryCode == USProductCode) {
       log.info("Filtering urls for only products or us-en at www.ibm.com.")
@@ -166,7 +164,6 @@ object CDSExtract extends ETLFrameWork {
     val singleQuoteStr = udf((string: String) => "\"" + string + "\"")
     val removeEndStr = udf((string: String) => string.substring(0, string.length - 5))
     val replaceQuotes = udf((string: String) => string.replace("\"", "'"))
-    //val replaceSingleComa = udf((string: String) => translate)
 
     log.info("Perform dataframe transformations for formatting...")
     val df2 = df.na.fill("")
@@ -194,30 +191,25 @@ object CDSExtract extends ETLFrameWork {
     createCSVHeader()
     // ## RECSentity.id,entity.name,entity.category,entity.message,entity.pageUrl,entity.thumbnailUrl,entity.value,entity.inventory,entity.margin,entity.common-type,entity.common-contentId,entity.common-source,entity.common-page-categoryCode,entity.common-language,entity.common-locale,entity.common-country,entity.common-geo,entity.common-topics,entity.ut-level10code,entity.ut-level10,entity.ut-level15code,entity.ut-level15,entity.ut-level17code,entity.ut-level17,entity.ut-level20code,entity.ut-level20,entity.ut-level30code,entity.ut-level30,entity.content-publishedTime,entity.content-modifiedTime,entity.content-authorName
 
-    // TODO can probably change this back to printing in a loop since all transformations is done above
     df2.foreach { row =>
       writeRow(row) // For some reason it didn't like me just appending the rows here, had to create a seperate function
     }
 
     log.info("csv created.")
     log.info("Uploading to COS Bucket....")
-    val COS_HOST = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, "COS_" + ENV)
+    val COS_HOST = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, "COS_" + ENV) // NOSONAR
     COSUpload(COS_HOST, COS_BUCKET, "CDS_Extract_US_" + pageCategoryCode + ".csv")
     val archiveTimestamp = Calendar.getInstance().getTime.toString.replace(" ", "_").replace(":", "-")
     COSUpload(COS_HOST, COS_BUCKET + "/archives", "CDS_Extract_US_" + pageCategoryCode + "_" + archiveTimestamp + ".csv")
 
     if (ENV == "PROD") {
-      //log.info("Uploading to FTP Server....")
       FTPUpload(FTP_HOST, FTP_BUCKET, "CDS_Extract_US_" + pageCategoryCode + ".csv")
-      //val archiveTimestamp = Calendar.getInstance().getTime.toString.replace(" ", "_").replace(":", "-")
-
       FTPUpload(FTP_HOST, FTP_ARCHIVE_BUCKET, "CDS_Extract_US_" + pageCategoryCode + "_" + archiveTimestamp + ".csv")
     }
 
     val totalTime: Long = (System.currentTimeMillis() - startTime) / (1000 * 60)
     log.info("Total time: " + totalTime + "  minutes.")
 
-    //CDS_COS_String.clear()
     CDS_COS_String = new StringBuilder()
 
     log.info("runJobSequence ended.")
@@ -371,8 +363,6 @@ object CDSExtract extends ETLFrameWork {
               .put("CONTENT_TITLE", contentTitle)
               .put("CONTENT_DESCRIPTION", contentDscr)
 
-            // TODO need entity.name (from title)
-
             cdsJSONFull.put(JsonValues)
           }
         } catch {
@@ -389,12 +379,9 @@ object CDSExtract extends ETLFrameWork {
         log.info("count so far : " + countSoFar + "+++++ nextPageLink: " + nextPageLink)
         val remaining = extractedPagesCount - countSoFar
         log.info("count remaining : " + remaining)
-        //callCDSAPI(nextPageLink)
         return nextPageLink
       }
       else {
-        //extractedPagesCount = Integer.parseInt(jsonObject.get("totalCount").toString)
-        //out.println("+++++ count so far : " + pageCount + "Total count : " + extractedPagesCount)
         log.info("count so far : " + countSoFar + "+++++ lastPage")
         log.info("Total count : " + extractedPagesCount)
         return ""
@@ -428,159 +415,6 @@ object CDSExtract extends ETLFrameWork {
       )
     }
     log.info("Sql found: \n" + mergedDFsql)
-    /**
-    val mergedDFsql =
-      """ select --distinct causes an error when building the Category ID
-        |     coalesce( cds.URLID, x2.DIM_PAGE_URL_ID ) as "entity.id"
-        |   -- , '' as "entity.name"
-        |    , cds.CONTENT_TITLE as "entity.name"
-        |    --, cds.TITLE
-        |
-        |    -- testing ,  cds.ut10, cds.ut15,cds.ut17,cds.ut20,cds.ut30
-        |
-        |------ Updated 4/02 ----------from CDS only---------------------------
-        |    , case when cds.ut15 is not null and cds.ut17 is null then
-        |           '"' || cds.ut10 || '"",""' || cds.ut10 || ':' || cds.ut15
-        |       when cds.ut15 is not null and  cds.ut20 is null then
-        |            '"' || cds.ut10 || '"",""' || cds.ut10 || ':' || cds.ut15  ||
-        |             '"",""' || cds.ut10 || ':' || cds.ut15  || ':' || cds.ut17
-        |       when cds.ut15 is not null and  cds.ut30 is null then
-        |            '"' || cds.ut10 || '"",""' || cds.ut10 || ':' || cds.ut15  ||
-        |            '"",""' || cds.ut10 || ':' || cds.ut15  || ':' || cds.ut17  ||
-        |             '"",""' || cds.ut10 || ':' || cds.ut15  || ':' || cds.ut17  || ':' ||
-        |                     cds.ut20  --|| '\"\"\"'
-        |       when cds.ut15 is not null and cds.ut30 is not null then
-        |            '"' || cds.ut10 || '"",""' || cds.ut10 || ':' || cds.ut15  ||
-        |            '"",""' || cds.ut10 || ':' || cds.ut15  || ':' || cds.ut17  ||
-        |            '"",""' || cds.ut10 || ':' || cds.ut15  || ':' || cds.ut17  || ':' ||
-        |                     cds.ut20  ||
-        |            '"",""'  || cds.ut10 || ':' || cds.ut15  || ':' || cds.ut17  || ':' ||
-        |                     cds.ut20 || ':' || cds.ut30
-        |       when cds.ut10 is not null and  cds.ut15 is null then
-        |              '"' || cds.ut10
-        |       else ''  end  -- as "entity.ut_codes"
-        |
-        |||   ---- Next Check for UT descriptions in case Xref table is empty
-        |   case when  ut.UT_LVL_10_DSCR is not null then  '"",""'
-        |          else '"'  end
-        | ||
-        |    case when ut.UT_LVL_15_DSCR is not null and ut.UT_LVL_17_DSCR is null then
-        |           ut.UT_LVL_10_DSCR || '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  || '"'
-        |       when ut.UT_LVL_15_DSCR is not null and  ut.UT_LVL_20_DSCR is null then
-        |            ut.UT_LVL_10_DSCR || '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  ||
-        |             '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  || ':' || ut.UT_LVL_17_DSCR  || '"'
-        |       when ut.UT_LVL_15_DSCR is not null and  ut.UT_LVL_30_DSCR is null then
-        |            ut.UT_LVL_10_DSCR || '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  ||
-        |            '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  || ':' || ut.UT_LVL_17_DSCR  ||
-        |            '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  || ':' || ut.UT_LVL_17_DSCR  || ':' ||
-        |                     ut.UT_LVL_20_DSCR  || '"'
-        |       when ut.UT_LVL_15_DSCR is not null and ut.UT_LVL_30_DSCR is not null then
-        |            ut.UT_LVL_10_DSCR || '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  ||
-        |            '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  || ':' || ut.UT_LVL_17_DSCR  ||
-        |            '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  || ':' || ut.UT_LVL_17_DSCR  || ':' ||
-        |                    ut.UT_LVL_20_DSCR  ||
-        |            '"",""' || ut.UT_LVL_10_DSCR || ':' || ut.UT_LVL_15_DSCR  || ':' || ut.UT_LVL_17_DSCR  || ':' ||
-        |                     ut.UT_LVL_20_DSCR || ':' || ut.UT_LVL_30_DSCR || '"'
-        |       when ut.UT_LVL_10_DSCR is not null and  ut.UT_LVL_15_DSCR is null then
-        |              ut.UT_LVL_10_DSCR || '"'
-        |       else ''  end
-        | --)
-        | as "entity.categoryId"
-        | --------------------------------------------------------------------------------
-        |
-        | --- Concat description
-        |  ,  coalesce(  cds.CONTENT_DESCRIPTION
-        |        , cds.MESSAGE ) as "entity.message"  -- page description as "entity.message"
-        |
-        |
-        |
-        |    , '' as "entity.thumbnailUrl", '' as "entity.value",
-        |      coalesce(cds.Page_URL, x2.PAGE_URL ) as "entity.pageUrl",
-        |     '' as "entity.inventory", '' as "entity.margin"  -- these 3 are blank in table
-        |
-        |  -- Get the Category Name based on Category Code
-        |    , case when cds.PAGECATCODE = 'PC090' then 'article/blog' -- Article Blogs
-        |           when cds.PAGECATCODE = 'PC030' then 'product' -- Products
-        |           else x2.REG_PAGE_CAT_NAME end  as "entity.common-type"
-        |
-        |     ,cds.Content_ID  as  "entity.common-contentId"
-        |     , 'CDS' as "entity.common-source"   --, coalesce('x2.DATA_SRC_CD , A.DATA_SRC_CD )
-        |     -- , cds.PAGECATCODE as "entity.common-page-categoryCode"
-        |     , coalesce( cds.PAGECATCODE,x2.REG_PAGE_CAT_CD) as "entity.common-page-categoryCode"
-        |
-        |     , substring(cds.LANG_CD, 0,3)  as "entity.common-language"  -- use CDS lang
-        |
-        |     , substring(cds.lang_cd, 0,3)  -- language _ Country
-        |       || '-' ||
-        |      case WHEN
-        |		    upper(substring(REGEXP_SUBSTR(COALESCE (cds.PAGE_URL, x2.PAGE_URL), '\/[a-z]{2}(-|_|\/)[a-z]{2}\/' ), 5, 2))
-        |		    IN ('AE', 'AF', 'AG', 'AI', 'AT', 'AU', 'AW', 'AZ', 'BB', 'BD', 'BE', 'BG', 'BH', 'BM', 'BN', 'BR', 'BS', 'BW', 'BZ', 'CA', 'CH', 'CM', 'CN', 'CR', 'CW', 'CY', 'CZ', 'DE', 'DK', 'DM', 'EE', 'EG', 'ES', 'ET', 'FI', 'FR', 'GB', 'GD', 'GH', 'GR', 'GY', 'HK', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IN', 'IQ', 'IT', 'JA', 'JP', 'JM', 'JO', 'KE', 'KH', 'KN', 'KW', 'KY', 'KZ', 'LB', 'LC', 'li', 'LK', 'LT', 'LU', 'LV', 'LY', 'MC', 'MP', 'MS', 'MU', 'MW', 'MX', 'MY', 'NA', 'NG', 'NL', 'NO', 'NP', 'NZ', 'OM', 'PH', 'PK', 'PL', 'PR', 'PT', 'QA', 'RO', 'RS', 'RU', 'SA', 'SC', 'SE', 'SG', 'SI', 'SK', 'SL', 'SR', 'SV', 'TC', 'TH', 'TR', 'TT', 'TZ', 'UA', 'UG', 'UK', 'UM', 'US', 'UZ', 'VC', 'VG', 'VN', 'WW', 'YE', 'ZA', 'ZM', 'ZW')
-        |		    THEN substring(REGEXP_SUBSTR(COALESCE (cds.PAGE_URL, x2.PAGE_URL), '\/[a-z]{2}(-|_|\/)[a-z]{2}\/' ), 5, 2)
-        |        else  COALESCE (lower(cds.CNTRY) ,lower(x2.PAGE_CTRY) )     -- else A.LANG_CD || '_' || A.CTRY end
-        |          end as "entity.common-locale"  -- en_BE 'uk' for GB (lang_cd + Ctry)
-        |
-        |     , coalesce(cds.CNTRY, x2.PAGE_CTRY) as "entity.common-country"
-        |     , coalesce(cds.geo,g.IBM_GBL_IOT_CD)  as "entity.common-geo"
-        |
-        |-- Logic assumes keywords go in order, would not have a 1 and 3 without a 2.
-        |-- Example: CSV Structure "[""AI platform"",""Business process"",""B2B gateway"",""Business intelligence""]"
-        |---- updated 3/31 removed extra quotes -----------
-        |
-        | , case when  x2.NLU_KEYWRD_VAL_2 is not null
-        |            and x2.NLU_KEYWRD_VAL_3 is null then
-        |        '"[""' || x2.NLU_KEYWRD_VAL_1 || '"",""' ||  x2.NLU_KEYWRD_VAL_2
-        |             || '""]"'
-        |         when  x2.NLU_KEYWRD_VAL_2 is not null
-        |         and x2.NLU_KEYWRD_VAL_4 is null then
-        |         '"[""' || x2.NLU_KEYWRD_VAL_1 || '"",""' ||  x2.NLU_KEYWRD_VAL_2 ||
-        |         '"",""' ||  x2.NLU_KEYWRD_VAL_3
-        |             || '""]"'
-        |         when  x2.NLU_KEYWRD_VAL_2 is not null
-        |            and x2.NLU_KEYWRD_VAL_4 is not null then
-        |          '"[""' || x2.NLU_KEYWRD_VAL_1 || '"",""' ||  x2.NLU_KEYWRD_VAL_2 ||
-        |         '"",""' ||  x2.NLU_KEYWRD_VAL_3
-        |             || '"",""' ||  x2.NLU_KEYWRD_VAL_4 || '""]"'
-        |         when  x2.NLU_KEYWRD_VAL_1 is not null
-        |            and x2.NLU_KEYWRD_VAL_2 is null then
-        |         '"[""' || x2.NLU_KEYWRD_VAL_1 || '""]"'
-        |          else ''  end as "entity.common-topics"    --- update 2
-        |
-        |   -- , coalesce(x2.UT_LVL_10_CD, cds.UT10) as "entity.ut-level10code"
-        |
-        |    ,cds.UT10 as "entity.ut-level10code"
-        |    , coalesce(ut.UT_LVL_10_DSCR, ut.UT_LVL_10_DSCR) as "entity.ut-level10"
-        |
-        |   -- , coalesce(x2.UT_LVL_15_CD, cds.UT15) as "entity.ut-level15code"
-        |    , cds.UT15 as "entity.ut-level15code"
-        |    , coalesce(ut.UT_LVL_15_DSCR, ut.UT_LVL_15_DSCR) as "entity.ut-level15"
-        |
-        |    --, coalesce(x2.UT_LVL_17_CD, cds.UT17) as "entity.ut-level17code"
-        |    , cds.UT17 as "entity.ut-level17code"
-        |    , coalesce(ut.UT_LVL_17_DSCR, ut.UT_LVL_17_DSCR) as "entity.ut-level17"
-        |
-        |    --, coalesce(x2.UT_LVL_20_CD, cds.UT20) as "entity.ut-level20code"
-        |    , cds.UT20 as "entity.ut-level20code"
-        |    , coalesce(ut.UT_LVL_20_DSCR, ut.UT_LVL_20_DSCR) as "entity.ut-level20"
-        |
-        |    --, coalesce(x2.UT_LVL_30_CD, cds.ut30) as "entity.ut-level30code"
-        |    , cds.ut30 as "entity.ut-level30code"
-        |    , coalesce(ut.UT_LVL_30_DSCR, ut.UT_LVL_30_DSCR) as "entity.ut-level30"
-        |   -- reformat time..
-        |  , cds.PUBLISHEDTIME as "entity.content-publishedTime"
-        |  , cds.MODIFIEDTIME as "entity.content-modifiedTime"
-        | --  , coalesce(cds.PUBLISHEDTIME, x2.CREATE_TS) as "entity.content-publishedTime"
-        | --  , coalesce(cds.MODIFIEDTIME  , x2.UPDT_TS) as "entity.content-modifiedTime"
-        |   , cds.authorName as "entity.content-authorName"
-        |   , 4 as PARTCOL
-        |
-        | from MAP_STG.STG_CDS_DATA cds
-        | left join MAP_STG.STG_CMDP_DIM_URL x2 on cds.Page_URL = x2.PAGE_URL -- NLU Keywords Only
-        | left join MAP_STG.STG_CMDP_REF_UT_BRAND ut on ut.UT_CD =
-        |                   coalesce( cds.UT30, cds.UT20, cds.UT17, cds.UT15, cds.UT10 )
-        | left join MAP_STG.STG_CMDP_REF_IBM_GBL_GEO g on g.CTRY =
-        |              coalesce(x2.PAGE_CTRY, cds.cntry)  and g.CTRY_SEQ = 1
-        |""".stripMargin
-        */
     val mergedDF = DataUtilities.readDataByPartitioningType(AppProperties.SparkSession, dbProperties, mergedDFsql, Constants.PartitionTypeByColumn, null, "PARTCOL").drop("PARTCOL")
     mergedDF
   }
@@ -596,7 +430,7 @@ object CDSExtract extends ETLFrameWork {
 
   }
 
-  private def COSUpload(connection: Properties, directory: String, filename: String): Int = {
+  private def COSUpload(connection: Properties, directory: String, filename: String): Int = { // NOSONAR
     val bucketURL = connection.getProperty(PropertyNames.EndPoint) + "/" +
       connection.getProperty(PropertyNames.ResourceSpecific_1) + "/" + directory + "/" + filename
     log.info("Uploading to COS url: " + bucketURL)
@@ -623,7 +457,6 @@ object CDSExtract extends ETLFrameWork {
       val iamUrl = DEFAULT_IAM_ENDPOINT + accessKey
       val accessTempToken = new StringBuilder
       var keyToken = ""
-      //URL urlGetToken = new URL("https://iam.cloud.ibm.com/identity/token?grant_type=urn:ibm:params:oauth:grant-type:a[...]L66H4kGRxcgChJXTPzJ3FzgNQMqVvJiQYxWt&responce_type=cloud_iam");
       val urlGetToken = new URL(iamUrl)
       val connGetToken = urlGetToken.openConnection.asInstanceOf[HttpURLConnection]
       connGetToken.setRequestMethod("POST")
@@ -636,8 +469,6 @@ object CDSExtract extends ETLFrameWork {
         line  != null
       }) {
         i += 1
-        //println(i)
-        //print(line)
         accessTempToken.append(line)
         line = buffReader.readLine()
       }
@@ -653,7 +484,7 @@ object CDSExtract extends ETLFrameWork {
     accessToken
   }
 
-  private def FTPUpload(host: String, directory: String, filename: String): Unit = {
+  private def FTPUpload(host: String, directory: String, filename: String): Unit = { // NOSONAR
 
     val user = System.getenv("MAP_FTP_USER_ID")
     val pass = System.getenv("MAP_FTP_PASSWORD")
@@ -663,7 +494,7 @@ object CDSExtract extends ETLFrameWork {
     var response = false
     try {
       val fclient = new SSLSessionReuseFTPSClient
-      log.info("Connecting....")
+      log.info("Connecting to FTP....")
       fclient.connect(host)
       log.info("Logging into FTP Server....")
       if (!fclient.login(user, pass)) {
@@ -692,7 +523,6 @@ object CDSExtract extends ETLFrameWork {
       log.info("Uploading....")
       response = fclient.storeFile(filename, input)
       val re: String = fclient.getReplyString
-      //println(response + ": :" + re)
       log.info(response + ": :" + re)
       if (response) {
         log.info("File uploaded successfully at " + directory + "/" + filename)
@@ -716,7 +546,7 @@ object CDSExtract extends ETLFrameWork {
 
   class SSLSessionReuseFTPSClient extends FTPSClient { // adapted from: https://trac.cyberduck.io/changeset/10760
     @throws[IOException]
-    override protected def _prepareDataSocket_(socket: Socket): Unit = {
+    override protected def _prepareDataSocket_(socket: Socket): Unit = { // NOSONAR
       if (socket.isInstanceOf[SSLSocket]) {
         val session = _socket_.asInstanceOf[SSLSocket].getSession
         val context = session.getSessionContext
@@ -760,7 +590,6 @@ object CDSExtract extends ETLFrameWork {
     var timestamp: Timestamp = null
     if (mode == "min") {
       // Uses defaultMinTimestmap or timestamp of job last ran
-      //timestamp = Timestamp.from(Instant.now().minus(24, ChronoUnit.HOURS))
       if (lastRunTimestamp == null) {
         timestamp = Timestamp.valueOf(defaultMinTimestamp)
       } else {
@@ -774,9 +603,7 @@ object CDSExtract extends ETLFrameWork {
     }
     println(timestamp)
     val pattern = """[0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}""".r
-    //val timestampString = null
     val find = pattern.findFirstIn(timestamp.toString)
-    //var timestampString = timestamp.toString.substring(0, timestamp.toString.length - 4)
     var timestampString = find.toString.replaceAll(" ", "%20").replaceAll(":", "%3A")
     timestampString = timestampString.substring(5, timestampString.length - 1)
     timestampString
@@ -825,8 +652,8 @@ object CDSExtract extends ETLFrameWork {
         )
       }
     }
-    val cds_details = args(args.indexOf("--cdsDetails") +1)
-    val cds_conn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, cds_details)
+    val cds_details = args(args.indexOf("--cdsDetails") +1) // NOSONAR
+    val cds_conn = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, cds_details) // NOSONAR
     cdsEndPoint = cds_conn.getProperty(PropertyNames.EndPoint)
     apiKey = cds_conn.getProperty(PropertyNames.ClientSecret)
   }
@@ -841,8 +668,6 @@ object CDSExtract extends ETLFrameWork {
       log.info(s"Starting ETL Job => $jobClassName....")
 
       // Log job status START - DB
-      // log.info(s"CommonDBConnProperties => ${this.CommonDBConProperties}")
-      // log.info(s"Log to JobHistoryLogTable => ${AppProperties.JobHistoryLogTable}")
       DataUtilities.recordJobHistory(AppProperties.SparkSession,
         AppProperties.CommonJobSeqCode,
         0,
