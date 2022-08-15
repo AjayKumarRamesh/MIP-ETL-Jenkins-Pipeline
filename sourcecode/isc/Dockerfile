@@ -39,6 +39,7 @@ RUN set -ex && \
     apt install -y bash tini libc6 libpam-modules libnss3 && \
     apt-get update && apt-get install zlib1g && \
     apt-get update && apt-get install gzip && \
+    apt-get update && apt upgrade -y \
     mkdir -p /opt/spark && \
     mkdir -p /opt/spark/examples && \
     mkdir -p /opt/spark/work-dir && \
