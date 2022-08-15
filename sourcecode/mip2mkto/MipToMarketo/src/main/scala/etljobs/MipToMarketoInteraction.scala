@@ -75,13 +75,12 @@ object MipToMarketoInteraction extends ETLFrameWork {
 
     val spark = AppProperties.SparkSession
     var activityDF1: DataFrame = null
-    var activityDF2: DataFrame = null
     var activityDF3: DataFrame = null
     var activityDF4: DataFrame = null
 
     import spark.implicits._
 
-    activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
+    activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {    //NOSONAR
       s"""{
          |      "leadId":${row.getLong(9)},
          |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
@@ -203,127 +202,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
 
     }).toDF().persist()
 
-    activityDF2 = transformedDF.filter(transformedDF("Activity_Type") === clientInterest).map(row => {
-      s"""{
-         |      "leadId":${row.getLong(9)},
-         |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
-         |      "activityTypeId":${row.getInt(19)},
-         |      "primaryAttributeValue": "${row.getString(25)}",
-         |      "attributes":
-         |          [
-         |              {
-         |                    "apiName": "Item_Name",
-         |                    "value": "${removeControlChar(row.getString(0))}"
-         |                },
-         |                {
-         |                    "apiName": "Item_URL",
-         |                    "value": "${removeControlChar(row.getString(18))}"
-         |                },
-         |                {
-         |                    "apiName": "Item_ID",
-         |                    "value": "${removeControlChar(row.getString(11))}"
-         |                },
-         |                {
-         |                    "apiName": "Content_Campaign_Name",
-         |                    "value": "${removeControlChar(row.getString(24))}"
-         |                },
-         |                {
-         |                    "apiName": "CI_TS",
-         |                    "value": "${DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS").format(LocalDateTime.now)}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "GBL_IMT_CD",
-         |                    "value": "${removeControlChar(row.getString(7))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "GBL_IOT_CD",
-         |                    "value": "${removeControlChar(row.getString(15))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "GBL_RGN_CD",
-         |                    "value": "${removeControlChar(row.getString(21))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "Lead_Description",
-         |                    "value": "${removeControlChar(row.getString(27))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "Lead_Note",
-         |                    "value": "${removeControlChar(row.getString(10))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "Lead_Source",
-         |                    "value": "${removeControlChar(row.getString(38))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "Person_Country_Code",
-         |                    "value": "${removeControlChar(row.getString(3))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "Strength",
-         |                    "value": "${row.getLong(1)}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "UT10_Code",
-         |                    "value": "${removeControlChar(row.getString(31))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "UT15_Code",
-         |                    "value": "${removeControlChar(row.getString(29))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "UT17_Code",
-         |                    "value": "${removeControlChar(row.getString(4))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "UT20_Code",
-         |                    "value": "${removeControlChar(row.getString(26))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "UT30_Code",
-         |                    "value": "${removeControlChar(row.getString(13))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "Interaction_ID",
-         |                    "value": "${row.getLong(34)}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "Sales_Channel",
-         |                    "value": "${removeControlChar(row.getString(16))}"
-         |
-         |                },
-         |                {
-         |                    "apiName": "Create_TS",
-         |                    "value": "${DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS").format(LocalDateTime.now)}"
-         |                },
-         |                {
-         |                    "apiName": "MIP_Activity_Seq_ID",
-         |                    "value": "${row.getLong(14)}"
-         |                },
-         |                {
-         |                    "apiName": "CI_Phone_Permission",
-         |                    "value": "${removeControlChar(row.getString(6))}"
-         |                }
-         |          ]
-         |}""".stripMargin
-    }).toDF().persist()
-
-    activityDF3 = transformedDF.filter(transformedDF("Activity_Type") === eventInteraction).map(row => {
+    activityDF3 = transformedDF.filter(transformedDF("Activity_Type") === eventInteraction).map(row => {    //NOSONAR
       s"""{
          |      "leadId":${row.getLong(9)},
          |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
@@ -412,7 +291,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |}""".stripMargin
     }).toDF().persist()
 
-    activityDF4 = transformedDF.filter(transformedDF("Activity_Type") === digitalInteraction).map(row => {
+    activityDF4 = transformedDF.filter(transformedDF("Activity_Type") === digitalInteraction).map(row => {   //NOSONAR
       s"""{
          |      "leadId":${row.getLong(9)},
          |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
@@ -538,7 +417,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
     }).toDF().persist()
 
 
-    val finalDF = Seq(activityDF1, activityDF2, activityDF3, activityDF4)
+    val finalDF = Seq(activityDF1, activityDF3, activityDF4)
 
     finalDF.reduce(_ union _)
   }
@@ -658,12 +537,12 @@ object MipToMarketoInteraction extends ETLFrameWork {
 
     try {
       val sqlData =
-        s"""(SELECT MIP_ACTIVITY_SEQ_ID FROM MAP_MKTO.MCV_MKTO_CUSTOM_ACTIVITY WHERE ACTIVITY_TYPE_ID = 100004 AND EVENT_REF_ID IS NULL AND EVENT_REF_ID = '' AND STATUS_CODE = 'U')""".stripMargin
+        s"""(SELECT MIP_ACTIVITY_SEQ_ID FROM MAP_MKTO.MCV_MKTO_CUSTOM_ACTIVITY WHERE ACTIVITY_TYPE_ID = $eventInteraction AND STATUS_CODE = 'U' AND (EVENT_REF_ID IS NULL OR EVENT_REF_ID = ''))""".stripMargin
 
       val conProp: Properties = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, dbSource)
       val filterEvent = AppProperties.SparkSession.read.jdbc(conProp.getProperty(PropertyNames.EndPoint), sqlData, conProp)
       val updateCount = filterEvent.count()
-      log.info("EVENT_REF_ID with null values count " + updateCount)
+      log.info("EVENT_REF_ID with NULL VALUE COUNT = " + updateCount)
       val dbConnectionInfoEvent = conProp.getProperty(PropertyNames.EndPoint)
       dbConEvent = DriverManager.getConnection(dbConnectionInfoEvent, conProp)
 

@@ -128,7 +128,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     val httpClient: CloseableHttpClient = HttpClients.custom().build()
 
     //Exception handling for duplicates in Payload
-    try {
+    try { //NOSONAR
       val token = getMarketoTokenPerson
       val httpPostToken = new HttpPost(s"$externalEndpoint?access_token=$token")
       httpPostToken.addHeader("Content-type", "application/json;charset=UTF-8")
@@ -191,7 +191,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
       s"""{
          |      "leadId":${row.getLong(9)},
-         |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
+         |      "activityDate":"${convert({row.getTimestamp(31).toString})}",
          |      "activityTypeId":${row.getInt(19)},
          |      "primaryAttributeValue": "${row.getString(25)}",
          |      "attributes":
@@ -202,7 +202,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Form_Name",
-         |                    "value": "${removeControlChar(row.getString(36))}"
+         |                    "value": "${removeControlChar(row.getString(35))}"
          |                },
          |                {
          |                    "apiName": "GBL_IMT_CD",
@@ -219,7 +219,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Interaction_ID",
-         |                    "value": "${row.getLong(34)}"
+         |                    "value": "${row.getLong(33)}"
          |
          |                },
          |                {
@@ -234,7 +234,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Lead_Source",
-         |                    "value": "${removeControlChar(row.getString(38))}"
+         |                    "value": "${removeControlChar(row.getString(37))}"
          |
          |                },
          |                {
@@ -259,12 +259,12 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "UT10_Code",
-         |                    "value": "${removeControlChar(row.getString(31))}"
+         |                    "value": "${removeControlChar(row.getString(30))}"
          |
          |                },
          |                {
          |                    "apiName": "UT15_Code",
-         |                    "value": "${removeControlChar(row.getString(29))}"
+         |                    "value": "${removeControlChar(row.getString(28))}"
          |
          |                },
          |                {
@@ -325,7 +325,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     val httpClient: CloseableHttpClient = HttpClients.custom().build()
 
     //Exception handling for duplicates in Payload
-    try {
+    try { //NOSONAR
       val token = getMarketoTokenInteraction
       val httpPostToken = new HttpPost(s"$externalEndpoint?access_token=$token")
       httpPostToken.addHeader("Content-type", "application/json;charset=UTF-8")
@@ -359,7 +359,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
     val httpClient: CloseableHttpClient = HttpClients.custom().build()
 
     //Exception handling for duplicates in Payload
-    try {
+    try {  //NOSONAR
       val httpPostToken = new HttpPost(s"$externalEndpoint?access_token=$token")
       httpPostToken.addHeader("Content-type", "application/json;charset=UTF-8")
       httpPostToken.addHeader("Accept", "application/json")
