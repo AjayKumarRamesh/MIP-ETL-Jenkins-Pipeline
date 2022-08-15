@@ -39,7 +39,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt-get update && apt-get install --upgrade openssl && \
     apt-get update && apt-get install zlib1g && \
     apt-get update && apt-get install gzip && \
-    apt install -y bash tini libc6 libpam-modules libnss3 
+    apt install -y bash tini libc6 libpam-modules libnss3 && \
+    apt-get update && apt upgrade -y
 
 # Second Docker build stage: copy compiled minimal Java distribution and app from stage 1 to a new image.
 #FROM openjdk:11.0.6-stretch

@@ -38,6 +38,7 @@ RUN set -ex && \
     apt-get update && apt-get install -y krb5-user && \
     apt-get update && apt-get install -y libnss3 && \
     apt install -y bash tini libc6 libpam-modules && \
+    apt-get update && apt upgrade -y && \
     mkdir -p /opt/spark && \
     mkdir -p /opt/spark/examples && \
     mkdir -p /opt/spark/work-dir && \
