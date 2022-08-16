@@ -46,6 +46,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
 #FROM openjdk:11.0.6-stretch
 FROM openjdk:11-jre-slim-buster
 
+# Update new environment again 
+RUN apt-get update && apt upgrade -y
+
 
 # Copy cert folder and files from the current local directory into the new image we just did above into /cert directory.
 COPY cert ./cert
