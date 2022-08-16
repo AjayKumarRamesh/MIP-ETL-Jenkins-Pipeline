@@ -9,3 +9,4 @@ sourcecode/adhoc/.DS_Store
 .run
 logs
 sourcecode/.DS_Store
+.vscode
