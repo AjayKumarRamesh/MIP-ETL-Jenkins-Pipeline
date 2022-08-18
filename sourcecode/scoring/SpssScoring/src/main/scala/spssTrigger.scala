@@ -43,11 +43,11 @@ object spssTrigger extends ETLFrameWork {
         log.info(lines)
         if (lines.contains("Run completed Successfully: ENDED")) {
           log.info("No errors found")
-          val rm_file_if = s"rm spssloging.txt".!
+          val rm_file_if = s"rm spssloging.txt".! // NOSONAR
         }
         else {
           log.info("Errors found")
-          val rm_file_else = s"rm spssloging.txt".!
+          val rm_file_else = s"rm spssloging.txt".! // NOSONAR
           bException = true
         }
       }

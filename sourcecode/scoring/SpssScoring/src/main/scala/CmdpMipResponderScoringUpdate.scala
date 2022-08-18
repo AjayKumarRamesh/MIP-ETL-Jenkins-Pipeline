@@ -11,7 +11,7 @@ object CmdpMipResponderScoringUpdate extends MIPUtilities {
   @throws(classOf[Exception])
   def runJobSequence() = {
     log.info("runJobSequence started")
-    val sparkSession = AppProperties.SparkSession
+    val sparkSession = AppProperties.SparkSession // NOSONAR
     AppProperties.DefaultPartitionCount = 1
     AppProperties.DefaultWriteBatchSize = 1000
 
@@ -32,8 +32,8 @@ object CmdpMipResponderScoringUpdate extends MIPUtilities {
         println("CmdpMipResponderScoringUpdate catch block")
         bException = true
       }
-    } finally {
-    }
+    } finally { // NOSONAR
+    }  // NOSONAR
 
     log.info("runJobSequence ended.")
   }
