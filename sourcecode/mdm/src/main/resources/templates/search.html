@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en-US" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+<!-- 
+																				-->
+<meta charset="UTF-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="shortcut icon" href="//www.ibm.com/favicon.ico"></link>
+<meta name="robots" content="noindex,nofollow"></meta>
+<meta name="description"
+	content="Advanced Northstar web development hints, tips, and documentation."></meta>
+<meta name="keywords" content="NONE"></meta>
+<meta name="geo.country" content="US"></meta>
+<meta name="dcterms.date" content="2018-01-29"></meta>
+<meta name="dcterms.rights" content="© Copyright IBM Corp. 2016"></meta>
+
+<title>MAP DATA MODEL</title>
+	<script>
+	digitalData = {
+		page : {
+			pageInfo : {
+				version: 'v18',
+				ibm : {
+					config : {
+						masthead : {
+							type : "popup",
+							sticky : {
+								enabled : false
+							},
+							marketplaceLink : {
+								enabled : false
+							},
+						},
+						footer :{
+                           enabled : false
+						}
+
+					}
+				}
+			}
+		}
+	};
+</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Arvo:400,400i,700,700i"></link>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700"></link>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,700i"></link>
+<link href="https://1.www.s81c.com/common/v18/css/www.css" rel="stylesheet" ></link>
+<link href="https://1.www.s81c.com/common/v18/css/grid-fluid.css" rel="stylesheet" ></link>
+<link href="https://1.www.s81c.com/common/v18/css/tables.css" rel="stylesheet"></link>
+<link href="https://1.www.s81c.com/common/v18/css/forms.css" rel="stylesheet"></link>
+<link href="https://1.www.s81c.com/common/v18/css/grid-fluid.css" rel="stylesheet"></link>
+<link th:href="@{/css/score.css}" rel="stylesheet"></link>
+<link th:href="@{/css/custom.css}" rel="stylesheet"></link>
+
+
+<!-- <script src="https://1.www.s81c.com/common/stats/ida_stats.js"></script> -->
+<script src="https://1.www.s81c.com/common/v18/js/www.js"></script>
+<script src="https://1.www.s81c.com/common/v18/js/dyntabs.js"></script>
+<!--<script src="https://1.www.s81c.com/common/v18/js/tables.js"></script>-->
+<script src="//1.www.s81c.com/common/v18/js/forms.js"></script>
+<script th:src="@{/js/table.js}"></script>
+<!-- <script th:src="@{/js/jquery.min.js}"></script> -->
+
+
+
+<script>
+	jQuery(function($){
+		
+		$("#data_list").html($("loading_area").html());
+		getList();
+		
+		$("#query").click(function(){
+			$("#data_list").html($("loading_area").html());
+			getList();
+		});
+
+		$('#ibm-search-input').bind('keydown',function(event){
+           if(event.keyCode == "13") {
+               $("#query").click();
+           }
+        });
+		
+		$("#q_view").click(function(){
+		    $("#data_list").html("");
+			$("#q_view").addClass("is-active");
+			if($("#q_column").hasClass("is-active")){
+				$("#q_column").removeClass("is-active");
+			}
+			$("#q_type").val("v");
+			getList();
+		});
+		
+		$("#q_column").click(function(){
+		    $("#data_list").html("");
+			$("#q_column").addClass("is-active");
+			if($("#q_view").hasClass("is-active")){
+				$("#q_view").removeClass("is-active");
+			}
+			$("#q_type").val("c");
+			getList();
+		});
+		
+		function getList(){
+		    var by=getSearchByValue();
+		    $("#data_list").html($("#loading_area").html());
+			$.post("searchList", {
+				"q" : $("#ibm-search-input").val(),
+				"type" :$("#q_type").val(),
+				"by" :by
+			}, function(data) {
+				$("#data_list").html(data);	
+				IBMCore.common.widget.datatable.init($("#result_table"));
+			});
+		}
+
+		function getSearchByValue(){
+           var searchBy="";
+           $("input[id^='search_by']").each(function() {
+			  if($(this).is(':checked')){
+                  searchBy=searchBy+$(this).attr('value')+",";
+			  }
+	       });
+	       if(searchBy!=""){
+               searchBy=searchBy.substr(0,searchBy.length -1);
+	       }
+	       return searchBy;
+		}
+
+
+		//search checkbox function
+		function initCheckbox(){
+
+		   $("input[id^='search_by']").each(function() {
+			  $(this).prop("checked", false);
+	       });
+
+	       var searchValue=$("#searchValue").val();
+
+           if(searchValue.indexOf("1")!=-1){
+              $("#search_by_all").prop("checked", true);
+              $("#search_by_schema").prop("checked", true);
+              $("#search_by_name").prop("checked", true);
+              $("#search_by_desc").prop("checked", true);
+           }
+
+           if(searchValue.indexOf("2")!=-1){
+              $("#search_by_schema").prop("checked", true);
+           }
+
+           if(searchValue.indexOf("2")!=-1){
+              $("#search_by_name").prop("checked", true);
+           }
+
+           if(searchValue.indexOf("2")!=-1){
+              $("#search_by_desc").prop("checked", true);
+           }
+	    }
+
+	    $("input[id^='search_by']").each(function() {
+		    $(this).bind("click", function(event){
+               var searchValue=$(this).attr('value');
+               if(searchValue=='1'){
+                   if($(this).is(':checked')){
+                        $("input[id^='search_by']").each(function() {
+			                $(this).prop("checked", true);
+	                    });
+                   }else{
+                        $("input[id^='search_by']").each(function() {
+			                $(this).prop("checked", false);
+	                    });
+                   }
+               }else{
+                   if(!$(this).is(':checked')){
+                       $("#search_by_all").prop("checked", false);
+                   }
+
+               }
+		    })
+		});
+
+	    initCheckbox();
+		    	     
+		
+	});
+</script>
+
+</head>
+
+<body id="ibm-com" class="ibm-type v18 v18overview">
+	<div id="ibm-top" class="ibm-landing-page">
+
+		
+		<div id="ibm-content-wrapper">
+
+			<div class="ibm-sitenav-menu-container" >
+					<!--<div style="width: 40%">
+						<a href="/mdm/index">
+					      <img src="img/mpw.png" alt="MDM" title="" style="height: 3.8rem;"></img>
+						</a>
+					</div> -->
+					<div class="ibm-sitenav-menu-list-custom">
+						<ul role="menubar">
+							<li role="presentation"><img src="img/home.png"></img><a href="/mdm/index">HOME</a></li>
+							<li role="presentation"><img src="img/search.png"></img><a href="/mdm/search">SEARCH</a></li>
+						</ul>
+					</div>
+					
+			</div>
+
+			<main role="main" aria-labelledby="ibm-pagetitle-h1">
+			
+			
+			<div class="ibm-fluid ibm-padding-bottom-0" style="padding-top: 50px">
+				<div class="ibm-col-12-6 ibm-center-block ibm-col-pri">
+
+					<div style="height:35px">
+					  <span class="ibm-input-group">
+						  <label >Search by : &nbsp;&nbsp;</label>
+						  <input id="searchValue" th:value="${by}" type="hidden"/>
+						  <input  class="" id="search_by_all" name="searchOption" type="checkbox" value="1" /> <label >All &nbsp;&nbsp;</label>
+						  <input  class="" id="search_by_schema" name="searchOption" type="checkbox" value="2" /> <label >Schema &nbsp;&nbsp;</label>
+						  <input  class="" id="search_by_name" name="searchOption" type="checkbox" value="3" /> <label >View/Column Name &nbsp;&nbsp;</label>
+						  <input  class="" id="search_by_desc" name="searchOption" type="checkbox" value="4" /> <label >Description</label>
+					  </span>
+					</div>
+					<div class="ibm-search-box is-focused">
+						<div id="ibm-search-box-wrapper">
+								<input type="text" id="ibm-search-input" name="q"
+									data-qa="query" class="ibm-search-box__text ibm-styled-input"
+									placeholder="Search" th:value="${q}" 
+									aria-label="Search" role="combobox" aria-autocomplete="list"
+									aria-expanded="true" aria-owns="typeahead-container"></input><span></span>
+								<button  class="ibm-search-box__action" id="query">
+									<span class="ibm-access">Search</span><span
+										class="ibm-icon ibm-search-link"></span>
+								</button>
+								
+
+							
+						</div>
+					</div>
+
+					<div class="ibm-tabs-menu">
+						<div class="ibm-custom-showhide">
+							<div class="ibm-custom-showhide__content ibm-clear is-collapsed">
+								<div data-qa="options" class="ibm-custom-tabs" role="tablist" style="text-align: center">
+									<a class="ibm-custom-tabs-option ibm-custom-tabs__item is-active" href="#" id="q_column">
+										<div class="ibm-custom-tabs-option__text custom-font">Column</div>
+									</a>
+									<a class="ibm-custom-tabs-option ibm-custom-tabs__item " href="#" id="q_view">
+									    <div class="ibm-custom-tabs-option__text custom-font">View</div>
+									</a>
+
+								</div>
+								<input type="hidden" th:value="${type}" value="" id="q_type"></input>
+							</div>
+						</div>
+					</div>
+			
+				</div>
+				<div class="ibm-col-12-12">
+					<div class="ibm-rule ibm-alternate ibm-gray-30">
+						<hr />
+					</div>
+				</div>
+				<div class="ibm-col-12-12" id="data_list" style="height:auto !important">
+					<p><span class="ibm-spinner"></span> Loding data,please wait.</p>
+				</div>
+			</div> 
+
+			</main>
+
+		<!-- Footer menu -->
+		<div id="ibm-footer-module"></div>
+
+		<!-- Corporate thin footer -->
+		<div th:replace="footer::footer" ></div>
+		<div th:replace="feedback::feedback" ></div>
+		
+		<div id="loading_area" style="display: none"><p><span class="ibm-spinner"></span> Loding data,please wait.</p></div>
+		<!-- FOOTER_END -->
+
+		<!-- #ibm-top END -->
+	</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,82 @@
+.scorejs {
+    unicode-bidi: bidi-override;
+    direction: rtl;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: left;
+    font-size: 26px;
+    color: #000;
+}
+
+.scorejs > .score-item,
+.scorejs > .score-item-static {
+    font-family: FontAwesome, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    display: inline-block;
+}
+
+.scorejs.score-vertical > .score-item,
+.scorejs.score-vertical > .score-item-static {
+    display: list-item;
+}
+
+.scorejs > .score-item:hover {
+    cursor: pointer;
+}
+
+.scorejs > .score-item-static:hover {
+    cursor: default;
+}
+
+.scorejs > .score-item:before {
+    content: "\2606"; /* ☆ */
+    _content: "\2740";
+    padding: 2px;
+}
+
+.scorejs > .score-item-static:before {
+    content: "\2606"; /* ☆ */
+    _content: "\2740";
+    padding: 2px;
+}
+
+.scorejs > .score-item:hover:before,
+.scorejs > .score-item:hover ~ .score-item:before {
+    content: "\2605"; /* ★ */
+    _content: "\273f";
+}
+
+.scorejs > .score-item.active:before,
+.scorejs > .score-item.active ~ .score-item:before {
+    content: "\2605"; /* ★ */
+    _content: "\273f";
+}
+
+.scorejs > .score-item-static.active:before {
+    content: "\2605"; /* ★ */
+    _content: "\273f";
+}
+
+.scorejs.fontawesome > .score-item:before {
+    content: "\f006";
+}
+
+.scorejs.fontawesome > .score-item-static:before {
+    content: "\f006";
+}
+
+.scorejs.fontawesome > .score-item:hover:before,
+.scorejs.fontawesome > .score-item:hover ~ .score-item:before {
+    content: "\f005";
+}
+
+.scorejs.fontawesome > .score-item.active:before,
+.scorejs.fontawesome > .score-item.active ~ .score-item:before {
+    content: "\f005";
+}
+
+.scorejs.fontawesome > .score-item-static.active:before {
+    content: "\f005";
+}

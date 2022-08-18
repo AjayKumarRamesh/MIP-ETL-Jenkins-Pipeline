@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en-US" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div class="ibm-common-overlay ibm-overlay-alt" data-widget="overlay" id="mdm_feedback" th:fragment="feedback">
+    <script th:src="@{/js/score.js}"></script>
+    <script th:src="@{/js/feedback.js}"></script>
+    <form  class="ibm-row-form" method="post">
+        <p style="padding:0px">
+            <label>How would you rate the MAP System overall?:<span class="ibm-required">*</span></label>
+        </p>
+        <div id="score_div"></div>
+        <p style="padding:0px">
+            <label>What would you like to tell us?<span class="ibm-required">*</span></label>
+            <span style="margin_top:15px">
+                 <select  id="feedback_select" style="width:90%">
+                  <option value="" selected="">Please select type of feedback</option>
+                  <option value="suggestion">Suggestion</option>
+                  <option value="compliment">Compliment</option>
+                  <option value="bug">Bug</option>
+                  <option value="question">Question</option>
+                </select>
+               </span>
+        </p>
+        <p>
+            <label id="feedback_detail_label"></label>
+            <textarea id="feedback_detail" class="ibm-styled-input" style="width:100%;"></textarea>
+        </p>
+        <p style="display:none" id="feedback_error_p">
+        <div id="feedback_error" style="color:red"></div>
+        </p>
+        <p align="center">
+            <label></label>
+            <button type="button" class="ibm-btn-pri ibm-btn-blue-50 ibm-fullwidth" id="feedback_submit">Submit</button>
+        </p>
+    </form>
+
+</div>
+</body>
+</html>

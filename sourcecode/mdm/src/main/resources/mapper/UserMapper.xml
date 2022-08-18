@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ibm.mdm.dao.UserMapper" >
+
+    <resultMap id="userMap" type="com.ibm.mdm.bean.UserInfo" >
+        <result column="USER_ID" property="userId" />
+        <result column="USER_EMAIL" property="userEmail" />
+        <result column="LAST_LOGIN_TIMSTAMP" property="lastLoginDate" />
+        <result column="CREATE_TS" property="createDate" />
+    </resultMap>
+
+    <insert id="insert" parameterType="com.ibm.mdm.bean.UserInfo"
+            timeout="2000" keyProperty="userId" flushCache="true">
+        <selectKey resultType="java.lang.Long" keyProperty="userId"
+                   order="BEFORE">
+            select nextval for MIPDM.DM_USER_SEQ  from sysibm.sysdummy1
+        </selectKey>
+        <![CDATA[
+   			insert into MIPDM.DM_USER(USER_ID,USER_EMAIL,LAST_LOGIN_TIMSTAMP,CREATE_TS)
+ 		    values(#{userId},#{userEmail},#{lastLoginDate},CURRENT_TIMESTAMP)
+   		]]>
+    </insert>
+
+    <update id="update" parameterType="com.ibm.mdm.bean.UserInfo">
+        <![CDATA[ UPDATE MIPDM.DM_USER ]]>
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="lastLoginDate!=null">LAST_LOGIN_TIMSTAMP = #{lastLoginDate},</if>
+        </trim>
+        <![CDATA[ where
+         user_id = #{userId}  ]]>
+    </update>
+
+    <select id="getUserByEmail" resultMap="userMap" parameterType="java.lang.String">
+        select * from MIPDM.DM_USER where user_email=#{userEmail}
+    </select>
+
+    <select id="getUserNumByDays" resultType="java.lang.Long" parameterType="java.lang.Integer">
+        <![CDATA[
+        select count(*) from MIPDM.DM_USER u where 1=1
+        ]]>
+        <if test="day>=0">
+            <![CDATA[
+   		       and days(current date)- days(u.LAST_LOGIN_TIMSTAMP)=#{day}
+   		    ]]>
+        </if>
+    </select>
+
+</mapper>

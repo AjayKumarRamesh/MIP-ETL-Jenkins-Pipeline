@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en-US" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+<table class="ibm-data-table ibm-padding-small ibm-small ibm-altrows" cellspacing="0" cellpadding="0" border="0" data-info="true" data-ordering="true"
+	data-paging="true" data-searching="true" data-widget="datatable" id="result_table">
+	<thead>
+		<tr>
+			<th  width="8%">Schema</th>
+			<th width="20%">View Name</th>
+			<th width="50%">Description</th>
+			<th width="15%">Refresh Rate</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr th:each="tableView:${tableList}">
+			<td width="8%" th:text="${tableView.schema}"></td>
+			<td width="20%"><a th:href="@{detail(tb=${tableView.name},schema=${tableView.schema},tbid=${tableView.tableObjid})}" style="vertical-align: top;" th:text="${tableView.name}" target="_blank"></a></td>
+			<td width="50%" th:text="${tableView.desc}"></td>
+			<td width="15%" th:text="${tableView.freshRate}"></td>
+		</tr>
+	</tbody>
+</table>
+
+</html>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ibm.mdm.dao.MdmMapper" >
+  
+  <resultMap id="tableViewMap" type="com.ibm.mdm.bean.TableView" >
+    <result column="table_name" property="name" />
+    <result column="table_schema" property="schema" />
+    <result column="fresh_frequency" property="freshRate" />
+    <result column="table_desc" property="desc" />
+    <result column="schema_desc" property="schemaDesc" />
+    <result column="db_flag" property="dbFlag" />
+    <result column="schema_id" property="schemaId" />
+    <result column="table_objid" property="tableObjid" />
+  </resultMap>
+  
+  <resultMap id="columnViewMap" type="com.ibm.mdm.bean.ColumnView" >
+    <result column="column_name" property="name" />
+    <result column="table_schema" property="schema" />
+    <result column="table_name" property="tableName" />
+    <result column="col_not_nullable" property="ifNull" />
+    <result column="column_desc" property="desc" />
+    <result column="column_data_type" property="dataType" />
+    <result column="db_flag" property="dbFlag" />
+    <result column="table_objid" property="tableObjid" />
+  </resultMap>
+  
+  <select id="selectColumnViewList" resultMap="columnViewMap" parameterType="java.lang.String">
+    select  column_name,table_schema,table_name,column_num,
+    (case col_not_nullable when 'F' then 'No' when 'T' then 'Yes' else 'Yes' end) col_not_nullable,
+    column_desc,column_data_type from
+    MIPDM.DATA_MODELING where column_name like CONCAT(CONCAT('%','${_parameter}'),'%')
+    order by selected_num desc,column_num
+  </select>
+  
+  <select id="selectSchemaList" resultMap="tableViewMap">
+    select distinct schema_id,table_schema,schema_desc,db_flag from MIPDM.DATA_MODELING
+  </select>
+  
+  <select id="selectTableViewBySchema" resultMap="tableViewMap" parameterType="java.lang.String">
+    select distinct table_objid,table_schema, table_name,schema_desc,
+    table_desc,fresh_frequency from MIPDM.DATA_MODELING where schema_id = '${_parameter}'
+  </select>
+  
+  <select id="selectSchemaNum" resultType="java.lang.Long">
+    select count(1) from (select DISTINCT a.schema_id from MIPDM.DATA_MODELING a ) b
+  </select>
+  
+  <select id="selectViewNum" resultType="java.lang.Long">
+    select count(1) from (select  DISTINCT table_objid from MIPDM.DATA_MODELING a ) b
+  </select>
+  
+  <select id="selectColumnNum" resultType="java.lang.Long">
+    select count(1) from MIPDM.DATA_MODELING
+  </select>
+  
+  <select id="selectColumnViewListByTable" resultMap="columnViewMap" parameterType="java.lang.String">
+    select  column_name,table_schema,table_name,column_num,
+    (case col_not_nullable when 'F' then 'No' when 'T' then 'Yes' else 'Yes' end) col_not_nullable,
+    column_desc,column_data_type from
+    MIPDM.DATA_MODELING where table_objid = '${_parameter}' order by COLUMN_SEQ
+  </select>
+  
+  <select id="selectTableViewByName" resultMap="tableViewMap" parameterType="java.util.HashMap" useCache="false">
+    select distinct table_schema, table_name,table_objid,
+    table_desc,fresh_frequency from MIPDM.DATA_MODELING where 1=1
+    and ( 1=2
+    <if test="bySchema!=null">
+     or table_schema like CONCAT(CONCAT('%','${name}'),'%')
+    </if>
+    <if test="byName!=null">
+      or table_name like CONCAT(CONCAT('%','${name}'),'%')
+    </if>
+    <if test="byDesc!=null">
+      or UPPER(table_desc) like CONCAT(CONCAT('%','${name}'),'%')
+    </if>
+    )
+  </select>
+  
+  <select id="selectColumnViewListByName" resultMap="columnViewMap" parameterType="java.util.HashMap" useCache="false">
+    select  column_name,table_schema,table_name,column_num,table_objid,
+    (case col_not_nullable when 'F' then 'No' when 'T' then 'Yes' else 'Yes' end) col_not_nullable,
+    column_desc,column_data_type from
+    MIPDM.DATA_MODELING where 1=1
+    and ( 1=2
+    <if test="bySchema!=null">
+      or table_schema like CONCAT(CONCAT('%','${name}'),'%')
+    </if>
+    <if test="byName!=null">
+      or column_name like CONCAT(CONCAT('%','${name}'),'%')
+    </if>
+    <if test="byDesc!=null">
+      or UPPER(column_desc) like CONCAT(CONCAT('%','${name}'),'%')
+    </if>
+    )
+  </select>
+
+  <select id="selectLastUpdateDate" resultType="java.lang.String">
+    select TO_CHAR(MAX(UPDT_TS),'yyyy-MM-dd') from MIPDM.DATA_MODELING LIMIT 1
+  </select>
+  
+</mapper>

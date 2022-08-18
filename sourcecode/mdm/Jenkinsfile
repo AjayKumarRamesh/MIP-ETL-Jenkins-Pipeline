@@ -1,0 +1,99 @@
+pipeline{
+    agent any
+
+    stages {
+
+    stage('SonarQube Analysis') {
+                agent { label 'taas_image' }
+                environment{
+                    //SonarQube Scanner plugin base home path
+                    scannerBaseHome = "${HOME}/scannerBaseHome"
+                    //SonarQube Scanner plugin home - based on the scanner version
+                    SCANNER_HOME = "${scannerBaseHome}/sonar-scanner-4.7.0.2747-linux"
+                    //SonarQube Scanner additional options - we pass the turststore and password required to connect to SonarQube server
+                    SONAR_SCANNER_OPTS = "-Djavax.net.ssl.trustStore=${HOME}/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Dsonar.issuesReport.html.enable=true"
+                    //SonarQube server URL
+                    SONAR_HOST_URL = "https://sms-sonarqube-intranet.dal1a.cirrus.ibm.com/"
+                    //Java home required to run the sonar-scanner
+                    JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64"
+                    PATH = "${JAVA_HOME}/bin/:${PATH}"
+                    //SonarQube Project Name - replace <sonar_project> from the list of projects eg. MAP-ETL-Framework
+                    SONAR_PROJECT_NAME="MIP-ETL-Jenkins-Pipeline"
+                    //SonarQube Project Key - replace <sonar_key> with the project name eg. MAP-ETL-Framework
+                    SONAR_PROJECT_KEY="MIP-ETL-Jenkins-Pipeline"
+                    //File or folders than need to be excluded from scans
+                    SONAR_EXCLUSIONS="**/*.java"
+                    //SONAR_EXCLUSIONS=""
+                }
+                steps {
+                    script {
+                        // Prepare truststore
+                        withCredentials([file(credentialsId: 'ibm_sonar_enterprise_cert', variable: 'FILE')]){
+                            sh ("keytool -importcert -keystore ${HOME}/cacerts -storepass changeit -file $FILE -alias 'ibm_sonar' -noprompt -trustcacerts")
+                        }
+                        def scannerHome = tool 'sonar-scanner';
+                        withSonarQubeEnv('SonarQube'){
+                            sh ("${scannerHome}/bin/sonar-scanner -Dsonar.projectName=${SONAR_PROJECT_NAME} -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.exclusions=${SONAR_EXCLUSIONS}")
+                        }
+
+                        // Quality Gate Check
+                        echo "checking the quality Gate"
+                        def tries = 0
+                        sonarResultStatus = "PENDING"
+                        while ((sonarResultStatus == "PENDING" || sonarResultStatus == "IN_PROGRESS") && tries++ < 5) {
+                            try {
+                                timeout(time: 1, unit: 'MINUTES') {
+                                    sonarResult = waitForQualityGate abortPipeline: true
+                                    sonarResultStatus = sonarResult.status
+                                }
+                            } catch(ex) {
+                                echo "caught exception ${ex}"
+                            }
+                            echo "waitForQualityGate status is ${sonarResultStatus} (tries=${tries})"
+                        }
+                        if (sonarResultStatus != 'OK') {
+                            error "Quality gate failure for SonarQube: ${sonarResultStatus}"
+                        }
+                    } //script
+                }
+       }
+
+        stage ("Prepare IBM Cloud CLI") {
+            steps {
+                sh('ibmcloud update -f -q')
+                sh('ibmcloud plugin install container-registry -f -q')
+                sh('ibmcloud plugin install container-service -f -q')
+                sh('ibmcloud plugin list')
+            }
+        }
+
+        stage ("Build MAP Data Model App") {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+            steps {
+                sh('ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south')
+                sh('ibmcloud cr login')
+                sh('docker build -t us.icr.io/map-dev-namespace/mdm:${BUILD_NUMBER} -f Dockerfile .')
+                sh('docker images')
+                sh('docker push us.icr.io/map-dev-namespace/mdm:${BUILD_NUMBER}')
+                sh('ibmcloud cr image-tag us.icr.io/map-dev-namespace/mdm:${BUILD_NUMBER} us.icr.io/map-dev-namespace/mdm:latest')
+                sh('ibmcloud cr image-list --restrict map-dev-namespace')
+            }
+        }
+
+        stage ("Deploy the MAP Data Model to dev cluster") {
+            environment {
+                IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
+            }
+            steps {
+                sh('ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south')
+                sh('ibmcloud ks cluster config --cluster map-dal10-16x64-01')
+                sh('kubectl config current-context')
+                sh('kubectl rollout restart deployment mdm-app -n mdm')
+            } //steps
+        }
+
+    }
+
+}

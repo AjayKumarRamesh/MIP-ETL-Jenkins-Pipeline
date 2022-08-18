@@ -1,0 +1,88 @@
+#server
+server:
+  tomcat:
+        uri-encoding: UTF-8
+        max-threads: 1000
+        min-spare-threads: 30
+  port: 8443
+  connection-timeout: 5000
+  context-path: /mdm
+#  ssl:
+#    key-store: ${SSL_CERT}
+#    key-store-password: ${SSL_CERT_PWD}
+#    keyStoreType: PKCS12
+
+logging:
+  config: classpath:log4j2.xml
+
+
+
+endpoints:
+  shutdown:
+    enabled: true
+    sensitive: false
+  
+
+  
+#srping
+spring:
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    check-template-location: true
+    mode: LEGACYHTML5
+    encoding: UTF-8
+    suffix: .html
+    content-type: text/html
+  mail:
+    host: us.relay.ibm.com
+    port: 25
+    protocol: smtp
+    defaultEncoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: false
+        starttls:
+           enable: true
+           required: true
+
+
+  datasource:
+      url: ${DB_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PWD}
+      driver-class-name: ${DB_DRIVER}
+
+mybatis:
+  mapper-locations: mapper/*.xml
+    
+  
+#pagehelper
+pagehelper:
+    helperDialect: mysql
+    reasonable: true
+    supportMethodsArguments: true
+    params: count=countSql
+
+# mdm system file path
+sys:
+  sample-data-json-path: ${SAMPLE_DATA_JSON_PATH}
+  change_log_excel_path: ${CHANGE_LOG_EXCEL_PATH}
+
+## sso auth config
+w3auth:
+  clientId: ${W3_CLIENT_ID}
+  clientSecret: ${W3_CLIENT_SECRET}
+  accessTokenUri: ${W3_ACCESS_TOKEN_URI}
+  authUrl: ${W3_AUTH_URL}
+  introspectUri: ${W3_INTROSPECT_URI}
+  redirectUri: ${W3_REDIRECT_URI}
+
+## mail info
+#mail:
+#  from: ${MAIL_FROM}
+#  to: ${MAIL_TO}
+#  cc: ${MAIL_CC}
+#  template: ${MAIL_TEMPLATE}
+

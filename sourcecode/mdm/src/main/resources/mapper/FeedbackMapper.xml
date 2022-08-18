@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ibm.mdm.dao.FeedbackMapper" >
+
+    <resultMap id="feedbackMap" type="com.ibm.mdm.bean.FeedbackInfo" >
+        <result column="ID" property="id" />
+        <result column="SCORE" property="score" />
+        <result column="FEEDBACK_TYPE" property="feedbackType" />
+        <result column="FEEDBACK_DETL" property="feedbackDetail" />
+        <result column="USER_EMAIL" property="userEmail" />
+        <result column="CREATE_TS" property="createDate" />
+    </resultMap>
+
+    <insert id="insert" parameterType="com.ibm.mdm.bean.FeedbackInfo"
+            timeout="2000" keyProperty="id" flushCache="true">
+        <selectKey resultType="java.lang.Long" keyProperty="id"
+                   order="BEFORE">
+            select nextval for MIPDM.DM_FEDBK_SEQ  from sysibm.sysdummy1
+        </selectKey>
+        <![CDATA[
+   			insert into MIPDM.DM_FEEDBACK(ID,SCORE,FEEDBACK_TYPE,FEEDBACK_DETL,USER_EMAIL,CREATE_TS)
+ 		    values(#{id},#{score},#{feedbackType},#{feedbackDetail},#{userEmail},#{createDate})
+   		]]>
+    </insert>
+
+</mapper>

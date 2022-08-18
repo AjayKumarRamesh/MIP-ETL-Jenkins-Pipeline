@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en-US" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <head>
+        <!-- Site made with Mobirise Website Builder v4.6.7, https://mobirise.com -->
+        <meta charset="UTF-8"></meta>
+        <link rel="shortcut icon" href="//www.ibm.com/favicon.ico"></link>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
+        <meta name="generator" content="Mobirise v4.6.7, mobirise.com"></meta>
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1"></meta>
+        <meta name="description" content=""></meta>
+        <title>MAP DATA MODEL</title>
+        <script>
+	digitalData = {
+		page : {
+			pageInfo : {
+				version: 'v18',
+				ibm : {
+					config : {
+						masthead : {
+							type : "popup",
+							sticky : {
+								enabled : false
+							},
+							marketplaceLink : {
+								enabled : false
+							},
+						},
+						footer :{
+                           enabled : false
+						}
+
+					}
+				}
+			}
+		}
+	};
+</script>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Arvo:400,400i,700,700i"></link>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700"></link>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,700i"></link>
+        <link rel="stylesheet" th:href="@{/css/font-awesome.min.css}"></link>
+        <link rel="stylesheet" th:href="@{/css/mobirise/style.css}" ></link>
+        <link rel="stylesheet" th:href="@{/css/tether.min.css}" ></link>
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" ></link>
+        <link rel="stylesheet" th:href="@{/css/bootstrap-grid.min.css}" ></link>
+        <link rel="stylesheet" th:href="@{/css/bootstrap-reboot.min.css}" ></link>
+        <link rel="stylesheet" th:href="@{/css/dropdown.style.css}" ></link>
+        <link rel="stylesheet" th:href="@{/css/socicon.styles.css}" ></link>
+        <link rel="stylesheet" th:href="@{/css/animate.min.css}"></link>
+        <link rel="stylesheet" th:href="@{/css/style.css}" ></link>
+        <link  th:href="@{/css/fonts.style.css}"  rel="stylesheet"></link>
+        <link rel="stylesheet" th:href="@{/css/mbr-additional.css}"  type="text/css"></link>
+        <link href="https://1.www.s81c.com/common/v18/css/www.css" rel="stylesheet" ></link>
+        <link href="https://1.www.s81c.com/common/v18/css/grid-fluid.css" rel="stylesheet" ></link>
+        <link href="https//1.www.s81c.com/common/v18/css/forms.css" rel="stylesheet"></link>
+        <link href="https://1.www.s81c.com/common/v18/css/tables.css" rel="stylesheet"></link>
+        <link th:href="@{/css/custom.css}" rel="stylesheet"></link>
+        <link th:href="@{/css/score.css}" rel="stylesheet"></link>
+        <script src="https://1.www.s81c.com/common/v18/js/www.js"></script>
+        <script src="https://1.www.s81c.com/common/v18/js/tables.js"></script>
+
+
+    </head>
+
+</head>
+
+<body id="ibm-com" class="ibm-type v18 v18overview">
+<div id="ibm-top" class="ibm-landing-page">
+
+    <div id="ibm-content-wrapper">
+
+        <div class="ibm-sitenav-menu-container" >
+            <!--<div style="width: 40%">
+                <a href="/mdm/index">
+                  <img src="img/mpw.png" alt="MDM" title="" style="height: 3.8rem;"></img>
+                </a>
+            </div> -->
+        </div>
+
+        <main role="main" aria-labelledby="ibm-pagetitle-h1">
+            <div id="ibm-pcon">
+                <div id="ibm-content">
+                    <div id="ibm-content-main">
+                        <div class="ibm-fluid ibm-fullwidth">
+                            <div class="ibm-col-12-12" >
+                                <div id="container" style="height:auto !important">
+
+                                    <div class="ibm-col-12-12">
+                                        <p class="ibm-h4 custom-font">Change History</p>
+                                    </div>
+
+                                    <div class="ibm-fluid">
+                                        <div class="ibm-col-12-12">
+                                            <div class="ibm-rule ibm-alternate-1 ibm-black-50"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ibm-fluid ibm-fullwidth">
+                                        <div id="tableddl" class="ibm-tabs-content" style="padding-left: 10px">
+                                            <table class="ibm-data-table ibm-padding-small ibm-small ibm-altrows"
+                                                   id="table_view" data-paging="true" data-widget="datatable">
+                                                <thead>
+                                                <tr>
+                                                    <th width="12%">Data Platform</th>
+                                                    <th width="18%">View Name</th>
+                                                    <th width="25%">Change Description</th>
+                                                    <th width="10%">Build Request</th>
+                                                    <th width="25%">Related Story</th>
+                                                    <th width="8%">Update Date</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr th:each="bean:${logList}">
+                                                    <td width="12%" th:text="${bean.platform}"></td>
+                                                    <td width="18%" th:text="${bean.viewName}"></td>
+                                                    <td width="25%" th:text="${bean.changeDesc}"></td>
+                                                    <td width="10%" th:text="${bean.buildRequest}"></td>
+                                                    <td width="25%" th:text="${bean.relatedStory}"></td>
+                                                    <td width="8%" th:text="${bean.updateDateStr}"></td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer menu -->
+    <div id="ibm-footer-module"></div>
+
+    <!-- Corporate thin footer -->
+    <div th:replace="footer::footer" ></div>
+    <div th:replace="feedback::feedback" ></div>
+    <div id="loading_area" style="display: none"><p><span class="ibm-spinner"></span> Loding data,please wait.</p></div>
+    <!-- FOOTER_END -->
+
+    <!-- #ibm-top END -->
+</div>
+</body>
+</html>

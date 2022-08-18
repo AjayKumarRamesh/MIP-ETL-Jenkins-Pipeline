@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en-US" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+<!-- 
+																				-->
+<meta charset="UTF-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="shortcut icon" href="//www.ibm.com/favicon.ico"></link>
+<meta name="robots" content="noindex,nofollow"></meta>
+<meta name="description"
+	content="Advanced Northstar web development hints, tips, and documentation."></meta>
+<meta name="keywords" content="NONE"></meta>
+<meta name="geo.country" content="US"></meta>
+<meta name="dcterms.date" content="2018-01-29"></meta>
+<meta name="dcterms.rights" content="© Copyright IBM Corp. 2016"></meta>
+<title>MIP DATA MODEL</title>
+<script>
+	digitalData = {
+		page : {
+			pageInfo : {
+				version: 'v18',
+				ibm : {
+					config : {
+						masthead : {
+							type : "popup",
+							sticky : {
+								enabled : false
+							},
+							marketplaceLink : {
+								enabled : false
+							},
+						},
+						footer :{
+                           enabled : false
+						}
+
+					}
+				}
+			}
+		}
+	};
+</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Arvo:400,400i,700,700i"></link>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700"></link>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,700i"></link>
+<link href="https://1.www.s81c.com/common/v18/css/www.css" rel="stylesheet" ></link>
+<link href="https://1.www.s81c.com/common/v18/css/grid-fluid.css" rel="stylesheet" ></link>
+<link href="https://1.www.s81c.com/common/v18/css/tables.css" rel="stylesheet"></link>
+<link href="https://1.www.s81c.com/common/v18/css/forms.css" rel="stylesheet"></link>
+<link href="https://1.www.s81c.com/common/v18/css/grid-fluid.css" rel="stylesheet"></link>
+<link th:href="@{/css/custom.css}" rel="stylesheet"></link>
+<link th:href="@{/css/score.css}" rel="stylesheet"></link>
+<script src="https://1.www.s81c.com/common/v18/js/www.js"></script>
+<script src="https://1.www.s81c.com/common/v18/js/tables.js"></script>
+<!-- <script th:src="@{/js/jquery.min.js}"></script> -->
+
+
+</head>
+
+<body id="ibm-com" class="ibm-type v18 v18overview">
+	<div id="ibm-top" class="ibm-landing-page">
+
+		
+		<div id="ibm-content-wrapper">
+
+			
+                <div class="ibm-sitenav-menu-container" >
+					<!--<div style="width: 40%">
+						<a href="/mdm/index">
+					      <img src="img/mpw.png" alt="MDM" title="" style="height: 3.8rem;"></img>
+						</a>
+					</div> -->
+					<div class="ibm-sitenav-menu-list-custom">
+						<ul role="menubar">
+							<li role="presentation"><img src="img/home.png"></img><a href="/mdm/index">HOME</a></li>
+							<li role="presentation"><img src="img/search.png"></img><a href="/mdm/search">SEARCH</a></li>
+						</ul>
+					</div>
+					
+				</div>
+			
+
+			<main role="main" aria-labelledby="ibm-pagetitle-h1">
+			<div id="ibm-pcon">
+				<div id="ibm-content">
+					<!-- <div id="ibm-content-body"> -->
+						<div id="ibm-content-main">
+						<div class="ibm-fluid ibm-fullwidth">
+                           <div class="ibm-col-12-12" >
+                              <div id="container" style="height:auto !important">
+                               
+                               <div class="ibm-col-12-12">
+                                 <p class="ibm-h4 custom-font">View List In <span th:text="${schema}"></span>
+								 </p>
+								   <p class="ibm-small custom-font">
+									   Description : <span th:text="${tableList[0].schemaDesc}"></span>
+								   </p>
+                               </div>
+                               
+                               <div class="ibm-fluid">
+                                   <div class="ibm-col-12-12">
+                                      <div class="ibm-rule ibm-alternate-1 ibm-black-50"></div>
+                                   </div>
+                               </div>
+										<div class="ibm-fluid ibm-fullwidth" style="padding-left: 10px">
+											<table class="ibm-data-table" data-info="true" data-ordering="true" data-paging="true" data-searching="true" data-widget="datatable" id="list_table">
+												<thead>
+													<tr>
+														<th width="10%">Schema</th>
+														<th width="20%">Name</th>
+														<th width="55%">Description</th>
+														<th width="15%">Refresh Rate</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr th:each="tableView:${tableList}">
+														<td width="10%" th:text="${tableView.schema}"></td>
+														<td width="20%"><a  th:href="@{detail(tb=${tableView.name},schema=${tableView.schema},tbid=${tableView.tableObjid})}" style="vertical-align: top;" th:text="${tableView.name}" target="_blank"></a></td>
+														<td width="55%" th:text="${tableView.desc}"></td>
+														<td width="15%" th:text="${tableView.freshRate}"></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+
+									</div>
+                           </div>
+                        </div>
+								
+						</div>
+					<!-- </div> -->
+				</div>
+			</div>
+			</main>
+		</div>
+
+		<!-- Footer menu -->
+		<div id="ibm-footer-module"></div>
+
+		<!-- Corporate thin footer -->
+		<div th:replace="footer::footer" ></div>
+		<div th:replace="feedback::feedback" ></div>
+		
+		<div id="loading_area" style="display: none"><p><span class="ibm-spinner"></span> Loding data,please wait.</p></div>
+		<!-- FOOTER_END -->
+
+		<!-- #ibm-top END -->
+	</div>
+</body>
+</html>
