@@ -16,6 +16,7 @@ object ISC_ClientInterest extends ETLFrameWork {
   private var iscMergeSql = ""
   private var TIMESTAMP_OFFSET = ""
   private var dataframeCount = 0.0
+  private var defaultTimestamp = ""
 
 
   @throws(classOf[Exception])
@@ -38,7 +39,7 @@ object ISC_ClientInterest extends ETLFrameWork {
 
     log.info("Getting Last Successful Run Time")
     val successfulTimestamp = DataUtilities.getLastSuccessfulRunTime(AppProperties.SparkSession, "ISC_ClientInterest")
-    var t = "1000-01-01-01.00.00.000000"
+    var t = "\'" + defaultTimestamp + "\'"
     if (!successfulTimestamp.isEmpty) {
       t = "\'" + successfulTimestamp("JOB_START_TIME") + "\'"
     }
@@ -52,6 +53,8 @@ object ISC_ClientInterest extends ETLFrameWork {
     iscData.cache()
     dataframeCount = iscData.count()
     iscData.show()
+
+    log.info("Merging data into ISC Table in MIP....")
 
     DataUtilities.runPreparedStatement(
       MIPdbProperties,
@@ -74,6 +77,7 @@ object ISC_ClientInterest extends ETLFrameWork {
       iscPullSql = args(args.indexOf("--iscPullSql") + 1)
       TIMESTAMP_OFFSET = args(args.indexOf("--offset") + 1)
       iscMergeSql = args(args.indexOf("--iscMergeSql") + 1)
+      defaultTimestamp = args(args.indexOf("--defaultTimestamp") + 1)
     } else {
       throw new IllegalArgumentException(
         "Uneven amount of argument key-value pairs provided."
