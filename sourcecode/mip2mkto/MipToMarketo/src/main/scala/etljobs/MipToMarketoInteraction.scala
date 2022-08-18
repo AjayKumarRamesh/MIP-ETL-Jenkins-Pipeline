@@ -568,7 +568,12 @@ object MipToMarketoInteraction extends ETLFrameWork {
            |LEFT JOIN
            |MAP_MKTO.MCT_MKTO_PERSON p on
            |p.MIP_SEQ_ID = a.MIP_SEQ_ID
-           |WHERE p.STATUS_CODE = 'P' AND a.STATUS_CODE = 'U' AND a.STRENGTH IS NOT NULL AND NOT (CAMPAIGN_CODE ='' or CAMPAIGN_CODE IS  NULL) AND a.MKTO_LEAD_ID > 0
+           |INNER JOIN MAP_MKTO.MCT_MKTO_ACTIVITY_TYPE AT
+           |ON a.ACTIVITY_TYPE_ID = AT.ACTIVITY_TYPE_ID
+           |WHERE p.STATUS_CODE = 'P' AND a.STATUS_CODE = 'U'
+           |AND a.STRENGTH IS NOT NULL AND NOT (CAMPAIGN_CODE ='' or CAMPAIGN_CODE IS  NULL)
+           |AND a.MKTO_LEAD_ID > 0
+           |AND AT.ACTIVITY_NAME != 'Client Interest'
            |ORDER BY 2 asc),
            |etl_config_data AS (
            |SELECT
