@@ -33,7 +33,6 @@ trait MIPUtilities extends ETLFrameWork {
       DataUtilities.recordJobHistory(sparkSession, AppProperties.CommonJobSeqCode, AppProperties.CommonJobSubSeqCode,
         Constants.JobStarted)
       log.info(s"Current Sub Sequence code ->${AppProperties.CommonJobSubSeqCode}")
-      //val crudMask = Constants.CDCActionMaskUpdate | Constants.CDCActionFetchToBeProcessedRecs
       val jobConfig = JobSequenceService.getJobSequence(AppProperties.CommonJobSeqCode, AppProperties.CommonJobSubSeqCode)
       srcConnectionInfo = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, jobConfig.fromDataSourceCode)
       tgtConnectionInfo = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, jobConfig.toDataSourceCode)
@@ -49,10 +48,7 @@ trait MIPUtilities extends ETLFrameWork {
       if (jobConfig.deleteRecordsIdentifier != null && jobConfig.deleteRecordsIdentifier.nonEmpty)
         deleteRecsCondition = jobConfig.deleteRecordsIdentifier.replaceAll("#CUTOFF_TIMESTAMP#", cutOffTimeStamp)
 
-      /*
-      retCRUDMetrics = DataUtilities.performCDCUsingConditions(sparkSession, srcConnectionInfo, tgtConnectionInfo, jobConfig,
-        true, crudMask, null)
-       */
+ 
       val incrementalRecordsConditions = new DataUtilities.IncrementalRecordsCondition(newRecsCondition,
         updateRecsCondition, deleteRecsCondition)
 
@@ -112,11 +108,9 @@ trait MIPUtilities extends ETLFrameWork {
       DataUtilities.recordJobHistory(sparkSession, AppProperties.CommonJobSeqCode, AppProperties.CommonJobSubSeqCode,
         Constants.JobStarted)
       log.info(s"Current Sub Sequence code ->${AppProperties.CommonJobSubSeqCode}")
-      //val crudMask = Constants.CDCActionMaskUpdate | Constants.CDCActionFetchToBeProcessedRecs
       val jobConfig = JobSequenceService.getJobSequence(AppProperties.CommonJobSeqCode, AppProperties.CommonJobSubSeqCode)
       srcConnectionInfo = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, jobConfig.fromDataSourceCode)
       tgtConnectionInfo = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, jobConfig.toDataSourceCode)
-      //TODO - need to see the method implementation
 
       breakable {
         for (retryIndex <- 1 to retryCount) {
@@ -186,10 +180,8 @@ trait MIPUtilities extends ETLFrameWork {
       AppProperties.CommonJobSubSeqCode = subSequenceCode
 
       val jobConfigStatusUpdate = JobSequenceService.getJobSequence(AppProperties.CommonJobSeqCode, AppProperties.CommonJobSubSeqCode)
-      //val srcConnectionInfo = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, jobConfigStatusUpdate.fromDataSourceCode)
       val tgtConnectionInfo = DataUtilities.getDataSourceDetails(AppProperties.SparkSession, jobConfigStatusUpdate.toDataSourceCode)
       //Update status in the source table
-      //TODO
       var retCRUDMetricsUpdate:CRUDMetrics = null
       breakable {
         for (retryIndex <- 1 to retryCount) {
@@ -249,13 +241,12 @@ trait MIPUtilities extends ETLFrameWork {
     var dfCrudErrorRecsKeys: DataFrame = null
     var dfSuccessRecsKeys: DataFrame = null
     var dfToBeProcessedRecWithStatus: DataFrame = null
-    //val colNames = retCRUDMetrics.tgtKeyColNames + "," + Constants.CDCErrDescColName
     val errColNames = (s"${retCRUDMetrics.tgtKeyColNames},${Constants.CDCErrDescColName}").split(",").map(_.toString)
     val successColNames = (s"${retCRUDMetrics.tgtKeyColNames}").split(",").map(_.toString)
-    val keyColNames = retCRUDMetrics.tgtKeyColNames.split(",").map(_.toString)
+    val keyColNames = retCRUDMetrics.tgtKeyColNames.split(",").map(_.toString) // NOSONAR
 
     try {
-      var dfAllRecsToBeProcessed: DataFrame = null
+      var dfAllRecsToBeProcessed: DataFrame = null // NOSONAR
       var errRecsLogFileName: String = null
       var successRecsLogFileName: String = null
       if ((cdcActionMask & Constants.CDCActionMaskInsert) == Constants.CDCActionMaskInsert) {
@@ -385,7 +376,6 @@ trait MIPUtilities extends ETLFrameWork {
     var dfCrudErrorRecsKeys: DataFrame = null
     var dfSuccessRecsKeys: DataFrame = null
     var dfToBeProcessedRecWithStatus: DataFrame = null
-    //val colNames = retCRUDMetrics.tgtKeyColNames + "," + Constants.CDCErrDescColName
     val colNames = (s"${retCRUDMetrics.tgtKeyColNames},${Constants.CDCErrDescColName}").split(",").map(_.toString)
     val keyColNames = retCRUDMetrics.tgtKeyColNames.split(",").map(_.toString)
 
@@ -416,14 +406,11 @@ trait MIPUtilities extends ETLFrameWork {
 
       //If error CSV file is present, then create a dataframe with only keys
       if (errRecsLogFileName != null && errRecsLogFileName.nonEmpty) {
-        //val path = getClass.getResource(errRecsLogFileName).getPath
         val file = new File(errRecsLogFileName)
         dfCrudErrorRecsKeys = sparkSession.read.format("csv").option("header", "true")
           .load(file.toString).select(colNames.map(name => col(name)): _*)
-        //dfAllRecsToBeProcessed.join(dfCrudErrorRecsKeys, keyColNames,"left_anti")
         dfSuccessRecsKeys = (dfAllRecsToBeProcessed.join(dfCrudErrorRecsKeys, keyColNames, "left_anti"))
           .withColumn("IS_PROCESSED", lit(successFlag))
-        //dfSuccessRecsKeys = (dfAllRecsToBeProcessed except dfCrudErrorRecsKeys).withColumn("IS_PROCESSED", lit(successFlag))
         dfToBeProcessedRecWithStatus = dfSuccessRecsKeys union (dfCrudErrorRecsKeys.withColumn("IS_PROCESSED", lit(errorFlag)))
         if (log.isInfoEnabled()) {
           log.info(s"getCDCProcessedRecordStatus: Error record keys from csv file")

@@ -12,7 +12,6 @@ object cmdp_bds_geo_hier_mip extends MIPUtilities {
   var bException: Boolean = false
   var CmdpGeoSrc: String = null
   var MipStgTgt: String = null
-  //var dfTgt: DataFrame = null
 
   def main(args: Array[String]): Unit = {
 
@@ -40,7 +39,6 @@ object cmdp_bds_geo_hier_mip extends MIPUtilities {
         bException = true
       }
     } finally {
-      // DataUtilities.writeLogsToCOS(AppProperties.SparkSession, List(jobSequenceLogFileName))
       DataUtilities.recordJobHistory(AppProperties.SparkSession, AppProperties.CommonJobSeqCode, "",
         if (bException) Constants.JobFailed else Constants.JobSucceeded)
       if (bException)
