@@ -1,4 +1,4 @@
-import java.util.{Date, Properties}
+import java.util.Date
 
 import com.ibm.mkt.etlframework.data.DataUtilities
 import com.ibm.mkt.etlframework.{AppProperties, Constants, ETLFrameWork}
@@ -6,6 +6,7 @@ import com.ibm.mkt.etlframework.{AppProperties, Constants, ETLFrameWork}
 object ISC_ClientInterest extends ETLFrameWork {
   val jobClassName: String = this.getClass.getSimpleName.stripSuffix("$")
   var isJobFailed = false
+  var jobSeq = ""
 
   // Database Endpoint variables
   private var MIP_ENDPOINT = ""
@@ -37,11 +38,17 @@ object ISC_ClientInterest extends ETLFrameWork {
     AppProperties.DefaultPartitionCount = 1
     AppProperties.DefaultWriteBatchSize = 2000
 
-    log.info("Getting Last Successful Run Time")
-    val successfulTimestamp = DataUtilities.getLastSuccessfulRunTime(AppProperties.SparkSession, "ISC_ClientInterest")
+    log.info("Setting current timestamp to default timestamp: " + defaultTimestamp)
     var t = "\'" + defaultTimestamp + "\'"
-    if (!successfulTimestamp.isEmpty) {
+    log.info("Getting Last Successful Run Time for JobSeq " + jobSeq)
+    val successfulTimestamp = DataUtilities.getLastSuccessfulRunTime(AppProperties.SparkSession, jobSeq)
+    // If start and end are equal, that means there's no job history and need to use default.
+    log.info(successfulTimestamp.seq)
+    if (!successfulTimestamp.isEmpty && (successfulTimestamp("JOB_START_TIME") != successfulTimestamp("JOB_END_TIME"))) {
+      log.info("Start time and end time not the same, setting timestamp to start time.")
       t = "\'" + successfulTimestamp("JOB_START_TIME") + "\'"
+    } else {
+      log.info("No job history found, keeping timestamp default value.")
     }
     log.info(s"Last Successful Timestamp: $t")
 
@@ -72,6 +79,7 @@ object ISC_ClientInterest extends ETLFrameWork {
   private def getArgs(args: Array[String]): Unit = {
 
     if (args.length % 2 == 0) {
+      jobSeq = args(args.indexOf("--jobseq") + 1)
       MIP_ENDPOINT = args(args.indexOf("--baseDB") + 1)
       CEDP_ENDPOINT = args(args.indexOf("--cedpDB") + 1)
       iscPullSql = args(args.indexOf("--iscPullSql") + 1)
