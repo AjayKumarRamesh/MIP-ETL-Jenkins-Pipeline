@@ -72,7 +72,7 @@ pipeline{
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
             steps {
-                dir("sourcecode/${SOURCE_CODE_FOLDER}") {
+                dir("sourcecode/mdm") {
                     sh "pwd"
                     sh('ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south')
                     sh('ibmcloud cr login')
