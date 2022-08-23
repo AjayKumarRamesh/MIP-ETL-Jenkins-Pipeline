@@ -7,7 +7,7 @@ pipeline {
        SOURCE_CODE_FOLDER = ''
     }
     stages {
-        stage('SonarQube Analysis') {
+        /**stage('SonarQube Analysis') {
             agent { label 'taas_image' }
             environment{
                 //SonarQube Scanner plugin base home path 
@@ -26,7 +26,7 @@ pipeline {
                 //SonarQube Project Key - replace <sonar_key> with the project name eg. MAP-ETL-Framework
                 SONAR_PROJECT_KEY="MIP-ETL-Jenkins-Pipeline"
                 //File or folders than need to be excluded from scans
-                SONAR_EXCLUSIONS="**/*.java"
+                 SONAR_EXCLUSIONS=""
                 //SONAR_EXCLUSIONS=""
             }
             steps {
@@ -60,7 +60,7 @@ pipeline {
                     }
                 } //script
             }
-        }
+        }*/
         stage('Get Global Vars') {
             steps{
                 script {

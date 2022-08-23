@@ -80,12 +80,12 @@ object MipToMarketoInteraction extends ETLFrameWork {
 
     import spark.implicits._
 
-    activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {    //NOSONAR
+    activityDF1 = transformedDF.filter(transformedDF("Activity_Type_Id") === contactInteraction).map(row => {    //NOSONAR
       s"""{
          |      "leadId":${row.getLong(9)},
-         |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
+         |      "activityDate":"${convert({row.getTimestamp(33).toString})}",
          |      "activityTypeId":${row.getInt(19)},
-         |      "primaryAttributeValue": "${row.getString(25)}",
+         |      "primaryAttributeValue": "${row.getString(26)}",
          |      "attributes":
          |          [
          |              {
@@ -94,7 +94,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Form_Name",
-         |                    "value": "${removeControlChar(row.getString(36))}"
+         |                    "value": "${removeControlChar(row.getString(37))}"
          |                },
          |                {
          |                    "apiName": "GBL_IMT_CD",
@@ -111,12 +111,12 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Interaction_ID",
-         |                    "value": "${row.getLong(34)}"
+         |                    "value": "${row.getLong(35)}"
          |
          |                },
          |                {
          |                    "apiName": "Lead_Description",
-         |                    "value": "${removeControlChar(row.getString(27))}"
+         |                    "value": "${removeControlChar(row.getString(28))}"
          |
          |                },
          |                {
@@ -126,7 +126,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Lead_Source",
-         |                    "value": "${removeControlChar(row.getString(38))}"
+         |                    "value": "${removeControlChar(row.getString(39))}"
          |
          |                },
          |                {
@@ -151,12 +151,12 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "UT10_Code",
-         |                    "value": "${removeControlChar(row.getString(31))}"
+         |                    "value": "${removeControlChar(row.getString(32))}"
          |
          |                },
          |                {
          |                    "apiName": "UT15_Code",
-         |                    "value": "${removeControlChar(row.getString(29))}"
+         |                    "value": "${removeControlChar(row.getString(30))}"
          |
          |                },
          |                {
@@ -166,7 +166,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "UT20_Code",
-         |                    "value": "${removeControlChar(row.getString(26))}"
+         |                    "value": "${removeControlChar(row.getString(27))}"
          |
          |                },
          |                {
@@ -186,7 +186,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Item_URL",
-         |                    "value": "${removeControlChar(row.getString(23))}"
+         |                    "value": "${removeControlChar(row.getString(18))}"
          |
          |                },
          |                {
@@ -202,21 +202,21 @@ object MipToMarketoInteraction extends ETLFrameWork {
 
     }).toDF().persist()
 
-    activityDF3 = transformedDF.filter(transformedDF("Activity_Type") === eventInteraction).map(row => {    //NOSONAR
+    activityDF3 = transformedDF.filter(transformedDF("Activity_Type_Id") === eventInteraction).map(row => {    //NOSONAR
       s"""{
          |      "leadId":${row.getLong(9)},
-         |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
+         |      "activityDate":"${convert({row.getTimestamp(33).toString})}",
          |      "activityTypeId":${row.getInt(19)},
          |      "primaryAttributeValue": "${row.getString(22)}",
          |      "attributes":
          |          [
          |              {
          |                    "apiName": "Content_Campaign_Code",
-         |                    "value": "${removeControlChar(row.getString(25))}"
+         |                    "value": "${removeControlChar(row.getString(26))}"
          |                },
          |                {
          |                    "apiName": "Interaction_ID",
-         |                    "value": "${row.getLong(34)}"
+         |                    "value": "${row.getLong(35)}"
          |                },
          |                {
          |                    "apiName": "Create_TS",
@@ -237,7 +237,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Activity_Campaign_Code",
-         |                    "value": "${removeControlChar(row.getString(30))}"
+         |                    "value": "${removeControlChar(row.getString(31))}"
          |                },
          |                {
          |                    "apiName": "Content_Campaign_Name",
@@ -250,22 +250,22 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Lead_Source",
-         |                    "value": "${removeControlChar(row.getString(38))}"
+         |                    "value": "${removeControlChar(row.getString(39))}"
          |
          |                },
          |                {
          |                    "apiName": "UT10_Code",
-         |                    "value": "${removeControlChar(row.getString(31))}"
+         |                    "value": "${removeControlChar(row.getString(32))}"
          |
          |                },
          |                {
          |                    "apiName": "UT15_Code",
-         |                    "value": "${removeControlChar(row.getString(29))}"
+         |                    "value": "${removeControlChar(row.getString(30))}"
          |
          |                },
          |                {
          |                    "apiName": "UT20_Code",
-         |                    "value": "${removeControlChar(row.getString(26))}"
+         |                    "value": "${removeControlChar(row.getString(27))}"
          |
          |                },
          |                {
@@ -284,24 +284,29 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Content_Type_Name",
-         |                    "value": "${removeControlChar(row.getString(28))}"
+         |                    "value": "${removeControlChar(row.getString(29))}"
+         |
+         |                },
+         |                {
+         |                    "apiName": "Event_Activity_Type",
+         |                    "value": "${removeControlChar(row.getString(25))}"
          |
          |                }
          |          ]
          |}""".stripMargin
     }).toDF().persist()
 
-    activityDF4 = transformedDF.filter(transformedDF("Activity_Type") === digitalInteraction).map(row => {   //NOSONAR
+    activityDF4 = transformedDF.filter(transformedDF("Activity_Type_Id") === digitalInteraction).map(row => {   //NOSONAR
       s"""{
          |      "leadId":${row.getLong(9)},
-         |      "activityDate":"${convert({row.getTimestamp(32).toString})}",
+         |      "activityDate":"${convert({row.getTimestamp(33).toString})}",
          |      "activityTypeId":${row.getInt(19)},
-         |      "primaryAttributeValue": "${row.getString(25)}",
+         |      "primaryAttributeValue": "${row.getString(26)}",
          |      "attributes":
          |          [
          |              {
          |                    "apiName": "Item_Country_Code",
-         |                    "value": "${removeControlChar(row.getString(35))}"
+         |                    "value": "${removeControlChar(row.getString(36))}"
          |                },
          |                {
          |                    "apiName": "Item_Language_Code",
@@ -332,7 +337,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Form_Name",
-         |                    "value": "${removeControlChar(row.getString(36))}"
+         |                    "value": "${removeControlChar(row.getString(37))}"
          |
          |                },
          |                {
@@ -342,12 +347,12 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "UT10_Code",
-         |                    "value": "${removeControlChar(row.getString(31))}"
+         |                    "value": "${removeControlChar(row.getString(32))}"
          |
          |                },
          |                {
          |                    "apiName": "UT15_Code",
-         |                    "value": "${removeControlChar(row.getString(29))}"
+         |                    "value": "${removeControlChar(row.getString(30))}"
          |
          |                },
          |                {
@@ -357,7 +362,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "UT20_Code",
-         |                    "value": "${removeControlChar(row.getString(26))}"
+         |                    "value": "${removeControlChar(row.getString(27))}"
          |
          |                },
          |                {
@@ -367,7 +372,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Interaction_ID",
-         |                    "value": "${row.getLong(34)}"
+         |                    "value": "${row.getLong(35)}"
          |
          |                },
          |                {
@@ -400,7 +405,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Lead_Source",
-         |                    "value": "${removeControlChar(row.getString(38))}"
+         |                    "value": "${removeControlChar(row.getString(39))}"
          |
          |                },
          |                {
@@ -409,7 +414,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
          |                },
          |                {
          |                    "apiName": "Content_Type_Name",
-         |                    "value": "${removeControlChar(row.getString(28))}"
+         |                    "value": "${removeControlChar(row.getString(29))}"
          |
          |                }
          |          ]
@@ -562,7 +567,7 @@ object MipToMarketoInteraction extends ETLFrameWork {
            |SUB_REGION_CODE, CAMPAIGN_NAME, LEAD_DESC, LEAD_NOTE, LEAD_SRC_NAME, SALES_CHANNEL_NAME, CONTACT_PHONE, REGION,
            |SUB_SRC_DESC, a.CREATE_TS, EVENT_REF_ID, a.MIP_ACTIVITY_SEQ_ID,
            |CASE WHEN ACTIVITY_URL IS NULL THEN REFERRER_URL ELSE ACTIVITY_URL END AS REFERRER_URL,
-           |ACTIVITY_CMPN_CD, a.WORK_PHONE_PERM, a.CONTENT_TYPE_NAME
+           |ACTIVITY_CMPN_CD, a.WORK_PHONE_PERM, a.CONTENT_TYPE_NAME, a.EVENT_ACTIVITY_TYPE
            |FROM
            |MAP_MKTO.MCV_MKTO_CUSTOM_ACTIVITY a
            |LEFT JOIN
