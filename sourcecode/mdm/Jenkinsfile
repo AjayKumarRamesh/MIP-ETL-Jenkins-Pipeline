@@ -72,13 +72,16 @@ pipeline{
                 IBMCLOUD_CREDS = credentials('ibm-cloud-cr')
             }
             steps {
-                sh('ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south')
-                sh('ibmcloud cr login')
-                sh('docker build -t us.icr.io/map-dev-namespace/mdm:${BUILD_NUMBER} -f Dockerfile .')
-                sh('docker images')
-                sh('docker push us.icr.io/map-dev-namespace/mdm:${BUILD_NUMBER}')
-                sh('ibmcloud cr image-tag us.icr.io/map-dev-namespace/mdm:${BUILD_NUMBER} us.icr.io/map-dev-namespace/mdm:latest')
-                sh('ibmcloud cr image-list --restrict map-dev-namespace')
+                dir("sourcecode/${SOURCE_CODE_FOLDER}") {
+                    sh "pwd"
+                    sh('ibmcloud login --apikey ${IBMCLOUD_CREDS_PSW} -r us-south')
+                    sh('ibmcloud cr login')
+                    sh('docker build -t us.icr.io/map-dev-namespace/mdm:${BUILD_NUMBER} -f Dockerfile .')
+                    sh('docker images')
+                    sh('docker push us.icr.io/map-dev-namespace/mdm:${BUILD_NUMBER}')
+                    sh('ibmcloud cr image-tag us.icr.io/map-dev-namespace/mdm:${BUILD_NUMBER} us.icr.io/map-dev-namespace/mdm:latest')
+                    sh('ibmcloud cr image-list --restrict map-dev-namespace')
+                }
             }
         }
 
