@@ -188,7 +188,7 @@ object MiptoMarketoPersonInteraction extends ETLFrameWork {
 
     import spark.implicits._
 
-    activityDF1 = transformedDF.filter(transformedDF("Activity_Type") === contactInteraction).map(row => {
+    activityDF1 = transformedDF.filter(transformedDF("Activity_Type_Id") === contactInteraction).map(row => {
       s"""{
          |      "leadId":${row.getLong(9)},
          |      "activityDate":"${convert({row.getTimestamp(31).toString})}",
