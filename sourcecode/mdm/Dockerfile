@@ -9,7 +9,7 @@ RUN mvn package
 #Copy built artifact from build into final image
 FROM adoptopenjdk/openjdk8
 
-EXPOSE 8086
+EXPOSE 8443
 
 RUN mkdir -p /opt/application/mdm/
 
