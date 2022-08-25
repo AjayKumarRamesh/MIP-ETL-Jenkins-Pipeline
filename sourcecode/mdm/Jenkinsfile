@@ -16,7 +16,7 @@ pipeline{
                      SONAR_HOST_URL = "https://sms-sonarqube-intranet.dal1a.cirrus.ibm.com/"
                      //Java home required to run the sonar-scanner
                      JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64"
-                     PATH = "${JAVA_HOME}/bin/:${HOME}/workspace/MIP-CodeScan-POC/node-v16.17.0-linux-x64/bin:${PATH}"
+                     PATH = "${JAVA_HOME}/bin/:${PATH}"
                      //SonarQube Project Name - replace <sonar_project> from the list of projects eg. MAP-ETL-Framework
                      SONAR_PROJECT_NAME="MIP-ETL-Jenkins-Pipeline"
                      //SonarQube Project Key - replace <sonar_key> with the project name eg. MAP-ETL-Framework
@@ -31,14 +31,9 @@ pipeline{
                          withCredentials([file(credentialsId: 'ibm_sonar_enterprise_cert', variable: 'FILE')]){
                              sh ("keytool -importcert -keystore ${HOME}/cacerts -storepass changeit -file $FILE -alias 'ibm_sonar' -noprompt -trustcacerts")
                          }
-                         sh "curl https://nodejs.org/dist/v16.17.0/node-v16.17.0-linux-x64.tar.xz -o node.tar.gz -s"
-                         sh "tar -xf node.tar.gz"
-                         sh "node -v"
-
                          def scannerHome = tool 'sonar-scanner';
                          withSonarQubeEnv('SonarQube'){
                              sh ("${scannerHome}/bin/sonar-scanner -Dsonar.projectName=${SONAR_PROJECT_NAME} -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.exclusions=${SONAR_EXCLUSIONS}")
-                             sh ("${scannerHome}/bin/sonar-scanner -Dsonar.projectName=${SONAR_PROJECT_NAME} -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.exclusions=${SONAR_EXCLUSIONS} -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=- ")
                          }
 
                          // Quality Gate Check
