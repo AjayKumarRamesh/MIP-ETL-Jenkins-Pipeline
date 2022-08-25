@@ -54,7 +54,6 @@
 <link th:href="@{/css/score.css}" rel="stylesheet"></link>
 <link th:href="@{/css/custom.css}" rel="stylesheet"></link>
 
-<!-- <script src="https://1.www.s81c.com/common/stats/ida_stats.js"></script> -->
 <script src="https://1.www.s81c.com/common/v18/js/www.js"></script>
 <script src="https://1.www.s81c.com/common/v18/js/dyntabs.js"></script>
 <script src="https://1.www.s81c.com/common/v18/js/tables.js"></script>
@@ -74,17 +73,7 @@
 		<div id="ibm-content-wrapper">
 
 			<div class="ibm-sitenav-menu-container" >
-				<!--<div style="width: 40%">
-                    <a href="/mdm/index">
-                      <img src="img/mpw.png" alt="MDM" title="" style="height: 3.8rem;"></img>
-                    </a>
-                </div>
-					 <div class="ibm-sitenav-menu-list-custom">
-						<ul role="menubar">
-							<li role="presentation"><img src="img/home.png"></img><a href="/index">Home</a></li>
-							<li role="presentation"><img src="img/search.png"></img><a href="/search">Search</a></li>
-						</ul>
-					</div>-->
+
 					
 			</div>
 
@@ -122,18 +111,18 @@
 												id="ddl_view">
 												<thead>
 													<tr>
-														<th width="20%">Column Name</th>
-														<th width="20%">Column Type</th>
-														<th width="8%">Not Null</th>
-														<th width="50%">Column Description</th>
+														<th>Column Name</th>
+														<th>Column Type</th>
+														<th>Not Null</th>
+														<th>Column Description</th>
 													</tr>
 												</thead>
 												<tbody>
 													<tr th:each="columnView:${columnList}">
-														<td width="20%" th:text="${columnView.name}"></td>
-														<td width="20%" th:text="${columnView.dataType}"></td>
-														<td width="8%" th:text="${columnView.ifNull}"></td>
-														<td width="50%" th:text="${columnView.desc}"></td>
+														<td th:text="${columnView.name}"></td>
+														<td th:text="${columnView.dataType}"></td>
+														<td th:text="${columnView.ifNull}"></td>
+														<td th:text="${columnView.desc}"></td>
 													</tr>
 												</tbody>
 											</table>										

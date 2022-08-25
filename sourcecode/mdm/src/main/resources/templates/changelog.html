@@ -71,11 +71,6 @@
     <div id="ibm-content-wrapper">
 
         <div class="ibm-sitenav-menu-container" >
-            <!--<div style="width: 40%">
-                <a href="/mdm/index">
-                  <img src="img/mpw.png" alt="MDM" title="" style="height: 3.8rem;"></img>
-                </a>
-            </div> -->
         </div>
 
         <main role="main" aria-labelledby="ibm-pagetitle-h1">
@@ -101,22 +96,22 @@
                                                    id="table_view" data-paging="true" data-widget="datatable">
                                                 <thead>
                                                 <tr>
-                                                    <th width="12%">Data Platform</th>
-                                                    <th width="18%">View Name</th>
-                                                    <th width="25%">Change Description</th>
-                                                    <th width="10%">Build Request</th>
-                                                    <th width="25%">Related Story</th>
-                                                    <th width="8%">Update Date</th>
+                                                    <th>Data Platform</th>
+                                                    <th>View Name</th>
+                                                    <th>Change Description</th>
+                                                    <th>Build Request</th>
+                                                    <th>Related Story</th>
+                                                    <th>Update Date</th>
                                                 </tr>
                                                 </thead>
                                                 <tbody>
                                                 <tr th:each="bean:${logList}">
-                                                    <td width="12%" th:text="${bean.platform}"></td>
-                                                    <td width="18%" th:text="${bean.viewName}"></td>
-                                                    <td width="25%" th:text="${bean.changeDesc}"></td>
-                                                    <td width="10%" th:text="${bean.buildRequest}"></td>
-                                                    <td width="25%" th:text="${bean.relatedStory}"></td>
-                                                    <td width="8%" th:text="${bean.updateDateStr}"></td>
+                                                    <td th:text="${bean.platform}"></td>
+                                                    <td th:text="${bean.viewName}"></td>
+                                                    <td th:text="${bean.changeDesc}"></td>
+                                                    <td th:text="${bean.buildRequest}"></td>
+                                                    <td th:text="${bean.relatedStory}"></td>
+                                                    <td th:text="${bean.updateDateStr}"></td>
                                                 </tr>
                                                 </tbody>
                                             </table>

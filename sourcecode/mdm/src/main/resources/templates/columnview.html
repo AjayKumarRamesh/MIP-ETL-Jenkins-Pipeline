@@ -5,22 +5,22 @@
 	data-paging="true" data-searching="true" data-widget="datatable" id="result_table">
 	<thead>
 		<tr>
-		    <th width="8%">Schema</th>
-		    <th width="10%">Table</th>
-			<th width="15%">Column Name</th>
-			<th width="10%">Data Type</th>
-			<th width="8%">Is Null</th>
-			<th width="50%">Description</th>
+		    <th>Schema</th>
+		    <th>Table</th>
+			<th>Column Name</th>
+			<th>Data Type</th>
+			<th>Is Null</th>
+			<th>Description</th>
 		</tr>
 	</thead>
 	<tbody>
 		<tr th:each="columnView:${columnList}">
-		    <td width="8%" th:text="${columnView.schema}"></td>
-		    <td width="10%"><a th:href="@{detail(tb=${columnView.tableName},schema=${columnView.schema},tbid=${columnView.tableObjid})}" style="vertical-align: top;" th:text="${columnView.tableName}" target="_blank"></a></td>
-			<td width="15%" th:text="${columnView.name}"></td>		
-			<td width="10%" th:text="${columnView.dataType}"></td>
-			<td width="8%" th:text="${columnView.ifNull}"></td>
-			<td width="50%" th:text="${columnView.desc}"></td>
+		    <td th:text="${columnView.schema}"></td>
+		    <td><a th:href="@{detail(tb=${columnView.tableName},schema=${columnView.schema},tbid=${columnView.tableObjid})}" style="vertical-align: top;" th:text="${columnView.tableName}" target="_blank"></a></td>
+			<td th:text="${columnView.name}"></td>
+			<td th:text="${columnView.dataType}"></td>
+			<td th:text="${columnView.ifNull}"></td>
+			<td th:text="${columnView.desc}"></td>
 		</tr>
 	</tbody>
 </table>

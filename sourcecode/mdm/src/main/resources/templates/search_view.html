@@ -52,7 +52,6 @@
 <link th:href="@{/css/score.css}" rel="stylesheet"></link>
 <script src="https://1.www.s81c.com/common/v18/js/www.js"></script>
 <script src="https://1.www.s81c.com/common/v18/js/tables.js"></script>
-<!-- <script th:src="@{/js/jquery.min.js}"></script> -->
 
 
 </head>
@@ -65,11 +64,6 @@
 
 			
                 <div class="ibm-sitenav-menu-container" >
-					<!--<div style="width: 40%">
-						<a href="/mdm/index">
-					      <img src="img/mpw.png" alt="MDM" title="" style="height: 3.8rem;"></img>
-						</a>
-					</div> -->
 					<div class="ibm-sitenav-menu-list-custom">
 						<ul role="menubar">
 							<li role="presentation"><img src="img/home.png"></img><a href="/mdm/index">HOME</a></li>
@@ -83,7 +77,6 @@
 			<main role="main" aria-labelledby="ibm-pagetitle-h1">
 			<div id="ibm-pcon">
 				<div id="ibm-content">
-					<!-- <div id="ibm-content-body"> -->
 						<div id="ibm-content-main">
 						<div class="ibm-fluid ibm-fullwidth">
                            <div class="ibm-col-12-12" >
@@ -106,18 +99,18 @@
 											<table class="ibm-data-table" data-info="true" data-ordering="true" data-paging="true" data-searching="true" data-widget="datatable" id="list_table">
 												<thead>
 													<tr>
-														<th width="10%">Schema</th>
-														<th width="20%">Name</th>
-														<th width="55%">Description</th>
-														<th width="15%">Refresh Rate</th>
+														<th>Schema</th>
+														<th>Name</th>
+														<th>Description</th>
+														<th>Refresh Rate</th>
 													</tr>
 												</thead>
 												<tbody>
 													<tr th:each="tableView:${tableList}">
-														<td width="10%" th:text="${tableView.schema}"></td>
-														<td width="20%"><a  th:href="@{detail(tb=${tableView.name},schema=${tableView.schema},tbid=${tableView.tableObjid})}" style="vertical-align: top;" th:text="${tableView.name}" target="_blank"></a></td>
-														<td width="55%" th:text="${tableView.desc}"></td>
-														<td width="15%" th:text="${tableView.freshRate}"></td>
+														<td th:text="${tableView.schema}"></td>
+														<td><a th:href="@{detail(tb=${tableView.name},schema=${tableView.schema},tbid=${tableView.tableObjid})}" style="vertical-align: top;" th:text="${tableView.name}" target="_blank"></a></td>
+														<td th:text="${tableView.desc}"></td>
+														<td th:text="${tableView.freshRate}"></td>
 													</tr>
 												</tbody>
 											</table>
@@ -128,7 +121,6 @@
                         </div>
 								
 						</div>
-					<!-- </div> -->
 				</div>
 			</div>
 			</main>
