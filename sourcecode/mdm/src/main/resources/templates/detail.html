@@ -107,7 +107,7 @@
 												</div>
 											</div>
 											<div id="tableddl" class="ibm-tabs-content" style="padding-left: 10px">
-											  <table class="ibm-data-table ibm-padding-small ibm-small ibm-altrows"
+											  <table  aria-describedby="column_detail" class="ibm-data-table ibm-padding-small ibm-small ibm-altrows"
 												id="ddl_view">
 												<thead>
 													<tr>
@@ -129,7 +129,7 @@
 											</div>
 											<div id="sampledata" class="ibm-tabs-content" style="padding-left: 10px">
 											 <p th:if="${#lists.isEmpty(sdList)}">No sample data</p>
-											  <table class="ibm-data-table ibm-padding-small ibm-small ibm-altrows" data-widget="datatable" data-scrollaxis="x"
+											  <table  aria-describedby="sample_data" class="ibm-data-table ibm-padding-small ibm-small ibm-altrows" data-widget="datatable" data-scrollaxis="x"
 												id="sample_view" th:if="${!#lists.isEmpty(sdList)}" >
 							
 												<thead>
