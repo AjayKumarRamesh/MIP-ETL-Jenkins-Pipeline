@@ -11,7 +11,7 @@ pipeline{
                      //SonarQube Scanner plugin home - based on the scanner version
                      SCANNER_HOME = "${scannerBaseHome}/sonar-scanner-4.7.0.2747-linux"
                      //SonarQube Scanner additional options - we pass the turststore and password required to connect to SonarQube server
-                     SONAR_SCANNER_OPTS = "-Djavax.net.ssl.trustStore=${HOME}/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Dsonar.issuesReport.html.enable=true"
+                     SONAR_SCANNER_OPTS = "-Djavax.net.ssl.trustStore=${HOME}/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Dsonar.issuesReport.html.enable=true -Dsonar.c.file.suffixes=- -Dsonar.cpp.file.suffixes=- -Dsonar.objc.file.suffixes=-"
                      //SonarQube server URL
                      SONAR_HOST_URL = "https://sms-sonarqube-intranet.dal1a.cirrus.ibm.com/"
                      //Java home required to run the sonar-scanner
