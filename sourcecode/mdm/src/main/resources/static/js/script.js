@@ -703,9 +703,6 @@
 
                 item.parents('section').css('z-index', '1');
 
-                if (videoIframeSrc.indexOf('youtu') !== -1) {
-                    videoIframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                }
 
                 if (videoIframeSrc.indexOf('vimeo') !== -1) {
                     var vimeoPlayer = new Vimeo.Player($(videoIframe));
@@ -715,9 +712,6 @@
                 $(item).parents('section').find($(item).attr('data-modal'))
                     .css('display', 'table')
                     .click(function() {
-                        if (videoIframeSrc.indexOf('youtu') !== -1) {
-                            videoIframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                        }
 
                         if (videoIframeSrc.indexOf('vimeo') !== -1) {
                             vimeoPlayer.pause();
