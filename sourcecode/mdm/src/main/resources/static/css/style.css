@@ -2,8 +2,6 @@
  * Mobirise v4 theme (https://mobirise.com/)
  * Copyright 2017 Mobirise
  */
-section {
-  background-color: #eeeeee; }
 
 section,
 .container,
@@ -25,10 +23,14 @@ a {
     text-decoration: none; }
 
 figure {
-  margin-bottom: 0; }
+  margin-bottom: 0;
+  overflow: hidden;
+   }
 
 body {
-  color: #232323; }
+  color: #232323;
+  position: relative;
+  }
 
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6,
@@ -53,10 +55,8 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 textarea[type="hidden"] {
   display: none; }
 
-body {
-  position: relative; }
-
 section {
+  background-color: #eeeeee;
   background-position: 50% 50%;
   background-repeat: no-repeat;
   background-size: cover; }
@@ -101,14 +101,6 @@ section {
 .mbr-light {
   font-weight: 300; }
 
-.mbr-regular {
-  font-weight: 400; }
-
-.mbr-semibold {
-  font-weight: 500; }
-
-.mbr-bold {
-  font-weight: 700; }
 
 /*! Media  */
 .media-size-item {
@@ -171,8 +163,6 @@ section {
     -webkit-flex-wrap: nowrap;
     -ms-flex-wrap: nowrap;
     flex-wrap: nowrap; } }
-figure {
-  overflow: hidden; }
 
 figure[mbr-media-size] {
   transition: width 0.1s; }
@@ -229,7 +219,7 @@ nav .mbr-section-btn {
   cursor: pointer;
   margin-right: 0.5rem; }
 
-.btn.btn-md .mbr-iconfont, .btn.btn-md .mbr-iconfont {
+.btn.btn-md .mbr-iconfont {
   margin-right: 0.8rem; }
 
 .mbr-regular {
@@ -441,3 +431,8 @@ nav .mbr-section-btn {
 .feedback-dropdown {
     margin_top: 15px
 }
+
+.feedback-button {
+    align: center
+}
+
