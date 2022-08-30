@@ -437,3 +437,7 @@ nav .mbr-section-btn {
     width: 300px;
     height: 40px;
 }
+
+.feedback-dropdown {
+    margin_top: 15px
+}

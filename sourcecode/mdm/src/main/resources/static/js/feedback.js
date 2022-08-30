@@ -1,12 +1,6 @@
 jQuery(function($) {
            $("#score_div").score();
-           $("#feedback_button").click(function(){
-               IBMCore.common.widget.overlay.show('mdm_feedback');
-               initFeedback();
-               return false;
-           });
-
-           $("#feedback_li").click(function(){
+           $("#feedback_button, #feedback_li").click(function(){
                IBMCore.common.widget.overlay.show('mdm_feedback');
                initFeedback();
                return false;
