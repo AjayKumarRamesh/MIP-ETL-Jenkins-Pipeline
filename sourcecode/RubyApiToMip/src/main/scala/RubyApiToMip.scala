@@ -8,6 +8,8 @@ import org.apache.spark.sql.functions.{desc, explode}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.sql.{Connection, DriverManager}
+import java.text.SimpleDateFormat
+import java.util.{Calendar, Date, SimpleTimeZone, TimeZone}
 import scala.collection.mutable.Map
 
 object RubyApiToMip extends ETLFrameWork {
@@ -53,17 +55,34 @@ object RubyApiToMip extends ETLFrameWork {
         }
       }
 
-      if (runDate == null || runDate == "" || runDate == "null" || runDate == "''") {
-        lastRun = getLastRecordTimeStamp(jobClassName).toString
-        if (lastRun == null || lastRun == "" || lastRun == "null") {
-          log.info("Both lastRun and runDate are empty. Please provide runDate. {}", lastRun)
-        } else {
-          runDate = lastRun
-          log.info("Running using lastRun {}", lastRun)
-        }
+      //Temp Fix
+      val date =new Date()
+      val formatter = new SimpleDateFormat("HH:mm:ss")
+      formatter.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"))
+      val now = formatter.format(date)
+      val from = "01:00:00"
+      val to = "01:45:00"
+
+      val date_from = formatter.parse(from)
+      val date_to = formatter.parse(to)
+      val date_now = formatter.parse(now)
+      if(date_from.before(date_now) && date_to.after(date_now)){
+        runDate = "2000-01-01 00:00:00.000000"
+        log.info("Running using oldest runDate 2000-01-01 00:00:00.000000")
       } else {
-        log.info("Running using  runDate {}", runDate)
+        if (runDate == null || runDate == "" || runDate == "null" || runDate == "''") {
+          lastRun = getLastRecordTimeStamp(jobClassName).toString
+          if (lastRun == null || lastRun == "" || lastRun == "null") {
+            log.info("Both lastRun and runDate are empty. Please provide runDate. {}", lastRun)
+          } else {
+            runDate = lastRun
+            log.info("Running using lastRun {}", lastRun)
+          }
+        } else {
+          log.info("Running using  runDate {}", runDate)
+        }
       }
+
 
       val tgtsqlStr = """MERGE INTO MAP_CORE.MCT_RUBY_CAMPAIGN t USING TABLE ( VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ) as v (CMPN_CD,CMPN_UT_10,CMPN_UT_15,CMPN_UT_17,CMPN_UT_20,CMPN_UT_30,PLAN_NAME,PLAN_CD,PLAN_TYPE_CD,SUB_PLAN_NAME,SUB_PLAN_CD,SUB_PLAN_UT_15,GLOBAL_CMPN_NAME,GLOBAL_CMPN_CD,GLOBAL_CMPN_TYPE_CD,ACTV_FLG) ON t.CMPN_CD = v.CMPN_CD WHEN MATCHED THEN UPDATE SET t.CMPN_UT_10 = v.CMPN_UT_10,t.CMPN_UT_15 = v.CMPN_UT_15,t.CMPN_UT_17 = v.CMPN_UT_17,t.CMPN_UT_20 = v.CMPN_UT_20,t.CMPN_UT_30 = v.CMPN_UT_30,t.PLAN_NAME = v.PLAN_NAME,t.PLAN_CD = v.PLAN_CD,t.PLAN_TYPE_CD = v.PLAN_TYPE_CD,t.SUB_PLAN_NAME = v.SUB_PLAN_NAME,t.SUB_PLAN_CD = v.SUB_PLAN_CD,t.SUB_PLAN_UT_15 = v.SUB_PLAN_UT_15,t.GLOBAL_CMPN_NAME = v.GLOBAL_CMPN_NAME,t.GLOBAL_CMPN_CD = v.GLOBAL_CMPN_CD,t.GLOBAL_CMPN_TYPE_CD = v.GLOBAL_CMPN_TYPE_CD,t.ACTV_FLG = v.ACTV_FLG WHEN NOT MATCHED THEN INSERT (CMPN_CD,CMPN_UT_10,CMPN_UT_15,CMPN_UT_17,CMPN_UT_20,CMPN_UT_30,PLAN_NAME,PLAN_CD,PLAN_TYPE_CD,SUB_PLAN_NAME,SUB_PLAN_CD,SUB_PLAN_UT_15,GLOBAL_CMPN_NAME,GLOBAL_CMPN_CD,GLOBAL_CMPN_TYPE_CD,ACTV_FLG) VALUES (v.CMPN_CD,v.CMPN_UT_10,v.CMPN_UT_15,v.CMPN_UT_17,v.CMPN_UT_20,v.CMPN_UT_30,v.PLAN_NAME,v.PLAN_CD,v.PLAN_TYPE_CD,v.SUB_PLAN_NAME,v.SUB_PLAN_CD,v.SUB_PLAN_UT_15,v.GLOBAL_CMPN_NAME,v.GLOBAL_CMPN_CD,v.GLOBAL_CMPN_TYPE_CD,v.ACTV_FLG)""".stripMargin
       val jobrun = new JobRunArgs
