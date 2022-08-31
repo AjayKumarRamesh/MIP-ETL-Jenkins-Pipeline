@@ -178,8 +178,8 @@ object RubyApiToMip extends ETLFrameWork {
     val leadEndpoint = apiConProps.getProperty(PropertyNames.ResourceSpecific_1) //This will provide rest of the path
 
     var requiredDateTime = lastRunTimestamp.replace(":", "%3A").replace(" ", "%20")
-    //log.info("Campaign Url : {}",
-     // s"$activityEndpoint$leadEndpoint?apikey=$activityId&timestamp=$requiredDateTime")
+    log.info("Campaign Url : {}",
+      s"$activityEndpoint$leadEndpoint?apikey=$activityId&timestamp=$requiredDateTime")
     val httpClient: CloseableHttpClient = HttpClients.custom().build()
     val httpGetToken = new HttpGet(
       s"$activityEndpoint$leadEndpoint?apikey=$activityId&timestamp=$requiredDateTime")
@@ -207,7 +207,7 @@ object RubyApiToMip extends ETLFrameWork {
     for (campaign_code <- campaign_codes) {
       val startTimeMillis = System.currentTimeMillis()
       val url = s"$activityEndpoint$leadEndpoint?apikey=$activityId&campaign_code=$campaign_code"
-      //log.info("Meta data Url : {}", url)
+      log.info("Meta data Url : {}", url)
 
 
       val httpClient: CloseableHttpClient = HttpClients.custom().build()
