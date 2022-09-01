@@ -7,7 +7,7 @@ pipeline {
        SOURCE_CODE_FOLDER = ''
     }
     stages {
-        /**stage('SonarQube Analysis') {
+        stage('SonarQube Analysis') {
             agent { label 'taas_image' }
             environment{
                 //SonarQube Scanner plugin base home path 
@@ -60,7 +60,7 @@ pipeline {
                     }
                 } //script
             }
-        }*/
+        }
         stage('Get Global Vars') {
             steps{
                 script {
