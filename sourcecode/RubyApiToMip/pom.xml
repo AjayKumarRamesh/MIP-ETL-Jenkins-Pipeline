@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>MIP</groupId>
-    <artifactId>Flare-Framework</artifactId>
+    <artifactId>ETL-Framework</artifactId>
     <version>2.1</version>
     <properties>
         <scala.version>2.12.1</scala.version>
@@ -13,7 +13,7 @@
         <dependency>
             <groupId>com.flare</groupId>
             <artifactId>base</artifactId>
-            <version>2.1-Log4j2</version>
+            <version>2.1-Log4j2new</version>
             <exclusions>
                 <exclusion>  <!-- declare the exclusion here -->
                     <groupId>org.apache.logging.log4j</groupId>
@@ -170,12 +170,6 @@
             <groupId>com.springml</groupId>
             <artifactId>spark-marketo_2.11</artifactId>
             <version>1.1.0</version>
-        </dependency>
-         <!-- https://mvnrepository.com/artifact/com.ibm.db2/jcc -->
-        <dependency>
-            <groupId>com.ibm.db2</groupId>
-            <artifactId>jcc</artifactId>
-            <version>11.5.7.0</version>
         </dependency>
     </dependencies>
     <build>
